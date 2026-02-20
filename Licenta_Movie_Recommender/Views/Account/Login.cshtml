@@ -1,0 +1,25 @@
+﻿@{
+    ViewData["Title"] = "Autentificare";
+}
+
+<div class="row justify-content-center">
+    <div class="col-md-4">
+        <h3 class="text-center mb-4">Intra in cont</h3>
+
+        @if (ViewBag.Error != null)
+        {
+            <div class="alert alert-danger">@ViewBag.Error</div>
+        }
+
+        <form asp-action="Login" method="post">
+            <div class="mb-3">
+                <label>Nume Utilizator</label>
+                <input type="text" name="username" class="form-control" required />
+            </div>
+            <button type="submit" class="btn btn-primary w-100">Logheaza-te</button>
+        </form>
+        <div class="text-center mt-3">
+            <a asp-action="Register">Nu ai cont? Inregistreaza-te</a>
+        </div>
+    </div>
+</div>

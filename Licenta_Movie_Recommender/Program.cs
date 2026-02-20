@@ -1,11 +1,14 @@
 using Microsoft.EntityFrameworkCore;
-using MovieRecommenderApp.Data; 
+using MovieRecommenderApp.Data;
+using MovieRecommenderApp.Services;
 
 var builder = WebApplication.CreateBuilder(args);
 
 // legam contextul de sql server folosind stringul din appsettings
 builder.Services.AddDbContext<ApplicationDbContext>(options =>
     options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
+
+builder.Services.AddHttpClient<TmdbService>();
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();

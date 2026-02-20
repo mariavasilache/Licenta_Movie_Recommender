@@ -1,0 +1,22 @@
+﻿@model IEnumerable<MovieRecommenderApp.Models.Movie>
+
+@{
+    ViewData["Title"] = "Catalog Filme";
+}
+
+<h2 class="mb-4">Catalog Filme</h2>
+
+<div class="row">
+    @foreach (var film in Model)
+    {
+        <div class="col-md-3 mb-4">
+            <div class="card h-100 shadow-sm">
+                <img src="@film.PosterUrl" class="card-img-top" alt="@film.Title">
+                <div class="card-body">
+                    <h5 class="card-title">@film.Title</h5>
+                    <p class="card-text text-muted">@film.Genres.Replace("|", ", ")</p>
+                </div>
+            </div>
+        </div>
+    }
+</div>

@@ -1,4 +1,5 @@
 ﻿using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace MovieRecommenderApp.Models
 {
@@ -14,6 +15,9 @@ namespace MovieRecommenderApp.Models
         [MaxLength(200)]
         public string Title { get; set; }
 
-        public string Genres { get; set; } 
+        public string Genres { get; set; }
+
+        [NotMapped] // nu se salveaza in baza de date, doar pt afisare
+        public string PosterUrl { get; set; }
     }
 }

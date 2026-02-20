@@ -1,9 +1,24 @@
+using Microsoft.EntityFrameworkCore;
+using MovieRecommenderApp.Data; 
+
 var builder = WebApplication.CreateBuilder(args);
+
+// legam contextul de sql server folosind stringul din appsettings
+builder.Services.AddDbContext<ApplicationDbContext>(options =>
+    options.UseSqlServer(builder.Configuration.GetConnectionString("DefaultConnection")));
 
 // Add services to the container.
 builder.Services.AddControllersWithViews();
 
 var app = builder.Build();
+
+// rulam scriptul de importare date la pornire
+using (var scope = app.Services.CreateScope())
+{
+    var services = scope.ServiceProvider;
+    var context = services.GetRequiredService<ApplicationDbContext>();
+    DbInitializer.Initialize(context);
+}
 
 // Configure the HTTP request pipeline.
 if (!app.Environment.IsDevelopment())

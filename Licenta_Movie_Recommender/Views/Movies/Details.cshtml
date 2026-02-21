@@ -1,0 +1,49 @@
+﻿@model MovieRecommenderApp.Models.Movie
+
+@{
+    ViewData["Title"] = Model.Title;
+}
+
+<div class="container mt-5">
+    <div class="row">
+        <div class="col-md-4">
+            <img src="@Model.PosterUrl" class="img-fluid rounded shadow-lg" alt="@Model.Title" />
+        </div>
+
+        <div class="col-md-8">
+            <h1 class="display-4 fw-bold">@Model.Title</h1>
+            <h4 class="text-muted mb-4">@Model.Genres.Replace("|", ", ")</h4>
+
+            <hr />
+
+            <div class="card bg-light mt-4">
+                <div class="card-body">
+                    <h5 class="card-title">Ce parere ai despre acest film?</h5>
+
+                    @if (User.Identity.IsAuthenticated)
+                    {
+                        <div class="mb-3">
+                            <label class="form-label">Acorda o nota (1-5):</label>
+                            <select class="form-select w-50">
+                                <option value="0">Alege nota...</option>
+                                <option value="1">1 Stea (Slab)</option>
+                                <option value="2">2 Stele</option>
+                                <option value="3">3 Stele (Mediu)</option>
+                                <option value="4">4 Stele</option>
+                                <option value="5">5 Stele (Capodopera!)</option>
+                            </select>
+                        </div>
+                        <button class="btn btn-primary">Salveaza Nota</button>
+                        <button class="btn btn-outline-secondary ms-2">Adauga in Watchlist</button>
+                    }
+                    else
+                    {
+                        <p class="text-danger">Trebuie sa fii logat pentru a da o nota sau a adauga in lista.</p>
+                        <a asp-controller="Account" asp-action="Login" class="btn btn-success">Intra in cont</a>
+                    }
+                </div>
+            </div>
+
+        </div>
+    </div>
+</div>

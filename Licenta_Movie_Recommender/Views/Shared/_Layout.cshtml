@@ -41,6 +41,10 @@
                             </li>
                         }
                     </ul>
+                    <form class="d-flex" asp-controller="Movies" asp-action="Search" method="get">
+                        <input class="form-control me-2" type="search" name="term" placeholder="Cauta un film..." aria-label="Search">
+                        <button class="btn btn-outline-primary" type="submit">Cauta</button>
+                    </form>
                 </div>
             </div>
         </nav>

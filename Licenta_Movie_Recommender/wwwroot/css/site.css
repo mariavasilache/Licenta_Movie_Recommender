@@ -20,3 +20,15 @@ html {
 body {
   margin-bottom: 60px;
 }
+
+/* efect animatie postere filme */
+.movie-card {
+    transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
+    cursor: pointer;
+}
+
+    .movie-card:hover {
+        transform: scale(1.05); /* mareste cardul cu 5% */
+        box-shadow: 0 15px 30px rgba(0,0,0,0.3) !important; /* umbra mai puternica */
+        z-index: 10; /* il aduce deasupra celorlalte */
+    }

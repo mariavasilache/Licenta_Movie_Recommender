@@ -10,13 +10,15 @@
     @foreach (var film in Model)
     {
         <div class="col-md-3 mb-4">
-            <div class="card h-100 shadow-sm">
+            <a asp-controller="Movies" asp-action="Details" asp-route-id="@film.Id" class="text-decoration-none text-dark">
+            <div class="card h-100 shadow-sm movie-card">
                 <img src="@film.PosterUrl" class="card-img-top" alt="@film.Title">
                 <div class="card-body">
                     <h5 class="card-title">@film.Title</h5>
                     <p class="card-text text-muted">@film.Genres.Replace("|", ", ")</p>
                 </div>
             </div>
+            </a>
         </div>
     }
 </div>

@@ -1,11 +1,12 @@
 ﻿using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Mvc;
-using MovieRecommenderApp.Data;
-using MovieRecommenderApp.Models;
+using Licenta_Movie_Recommender.Data;
+using Licenta_Movie_Recommender.Models;
+
 using System.Security.Claims;
 
-namespace MovieRecommenderApp.Controllers
+namespace Licenta_Movie_Recommender.Controllers
 {
     public class AccountController : Controller
     {

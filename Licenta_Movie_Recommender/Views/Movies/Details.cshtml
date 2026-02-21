@@ -1,4 +1,4 @@
-﻿@model MovieRecommenderApp.Models.Movie
+﻿@model Licenta_Movie_Recommender.Models.Movie
 
 @{
     ViewData["Title"] = Model.Title;
@@ -22,23 +22,38 @@
 
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <div class="mb-3">
-                            <label class="form-label">Acorda o nota (1-5):</label>
-                            <select class="form-select w-50">
-                                <option value="0">Alege nota...</option>
-                                <option value="1">1 Stea (Slab)</option>
-                                <option value="2">2 Stele</option>
-                                <option value="3">3 Stele (Mediu)</option>
-                                <option value="4">4 Stele</option>
-                                <option value="5">5 Stele (Capodopera!)</option>
-                            </select>
-                        </div>
-                        <button class="btn btn-primary">Salveaza Nota</button>
-                        <button class="btn btn-outline-secondary ms-2">Adauga in Watchlist</button>
+                        <form asp-controller="Movies" asp-action="SaveRating" method="post" class="d-inline-block">
+                            <input type="hidden" name="movieId" value="@Model.Id" />
+
+                            <div class="mb-3">
+                                <label class="form-label">Acorda o nota (1-5):</label>
+                                <select name="rating" class="form-select" required>
+                                    <option value="">Alege nota...</option>
+                                    <option value="1">1 Stea (Slab)</option>
+                                    <option value="2">2 Stele</option>
+                                    <option value="3">3 Stele (Mediu)</option>
+                                    <option value="4">4 Stele</option>
+                                    <option value="5">5 Stele (Capodopera)</option>
+                                </select>
+                            </div>
+                            <button type="submit" class="btn btn-primary">Salveaza Nota</button>
+                        </form>
+                        <br />
+
+                        <form asp-controller="Movies" asp-action="MarkAsWatched" method="post" class="d-inline-block mt-2">
+                            <input type="hidden" name="movieId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-success">✓ Am vazut acest film</button>
+                        </form>
+
+                        <form asp-controller="Movies" asp-action="AddToWatchlist" method="post" class="d-inline-block ms-2 mt-2">
+                            <input type="hidden" name="movieId" value="@Model.Id" />
+                            <button type="submit" class="btn btn-outline-secondary">+ Watchlist</button>
+                        </form>
+                        
                     }
                     else
                     {
-                        <p class="text-danger">Trebuie sa fii logat pentru a da o nota sau a adauga in lista.</p>
+                        <p class="text-danger">Trebuie sa fii logat pentru a interactiona cu filmul.</p>
                         <a asp-controller="Account" asp-action="Login" class="btn btn-success">Intra in cont</a>
                     }
                 </div>

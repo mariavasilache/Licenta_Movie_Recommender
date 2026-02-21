@@ -1,6 +1,6 @@
 ﻿using System.ComponentModel.DataAnnotations;
 
-namespace MovieRecommenderApp.Models
+namespace Licenta_Movie_Recommender.Models
 {
     public class User
     {

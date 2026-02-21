@@ -12,39 +12,55 @@
     <header>
         <nav class="navbar navbar-expand-sm navbar-toggleable-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-area="" asp-controller="Home" asp-action="Index">Licenta_Movie_Recommender</a>
+                <a class="navbar-brand fw-bold" asp-area="" asp-controller="Movies" asp-action="Index">Licenta_Movie_Recommender</a>
+
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target=".navbar-collapse" aria-controls="navbarSupportedContent"
                         aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
+
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
+
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Index">Home</a>
+                            <a class="nav-link text-dark" asp-area="" asp-controller="Movies" asp-action="Index">Catalog Filme</a>
                         </li>
-                        <li class="nav-item">
-                            <a class="nav-link text-dark" asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
-                        </li>
+                    </ul>
+
+                    <form class="d-flex" asp-controller="Movies" asp-action="Search" method="get">
+                        <input class="form-control me-2" type="search" name="term" placeholder="Cauta un film..." aria-label="Search">
+                        <button class="btn btn-outline-primary" type="submit">Cauta</button>
+                    </form>
+
+                    <ul class="navbar-nav ms-3">
                         @if (User.Identity.IsAuthenticated)
                         {
-                            <li class="nav-item">
-                                <span class="nav-link text-primary">Salut, @User.Identity.Name!</span>
-                            </li>
-                            <li class="nav-item">
-                                <a class="nav-link text-danger" asp-controller="Account" asp-action="Logout">Iesi din cont</a>
+                            <li class="nav-item dropdown">
+                                <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="profileDropdown" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                                    <img src="https://ui-avatars.com/api/?name=@User.Identity.Name&background=0D8ABC&color=fff&rounded=true" alt="Avatar" width="35" height="35" class="rounded-circle shadow-sm">
+                                </a>
+                                <ul class="dropdown-menu dropdown-menu-end shadow border-0 mt-2" aria-labelledby="profileDropdown">
+                                    <li><h6 class="dropdown-header text-primary">Salut, @User.Identity.Name!</h6></li>
+                                    <li><hr class="dropdown-divider"></li>
+
+                                    <li><a class="dropdown-item py-2" asp-controller="Movies" asp-action="MyProfile">🎬 Activitatea Mea</a></li>
+                                    <li><a class="dropdown-item py-2" href="#">⚙️ Setari Cont</a></li>
+                                    <li><hr class="dropdown-divider"></li>
+                                    <li><a class="dropdown-item text-danger py-2" asp-controller="Account" asp-action="Logout">🚪 Deconectare</a></li>
+                                </ul>
                             </li>
                         }
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-success" asp-controller="Account" asp-action="Login">Intra in cont</a>
+                                <a class="nav-link text-dark" asp-controller="Account" asp-action="Login">Intra in cont</a>
+                            </li>
+                            <li class="nav-item">
+                                <a class="btn btn-primary ms-2" asp-controller="Account" asp-action="Register">Inregistrare</a>
                             </li>
                         }
                     </ul>
-                    <form class="d-flex" asp-controller="Movies" asp-action="Search" method="get">
-                        <input class="form-control me-2" type="search" name="term" placeholder="Cauta un film..." aria-label="Search">
-                        <button class="btn btn-outline-primary" type="submit">Cauta</button>
-                    </form>
+
                 </div>
             </div>
         </nav>
@@ -55,9 +71,9 @@
         </main>
     </div>
 
-    <footer class="border-top footer text-muted">
+    <footer class="border-top footer text-muted mt-5">
         <div class="container">
-            &copy; 2026 - Licenta_Movie_Recommender - <a asp-area="" asp-controller="Home" asp-action="Privacy">Privacy</a>
+            &copy; 2026 - Licenta_Movie_Recommender
         </div>
     </footer>
     <script src="~/lib/jquery/dist/jquery.min.js"></script>

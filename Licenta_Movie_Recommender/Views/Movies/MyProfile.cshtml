@@ -1,0 +1,105 @@
+﻿@model IEnumerable<Licenta_Movie_Recommender.Models.UserMovieActivity>
+
+@{
+    ViewData["Title"] = "Activitatea Mea";
+    // 3 liste pentru tab uri
+    var toate = Model.ToList();
+    var vazute = Model.Where(a => a.Status == 2).ToList();
+    var watchlist = Model.Where(a => a.Status == 1).ToList();
+}
+
+<div class="container mt-4">
+    <h2 class="mb-4">Activitatea Mea</h2>
+
+    <ul class="nav nav-pills mb-4" id="profile-tabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="toate-tab" data-bs-toggle="pill" data-bs-target="#toate" type="button" role="tab">
+                Toate (@toate.Count)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="vazute-tab" data-bs-toggle="pill" data-bs-target="#vazute" type="button" role="tab">
+                Vazute (@vazute.Count)
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="watchlist-tab" data-bs-toggle="pill" data-bs-target="#watchlist" type="button" role="tab">
+                Watchlist (@watchlist.Count)
+            </button>
+        </li>
+    </ul>
+
+    <div class="tab-content" id="profile-tabs-content">
+
+        <div class="tab-pane fade show active" id="toate" role="tabpanel">
+            <div class="row">
+                @if (!toate.Any())
+                {
+                    <p class="text-muted">Nu ai nicio activitate inca.</p>
+                }
+                @foreach (var item in toate)
+                {
+                    <div class="col-md-2 mb-4">
+                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@item.MovieId" class="text-decoration-none">
+                            <div class="card h-100 movie-card shadow-sm position-relative">
+                                @if (item.Status == 2)
+                                {
+                                    <span class="position-absolute top-0 end-0 badge bg-success m-2">
+                                        Vazut @(item.Rating > 0 ? $" | Nota: {item.Rating}" : "")
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="position-absolute top-0 end-0 badge bg-secondary m-2">Watchlist</span>
+                                }
+                                <img src="@item.Movie.PosterUrl" class="card-img-top" alt="@item.Movie.Title">
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="vazute" role="tabpanel">
+            <div class="row">
+                @if (!vazute.Any())
+                {
+                    <p class="text-muted">Nu ai vazut niciun film inca.</p>
+                }
+                @foreach (var item in vazute)
+                {
+                    <div class="col-md-2 mb-4">
+                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@item.MovieId" class="text-decoration-none">
+                            <div class="card h-100 movie-card shadow-sm position-relative">
+                                <span class="position-absolute top-0 end-0 badge bg-success m-2">
+                                    @(item.Rating > 0 ? $"Nota: {item.Rating}" : "Fara nota")
+                                </span>
+                                <img src="@item.Movie.PosterUrl" class="card-img-top" alt="@item.Movie.Title">
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+        <div class="tab-pane fade" id="watchlist" role="tabpanel">
+            <div class="row">
+                @if (!watchlist.Any())
+                {
+                    <p class="text-muted">Watchlist-ul este gol.</p>
+                }
+                @foreach (var item in watchlist)
+                {
+                    <div class="col-md-2 mb-4">
+                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@item.MovieId" class="text-decoration-none">
+                            <div class="card h-100 movie-card shadow-sm position-relative">
+                                <img src="@item.Movie.PosterUrl" class="card-img-top" alt="@item.Movie.Title">
+                            </div>
+                        </a>
+                    </div>
+                }
+            </div>
+        </div>
+
+    </div>
+</div>

@@ -1,8 +1,8 @@
 ﻿using System.Globalization;
 using CsvHelper;
-using MovieRecommenderApp.Models;
+using Licenta_Movie_Recommender.Models;
 
-namespace MovieRecommenderApp.Data
+namespace Licenta_Movie_Recommender.Data
 {
     public static class DbInitializer
     {

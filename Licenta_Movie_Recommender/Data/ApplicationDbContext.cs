@@ -1,7 +1,7 @@
-﻿using Microsoft.EntityFrameworkCore;
-using MovieRecommenderApp.Models;
+﻿using Licenta_Movie_Recommender.Models; 
+using Microsoft.EntityFrameworkCore;
 
-namespace MovieRecommenderApp.Data
+namespace Licenta_Movie_Recommender.Data 
 {
     public class ApplicationDbContext : DbContext
     {
@@ -9,9 +9,9 @@ namespace MovieRecommenderApp.Data
         {
         }
 
-        // tabelele care ajung in baza de date
         public DbSet<Movie> Movies { get; set; }
         public DbSet<User> Users { get; set; }
         public DbSet<Rating> Ratings { get; set; }
+        public DbSet<UserMovieActivity> UserActivities { get; set; }
     }
 }

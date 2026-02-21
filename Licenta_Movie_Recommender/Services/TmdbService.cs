@@ -1,6 +1,6 @@
 ﻿using System.Text.Json;
 
-namespace MovieRecommenderApp.Services
+namespace Licenta_Movie_Recommender.Services
 {
     public class TmdbService
     {

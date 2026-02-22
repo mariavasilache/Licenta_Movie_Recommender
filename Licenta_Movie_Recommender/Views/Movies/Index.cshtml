@@ -1,24 +1,86 @@
 ﻿@model IEnumerable<Licenta_Movie_Recommender.Models.Movie>
+@inject Licenta_Movie_Recommender.Services.RecommendationService RecService
 
 @{
     ViewData["Title"] = "Catalog Filme";
+
+    //
+    var userIdClaim = User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier);
+    List<Licenta_Movie_Recommender.Models.Movie> recommendations = new List<Licenta_Movie_Recommender.Models.Movie>();
+
+    if (userIdClaim != null)
+    {
+        recommendations = await RecService.GetRecommendationsAsync(int.Parse(userIdClaim.Value));
+    }
 }
 
-<h2 class="mb-4">Catalog Filme</h2>
+<div class="container mt-4">
 
-<div class="row">
-    @foreach (var film in Model)
+    @* --- SECTIUNE RECOMANDARI --- *@
+    @if (recommendations != null && recommendations.Any())
     {
-        <div class="col-md-3 mb-4">
-            <a asp-controller="Movies" asp-action="Details" asp-route-id="@film.Id" class="text-decoration-none text-dark">
-            <div class="card h-100 shadow-sm movie-card">
-                <img src="@film.PosterUrl" class="card-img-top" alt="@film.Title">
-                <div class="card-body">
-                    <h5 class="card-title">@film.Title</h5>
-                    <p class="card-text text-muted">@film.Genres.Replace("|", ", ")</p>
+        <h3 class="mb-3 text-primary"><i class="bi bi-stars"></i> Recomandate pentru tine</h3>
+        <div class="row mb-5">
+            @foreach (var film in recommendations)
+            {
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a asp-action="Details" asp-route-id="@film.Id">
+                        <div class="card h-100 shadow-sm border-0 movie-card">
+                            <img src="@(film.PosterUrl.StartsWith("http") ? film.PosterUrl : "https://image.tmdb.org/t/p/w500" + film.PosterUrl)"
+                                 class="card-img-top"
+                                 alt="@film.Title"
+                                 style="height: 350px; object-fit: cover;"
+                                 onerror="this.src='https://placehold.co/300x450?text=Fara+Imagine'">
+                        </div>
+                    </a>
                 </div>
-            </div>
-            </a>
+            }
         </div>
+        <hr class="mb-5" />
     }
+
+    @* --- CATALOGUL GENERAL --- *@
+    <h3 class="mb-4">Toate Filmele</h3>
+    <div class="row">
+        @foreach (var film in Model)
+        {
+            <div class="col-md-3 mb-4">
+                <a asp-controller="Movies" asp-action="Details" asp-route-id="@film.Id" class="text-decoration-none text-dark">
+                    <div class="card h-100 shadow-sm border-0 movie-card">
+                        <img src="@film.PosterUrl" class="card-img-top" alt="@film.Title"
+                             onerror="this.src='https://placehold.co/300x450?text=Fara+Imagine'">
+                        <div class="card-body">
+                            <h6 class="card-title fw-bold">@film.Title</h6>
+                            <p class="card-text text-muted small">
+                                @(string.IsNullOrEmpty(film.Genres) ? "General" : film.Genres.Replace("|", ", "))
+                            </p>
+                        </div>
+                    </div>
+                </a>
+            </div>
+        }
+    </div>
+
+    @* --- NAVIGATIE PAGINATIE --- *@
+    <nav aria-label="Page navigation" class="mt-5">
+        <ul class="pagination justify-content-center">
+            @if (ViewBag.CurrentPage > 1)
+            {
+                <li class="page-item">
+                    <a class="page-link shadow-sm" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage - 1)">« Inapoi</a>
+                </li>
+            }
+
+            <li class="page-item disabled">
+                <span class="page-link bg-light">Pagina @ViewBag.CurrentPage din @ViewBag.TotalPages</span>
+            </li>
+
+            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+            {
+                <li class="page-item">
+                    <a class="page-link shadow-sm" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage + 1)">Inainte »</a>
+                </li>
+            }
+        </ul>
+    </nav>
 </div>

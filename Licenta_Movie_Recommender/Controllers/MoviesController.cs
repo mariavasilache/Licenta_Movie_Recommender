@@ -18,9 +18,23 @@ namespace Licenta_Movie_Recommender.Controllers
             _tmdbService = tmdbService;
         }
 
-        public async Task<IActionResult> Index()
+        public async Task<IActionResult> Index(int page = 1)
         {
-            var movies = await _context.Movies.ToListAsync();
+            int pageSize = 24; // filme pe pagina
+
+            // cate pagini avem in total
+            var totalMovies = await _context.Movies.CountAsync();
+
+            var movies = await _context.Movies
+                .OrderByDescending(m => m.Id) // cele mai noi importate primele
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .ToListAsync();
+
+            //  info despre pagini catre ecran prin ViewBag
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalMovies / pageSize);
+
             return View(movies);
         }
 

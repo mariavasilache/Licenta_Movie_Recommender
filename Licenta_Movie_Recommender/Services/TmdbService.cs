@@ -25,7 +25,7 @@ namespace Licenta_Movie_Recommender.Services
                 var content = await response.Content.ReadAsStringAsync();
                 using var doc = JsonDocument.Parse(content);
 
-                // cautam calea catre poster in raspunsul lor
+                // cautam calea catre poster in raspuns
                 if (doc.RootElement.TryGetProperty("poster_path", out var posterPath) && posterPath.ValueKind != JsonValueKind.Null)
                 {
                     return $"https://image.tmdb.org/t/p/w500{posterPath.GetString()}";

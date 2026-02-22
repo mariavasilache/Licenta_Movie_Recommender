@@ -17,7 +17,7 @@ namespace Licenta_Movie_Recommender.Models
 
         public string Genres { get; set; }
 
-        [NotMapped] // nu se salveaza in baza de date, doar pt afisare
+   
         public string PosterUrl { get; set; }
     }
 }

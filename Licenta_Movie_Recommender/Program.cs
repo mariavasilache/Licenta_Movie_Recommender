@@ -23,7 +23,10 @@ using (var scope = app.Services.CreateScope())
 {
     var services = scope.ServiceProvider;
     var context = services.GetRequiredService<ApplicationDbContext>();
-    DbInitializer.Initialize(context);
+    var tmdbService = services.GetRequiredService<TmdbService>();
+
+
+    DbInitializer.Initialize(context, tmdbService).GetAwaiter().GetResult();
 }
 
 if (!app.Environment.IsDevelopment())

@@ -51,9 +51,19 @@ namespace Licenta_Movie_Recommender.Services
                 double rating = root.TryGetProperty("vote_average", out var va) ? va.GetDouble() : 0;
                 string releaseDate = root.TryGetProperty("release_date", out var rd) ? rd.GetString() : "";
 
-                // daca nu exista traducere in romana
-                if (string.IsNullOrEmpty(overview)) overview = "Descriere indisponibilă în limba română.";
+                // daca nu exista traducere in romana cerem in eng
+                if (string.IsNullOrEmpty(overview))
+                {
+                    var responseEn = await _httpClient.GetAsync($"https://api.themoviedb.org/3/movie/{tmdbId}?api_key={_apiKey}&language=en-US");
+                    if (responseEn.IsSuccessStatusCode)
+                    {
+                        var contentEn = await responseEn.Content.ReadAsStringAsync();
+                        using var docEn = System.Text.Json.JsonDocument.Parse(contentEn);
 
+                       
+                        overview = docEn.RootElement.TryGetProperty("overview", out var ovEn) ? ovEn.GetString() : "";
+                    }
+                }
                 return (overview, rating, releaseDate);
             }
             return ("Descriere indisponibilă.", 0, "");

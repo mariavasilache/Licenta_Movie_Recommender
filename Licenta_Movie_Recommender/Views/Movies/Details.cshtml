@@ -4,57 +4,103 @@
     ViewData["Title"] = Model.Title;
 }
 
-<div class="container mt-5">
-    <div class="row">
-        <div class="col-md-4">
-            <img src="@Model.PosterUrl" class="img-fluid rounded shadow-lg" alt="@Model.Title" />
+<style>
+    /* design sistem rating cu stelute */
+    .star-rating {
+        display: flex;
+        flex-direction: row-reverse;
+        justify-content: flex-end;
+    }
+
+        .star-rating input {
+            display: none;
+        }
+
+        .star-rating label {
+            color: #ddd;
+            font-size: 2rem;
+            padding: 0 5px;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+
+            .star-rating input:checked ~ label,
+            .star-rating label:hover,
+            .star-rating label:hover ~ label {
+                color: #ffc107; 
+            }
+</style>
+
+<div class="container mt-5 mb-5">
+    <div class="row bg-white rounded shadow-sm p-4">
+        <div class="col-md-4 text-center">
+            <img src="@Model.PosterUrl" class="img-fluid rounded shadow" alt="@Model.Title" style="max-height: 500px; object-fit: cover;" onerror="this.src='https://placehold.co/300x450?text=Fara+Imagine'" />
         </div>
 
-        <div class="col-md-8">
-            <h1 class="display-4 fw-bold">@Model.Title</h1>
-            <h4 class="text-muted mb-4">@Model.Genres.Replace("|", ", ")</h4>
+        <div class="col-md-8 mt-4 mt-md-0">
+            <h1 class="display-5 fw-bold mb-2">@Model.Title</h1>
 
-            <hr />
+            <p class="text-muted">
+                <i class="bi bi-calendar3"></i> Lansare: <strong>@(string.IsNullOrEmpty(ViewBag.ReleaseDate) ? "N/A" : ViewBag.ReleaseDate)</strong> |
+                <i class="bi bi-star-fill text-warning"></i> Nota TMDB: <strong>@(ViewBag.TmdbRating > 0 ? ((double)ViewBag.TmdbRating).ToString("0.0") : "N/A")</strong> / 10
+            </p>
 
-            <div class="card bg-light mt-4">
-                <div class="card-body">
-                    <h5 class="card-title">Ce parere ai despre acest film?</h5>
+            <div class="mb-4">
+                @if (!string.IsNullOrEmpty(Model.Genres))
+                {
+                    @foreach (var gen in Model.Genres.Split('|'))
+                    {
+                        <span class="badge bg-secondary me-1 fs-6 px-3 py-2">@gen</span>
+                    }
+                }
+            </div>
 
+            <h4 class="fw-bold">Sinopsis</h4>
+            <p class="lead" style="font-size: 1.1rem; line-height: 1.6;">
+                @ViewBag.Overview
+            </p>
+
+            <hr class="my-4" />
+
+            <div class="card border-0 bg-light shadow-sm">
+                <div class="card-body p-4">
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <form asp-controller="Movies" asp-action="SaveRating" method="post" class="d-inline-block">
-                            <input type="hidden" name="movieId" value="@Model.Id" />
+                        <div class="row align-items-center">
+                            <div class="col-md-6 mb-3 mb-md-0 d-flex gap-2">
+                                <form asp-controller="Movies" asp-action="MarkAsWatched" method="post">
+                                    <input type="hidden" name="movieId" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-success px-4 py-2"><i class="bi bi-check2-circle"></i> Văzut</button>
+                                </form>
 
-                            <div class="mb-3">
-                                <label class="form-label">Acorda o nota (1-5):</label>
-                                <select name="rating" class="form-select" required>
-                                    <option value="">Alege nota...</option>
-                                    <option value="1">1 Stea (Slab)</option>
-                                    <option value="2">2 Stele</option>
-                                    <option value="3">3 Stele (Mediu)</option>
-                                    <option value="4">4 Stele</option>
-                                    <option value="5">5 Stele (Capodopera)</option>
-                                </select>
+                                <form asp-controller="Movies" asp-action="AddToWatchlist" method="post">
+                                    <input type="hidden" name="movieId" value="@Model.Id" />
+                                    <button type="submit" class="btn btn-outline-primary px-4 py-2"><i class="bi bi-bookmark-plus"></i> Watchlist</button>
+                                </form>
                             </div>
-                            <button type="submit" class="btn btn-primary">Salveaza Nota</button>
-                        </form>
-                        <br />
 
-                        <form asp-controller="Movies" asp-action="MarkAsWatched" method="post" class="d-inline-block mt-2">
-                            <input type="hidden" name="movieId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-success">✓ Am vazut acest film</button>
-                        </form>
-
-                        <form asp-controller="Movies" asp-action="AddToWatchlist" method="post" class="d-inline-block ms-2 mt-2">
-                            <input type="hidden" name="movieId" value="@Model.Id" />
-                            <button type="submit" class="btn btn-outline-secondary">+ Watchlist</button>
-                        </form>
-                        
+                            <div class="col-md-6 border-start text-center text-md-start">
+                                <h6 class="mb-1 text-muted">Evaluează acest film:</h6>
+                                <form asp-controller="Movies" asp-action="SaveRating" method="post" class="d-flex align-items-center justify-content-center justify-content-md-start">
+                                    <input type="hidden" name="movieId" value="@Model.Id" />
+                                    <div class="star-rating me-3">
+                                        <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="5 stele - Capodoperă">★</label>
+                                        <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stele - Foarte bun">★</label>
+                                        <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stele - Bun">★</label>
+                                        <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stele - Slab">★</label>
+                                        <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 stea - Oribil">★</label>
+                                    </div>
+                                    <button type="submit" class="btn btn-sm btn-warning fw-bold">Trimite Nota</button>
+                                </form>
+                            </div>
+                        </div>
                     }
                     else
                     {
-                        <p class="text-danger">Trebuie sa fii logat pentru a interactiona cu filmul.</p>
-                        <a asp-controller="Account" asp-action="Login" class="btn btn-success">Intra in cont</a>
+                        <div class="text-center py-2">
+                            <h5 class="text-muted mb-3"><i class="bi bi-lock"></i> Autentifică-te pentru a salva filme și a acorda note.</h5>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-primary px-5">Intră în cont</a>
+                        </div>
                     }
                 </div>
             </div>

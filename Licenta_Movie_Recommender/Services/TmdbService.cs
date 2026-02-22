@@ -33,5 +33,30 @@ namespace Licenta_Movie_Recommender.Services
             }
             return "https://via.placeholder.com/500x750?text=Fara+Poza";
         }
+
+        public async Task<(string Overview, double Rating, string ReleaseDate)> GetExtraDetailsAsync(int tmdbId)
+        {
+            if (tmdbId == 0) return ("Descriere indisponibilă.", 0, "");
+
+            // cerem datele in limba romana 
+            var response = await _httpClient.GetAsync($"https://api.themoviedb.org/3/movie/{tmdbId}?api_key={_apiKey}&language=ro-RO");
+
+            if (response.IsSuccessStatusCode)
+            {
+                var content = await response.Content.ReadAsStringAsync();
+                using var doc = System.Text.Json.JsonDocument.Parse(content);
+                var root = doc.RootElement;
+
+                string overview = root.TryGetProperty("overview", out var ov) ? ov.GetString() : "Descriere indisponibilă.";
+                double rating = root.TryGetProperty("vote_average", out var va) ? va.GetDouble() : 0;
+                string releaseDate = root.TryGetProperty("release_date", out var rd) ? rd.GetString() : "";
+
+                // daca nu exista traducere in romana
+                if (string.IsNullOrEmpty(overview)) overview = "Descriere indisponibilă în limba română.";
+
+                return (overview, rating, releaseDate);
+            }
+            return ("Descriere indisponibilă.", 0, "");
+        }
     }
 }

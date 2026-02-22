@@ -63,6 +63,13 @@ namespace Licenta_Movie_Recommender.Controllers
                 return NotFound();
             }
 
+            if (movie.TmdbId > 0)
+            {
+                var extraDetails = await _tmdbService.GetExtraDetailsAsync(movie.TmdbId);
+                ViewBag.Overview = extraDetails.Overview;
+                ViewBag.TmdbRating = extraDetails.Rating;
+                ViewBag.ReleaseDate = extraDetails.ReleaseDate;
+            }
 
             return View(movie);
         }

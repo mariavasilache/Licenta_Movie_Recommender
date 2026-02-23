@@ -5,47 +5,140 @@
 }
 
 <div class="container mt-4">
-    <h3 class="mb-4">Toate Filmele</h3>
-    <div class="row">
-        @foreach (var film in Model)
-        {
-            <div class="col-md-3 mb-4">
-                <a asp-controller="Movies" asp-action="Details" asp-route-id="@film.Id" class="text-decoration-none text-dark">
-                    <div class="card h-100 shadow-sm border-0 movie-card">
-                        <img src="@film.PosterUrl" class="card-img-top" alt="@film.Title"
-                             onerror="this.src='https://placehold.co/300x450?text=Fara+Imagine'">
-                        <div class="card-body">
-                            <h6 class="card-title fw-bold">@film.Title</h6>
-                            <p class="card-text text-muted small">
-                                @(string.IsNullOrEmpty(film.Genres) ? "General" : film.Genres.Replace("|", ", "))
-                            </p>
-                        </div>
-                    </div>
-                </a>
+
+    <div class="bg-light p-3 rounded shadow-sm mb-4 d-flex flex-wrap align-items-center justify-content-between border">
+        <h3 class="mb-0 text-primary fw-bold"><i class="bi bi-collection-play"></i> Toate Filmele</h3>
+
+        <form asp-controller="Movies" asp-action="Index" method="get" class="d-flex gap-4 align-items-center mt-3 mt-md-0">
+
+            <div class="d-flex align-items-center">
+                <label class="me-2 fw-bold text-muted small mb-0">Gen:</label>
+                <select name="genreFilter" class="form-select form-select-sm shadow-sm" style="min-width: 160px;" onchange="this.form.submit()">
+                    @if (string.IsNullOrEmpty(ViewBag.CurrentGenre))
+                    {
+                        <option value="" selected>Toate Genurile</option>
+                    }
+                    else
+                    {
+                        <option value="">Toate Genurile</option>
+                    }
+
+                    @if (ViewBag.Genres != null)
+                    {
+                        foreach (var gen in ViewBag.Genres)
+                        {
+                            if (ViewBag.CurrentGenre == gen)
+                            {
+                                <option value="@gen" selected>@gen</option>
+                            }
+                            else
+                            {
+                                <option value="@gen">@gen</option>
+                            }
+                        }
+                    }
+                </select>
             </div>
-        }
+
+            <div class="d-flex align-items-center">
+                <label class="me-2 fw-bold text-muted small mb-0">Sortează:</label>
+                <select name="sortOrder" class="form-select form-select-sm shadow-sm" style="min-width: 160px;" onchange="this.form.submit()">
+                    @if (string.IsNullOrEmpty(ViewBag.CurrentSort))
+                    {
+                        <option value="" selected>Noi adăugate</option>
+                    }
+                    else
+                    {
+                        <option value="">Noi adăugate</option>
+                    }
+                    @if (ViewBag.CurrentSort == "oldest")
+                    {
+                        <option value="oldest" selected>Vechi adăugate</option>
+                    }
+                    else
+                    {
+                        <option value="oldest">Vechi adăugate</option>
+                    }
+                    @if (ViewBag.CurrentSort == "title_asc")
+                    {
+                        <option value="title_asc" selected>Titlu (A-Z)</option>
+                    }
+                    else
+                    {
+                        <option value="title_asc">Titlu (A-Z)</option>
+                    }
+                    @if (ViewBag.CurrentSort == "title_desc")
+                    {
+                        <option value="title_desc" selected>Titlu (Z-A)</option>
+                    }
+                    else
+                    {
+                        <option value="title_desc">Titlu (Z-A)</option>
+                    }
+                </select>
+            </div>
+
+        </form>
     </div>
 
-    @* --- NAVIGATIE PAGINATIE --- *@
-    <nav aria-label="Page navigation" class="mt-5">
-        <ul class="pagination justify-content-center">
-            @if (ViewBag.CurrentPage > 1)
+    @if (!Model.Any())
+    {
+        <div class="alert alert-warning text-center shadow-sm">
+            <i class="bi bi-emoji-frown fs-4 d-block mb-2"></i>
+            Nu am găsit niciun film pentru filtrele selectate. Încearcă o altă combinație!
+        </div>
+    }
+    else
+    {
+        <div class="row">
+            @foreach (var film in Model)
             {
-                <li class="page-item">
-                    <a class="page-link shadow-sm" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage - 1)">« Înapoi</a>
-                </li>
+                <div class="col-md-3 mb-4">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@film.Id" class="text-decoration-none text-dark">
+                        <div class="card h-100 shadow-sm border-0 movie-card">
+                            <img src="@film.PosterUrl" class="card-img-top" alt="@film.Title"
+                                 onerror="this.src='https://placehold.co/300x450?text=Fara+Imagine'">
+                            <div class="card-body">
+                                <h6 class="card-title fw-bold">@film.Title</h6>
+                                <p class="card-text text-muted small">
+                                    @(string.IsNullOrEmpty(film.Genres) ? "General" : film.Genres.Replace("|", ", "))
+                                </p>
+                            </div>
+                        </div>
+                    </a>
+                </div>
             }
+        </div>
+    }
 
-            <li class="page-item disabled">
-                <span class="page-link bg-light">Pagina @ViewBag.CurrentPage din @ViewBag.TotalPages</span>
-            </li>
+    @if (ViewBag.TotalPages > 1)
+    {
+        <nav aria-label="Page navigation" class="mt-5">
+            <ul class="pagination justify-content-center">
+                @if (ViewBag.CurrentPage > 1)
+                {
+                    <li class="page-item">
+                        <a class="page-link shadow-sm" asp-action="Index"
+                           asp-route-sortOrder="@ViewBag.CurrentSort"
+                           asp-route-genreFilter="@ViewBag.CurrentGenre"
+                           asp-route-page="@(ViewBag.CurrentPage - 1)">« Înapoi</a>
+                    </li>
+                }
 
-            @if (ViewBag.CurrentPage < ViewBag.TotalPages)
-            {
-                <li class="page-item">
-                    <a class="page-link shadow-sm" asp-action="Index" asp-route-page="@(ViewBag.CurrentPage + 1)">Înainte »</a>
+                <li class="page-item disabled">
+                    <span class="page-link bg-light">Pagina @ViewBag.CurrentPage din @ViewBag.TotalPages</span>
                 </li>
-            }
-        </ul>
-    </nav>
+
+                @if (ViewBag.CurrentPage < ViewBag.TotalPages)
+                {
+                    <li class="page-item">
+                        <a class="page-link shadow-sm" asp-action="Index"
+                           asp-route-sortOrder="@ViewBag.CurrentSort"
+                           asp-route-genreFilter="@ViewBag.CurrentGenre"
+                           asp-route-page="@(ViewBag.CurrentPage + 1)">Înainte »</a>
+                    </li>
+                }
+            </ul>
+        </nav>
+    }
 </div>

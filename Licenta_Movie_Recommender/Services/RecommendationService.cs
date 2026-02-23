@@ -60,14 +60,17 @@ namespace Licenta_Movie_Recommender.Services
             // creare motor de predictie
             var predictionEngine = mlContext.Model.CreatePredictionEngine<MovieRatingData, MovieRatingPrediction>(model);
 
-            // lista filme nevazute de user
+            // lista filme vazute de user
             var seenMovieIds = await _context.UserActivities
                 .Where(ua => ua.UserId == userId)
                 .Select(ua => ua.MovieId)
                 .ToListAsync();
 
+            
             var unseenMovies = await _context.Movies
-                .Where(m => !seenMovieIds.Contains(m.Id))
+                .Where(m => !seenMovieIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl))
+                .OrderByDescending(m => m.Id) // cele mai noi adaugate
+                .Take(200)
                 .ToListAsync();
 
             // calcul predictii

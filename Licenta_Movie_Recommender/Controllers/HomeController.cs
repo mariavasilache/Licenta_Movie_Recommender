@@ -21,10 +21,19 @@ namespace Licenta_Movie_Recommender.Controllers
 
         public async Task<IActionResult> Index()
         {
-            
+           
+            int totalValidMovies = await _context.Movies.CountAsync(m => !string.IsNullOrEmpty(m.PosterUrl));
+            int randomSkip = 0;
+
+            if (totalValidMovies > 6)
+            {
+                randomSkip = new Random().Next(0, totalValidMovies - 6);
+            }
+
+           
             var trendingMovies = await _context.Movies
                 .Where(m => !string.IsNullOrEmpty(m.PosterUrl))
-                .OrderBy(m => Guid.NewGuid())
+                .Skip(randomSkip)
                 .Take(6)
                 .ToListAsync();
 

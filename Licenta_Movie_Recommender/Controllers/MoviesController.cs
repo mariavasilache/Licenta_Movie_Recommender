@@ -1,9 +1,10 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Licenta_Movie_Recommender.Data;
+using Licenta_Movie_Recommender.Models;
+using Licenta_Movie_Recommender.Services;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
 using System.Security.Claims;
-using Licenta_Movie_Recommender.Data;
-using Licenta_Movie_Recommender.Services;
-using Licenta_Movie_Recommender.Models;
 
 namespace Licenta_Movie_Recommender.Controllers
 {
@@ -18,14 +19,47 @@ namespace Licenta_Movie_Recommender.Controllers
             _tmdbService = tmdbService;
         }
 
-        public async Task<IActionResult> Index(int page = 1)
+        [HttpGet]
+        public async Task<IActionResult> Index([FromQuery] string sortOrder, [FromQuery] string genreFilter, [FromQuery] int page = 1)
         {
             int pageSize = 24;
 
-            var totalMovies = await _context.Movies.CountAsync();
+            ViewBag.CurrentSort = sortOrder;
+            ViewBag.CurrentGenre = genreFilter;
 
-            var movies = await _context.Movies
-                .OrderByDescending(m => m.Id)
+            
+            ViewBag.Genres = new List<string> { "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi", "Thriller" };
+
+            var moviesQuery = _context.Movies.AsQueryable();
+
+           
+            if (!string.IsNullOrEmpty(genreFilter))
+            {
+                moviesQuery = moviesQuery.Where(m => m.Genres.Contains(genreFilter));
+            }
+
+            
+            if (sortOrder == "title_asc")
+            {
+                moviesQuery = moviesQuery.OrderBy(m => m.Title);
+            }
+            else if (sortOrder == "title_desc")
+            {
+                moviesQuery = moviesQuery.OrderByDescending(m => m.Title);
+            }
+            else if (sortOrder == "oldest")
+            {
+                moviesQuery = moviesQuery.OrderBy(m => m.Id);
+            }
+            else
+            {
+                // implicit cele mai noi
+                moviesQuery = moviesQuery.OrderByDescending(m => m.Id);
+            }
+
+            var totalMovies = await moviesQuery.CountAsync();
+
+            var movies = await moviesQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .ToListAsync();

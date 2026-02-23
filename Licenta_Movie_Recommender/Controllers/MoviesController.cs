@@ -30,15 +30,6 @@ namespace Licenta_Movie_Recommender.Controllers
                 .Take(pageSize)
                 .ToListAsync();
 
-            var trendingMovies = await _context.Movies
-                .OrderBy(m => Guid.NewGuid())
-                .Take(6)
-                .ToListAsync();
-
-            ViewBag.TrendingMovies = trendingMovies;
-
-
-
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalMovies / pageSize);
 
@@ -132,8 +123,6 @@ namespace Licenta_Movie_Recommender.Controllers
                 .Where(ua => ua.UserId == userId)
                 .OrderByDescending(ua => ua.DateAdded)
                 .ToListAsync();
-
-            
 
             return View(userActivities);
         }

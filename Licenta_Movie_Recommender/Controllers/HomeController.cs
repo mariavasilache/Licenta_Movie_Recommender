@@ -1,21 +1,47 @@
 using System.Diagnostics;
 using Licenta_Movie_Recommender.Models;
 using Microsoft.AspNetCore.Mvc;
+using Licenta_Movie_Recommender.Data;
+using Licenta_Movie_Recommender.Services;
+using Microsoft.EntityFrameworkCore;
+using System.Security.Claims;
 
 namespace Licenta_Movie_Recommender.Controllers
 {
     public class HomeController : Controller
     {
-        private readonly ILogger<HomeController> _logger;
+        private readonly ApplicationDbContext _context;
+        private readonly RecommendationService _recService;
 
-        public HomeController(ILogger<HomeController> logger)
+        public HomeController(ApplicationDbContext context, RecommendationService recService)
         {
-            _logger = logger;
+            _context = context;
+            _recService = recService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            
+            var trendingMovies = await _context.Movies
+                .Where(m => !string.IsNullOrEmpty(m.PosterUrl))
+                .OrderBy(m => Guid.NewGuid())
+                .Take(6)
+                .ToListAsync();
+
+            ViewBag.TrendingMovies = trendingMovies;
+
+           
+            var recommendations = new List<Movie>();
+            if (User.Identity.IsAuthenticated)
+            {
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userIdString != null)
+                {
+                    recommendations = await _recService.GetRecommendationsAsync(int.Parse(userIdString));
+                }
+            }
+
+            return View(recommendations);
         }
 
         public IActionResult Privacy()

@@ -1,4 +1,65 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model List<Licenta_Movie_Recommender.Models.Movie>
+
+@{
+    ViewData["Title"] = "Acasă";
 }
 
+<div class="container mt-4">
+
+    @* --- SECTIUNE RECOMANDARI (AI) --- *@
+    @if (Model != null && Model.Any())
+    {
+        <h3 class="mb-3 text-primary"><i class="bi bi-stars"></i> Recomandate pentru tine</h3>
+        <div class="row mb-5">
+            @foreach (var film in Model)
+            {
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@film.Id">
+                        <div class="card h-100 shadow-sm border-0 movie-card">
+                            <img src="@film.PosterUrl" class="card-img-top rounded" alt="@film.Title"
+                                 onerror="this.src='https://placehold.co/300x450?text=Fara+Imagine'">
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+        <hr class="mb-5" />
+    }
+    else if (User.Identity.IsAuthenticated)
+    {
+        @* --- MESAJ COLD START --- *@
+        <div class="alert alert-info shadow-sm border-0 mb-5 d-flex align-items-center" role="alert">
+            <i class="bi bi-info-circle-fill fs-3 text-info me-3"></i>
+            <div>
+                <h5 class="alert-heading mb-1">Ești nou pe aici sau nu ai evaluat destule filme?</h5>
+                <p class="mb-0">Pentru a debloca algoritmul de recomandări personalizate, acordă o notă bună filmelor pe care le-ai văzut deja din catalog!</p>
+            </div>
+        </div>
+        <hr class="mb-5" />
+    }
+
+    @* --- SECTIUNE DESCOPERA --- *@
+    @if (ViewBag.TrendingMovies != null)
+    {
+        <div class="mb-4">
+            <h3 class="mb-1 text-success fw-bold"><i class="bi bi-compass"></i> Descoperă</h3>
+            <p class="text-muted fs-6">Nu știi la ce să te uiți? Încearcă una dintre aceste sugestii extrase din catalogul nostru!</p>
+        </div>
+
+        <div class="row mb-5">
+            @foreach (var film in ViewBag.TrendingMovies)
+            {
+                <div class="col-md-2 col-sm-4 col-6 mb-3">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@film.Id">
+                        <div class="card h-100 shadow-sm border-0 movie-card position-relative overflow-hidden">
+                            <span class="position-absolute top-0 end-0 badge bg-success m-2 shadow">Sugestie</span>
+                            <img src="@film.PosterUrl" class="card-img-top rounded" alt="@film.Title"
+                                 style="object-fit: cover; height: 100%;"
+                                 onerror="this.src='https://placehold.co/300x450?text=Fara+Imagine'">
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>

@@ -87,7 +87,8 @@ namespace Licenta_Movie_Recommender.Controllers
             return View("Index", rezultate);
         }
 
-        //pagina detalii film
+
+        //----------------------------------- PAGINA DETALII FILM ----------------------------------
         public async Task<IActionResult> Details(int id)
         {
             var movie = await _context.Movies.FirstOrDefaultAsync(m => m.Id == id);
@@ -105,7 +106,57 @@ namespace Licenta_Movie_Recommender.Controllers
                 ViewBag.ReleaseDate = extraDetails.ReleaseDate;
             }
 
+           
+            if (User.Identity.IsAuthenticated)
+            {
+                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userIdString != null)
+                {
+                    var userId = int.Parse(userIdString);
+                    ViewBag.UserLists = await _context.CustomLists
+                        .Where(cl => cl.UserId == userId)
+                        .ToListAsync();
+                }
+            }
+
             return View(movie);
+        }
+
+        //adaugare film in watchlist
+        [HttpPost]
+        public async Task<IActionResult> AddToWatchlist(int movieId)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            var userId = int.Parse(userIdString);
+
+            var activity = await _context.UserActivities
+                .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
+
+            if (activity == null)
+            {
+                activity = new UserMovieActivity
+                {
+                    UserId = userId,
+                    MovieId = movieId,
+                    Rating = 0,
+                    Status = 1,
+                    DateAdded = DateTime.Now
+                };
+                _context.UserActivities.Add(activity);
+            }
+            else
+            {
+                if (activity.Rating == 0)
+                {
+                    activity.Status = 1;
+                    activity.DateAdded = DateTime.Now;
+                }
+            }
+
+            await _context.SaveChangesAsync();
+            return RedirectToAction("Details", new { id = movieId });
         }
 
         //logica rating
@@ -143,7 +194,44 @@ namespace Licenta_Movie_Recommender.Controllers
             return RedirectToAction("Details", new { id = movieId });
         }
 
-        //pagina profil
+        // adaugare film in lista custom
+        [HttpPost]
+        public async Task<IActionResult> AddMovieToCustomList(int customListId, int movieId)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            var userId = int.Parse(userIdString);
+
+           
+            var listExists = await _context.CustomLists.AnyAsync(cl => cl.Id == customListId && cl.UserId == userId);
+            if (!listExists) return Unauthorized();
+
+            
+            var alreadyInList = await _context.CustomListMovies
+                .AnyAsync(clm => clm.CustomListId == customListId && clm.MovieId == movieId);
+
+            if (!alreadyInList)
+            {
+                _context.CustomListMovies.Add(new CustomListMovie
+                {
+                    CustomListId = customListId,
+                    MovieId = movieId,
+                    AddedAt = DateTime.Now
+                });
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Filmul a fost adăugat în lista ta!";
+            }
+            else
+            {
+                TempData["Error"] = "Filmul se află deja în această listă.";
+            }
+
+            return RedirectToAction("Details", new { id = movieId });
+        }
+
+
+        //----------------------------------- PAGINA PROFIL ----------------------------------
         [HttpGet]
         public async Task<IActionResult> MyProfile()
         {
@@ -236,55 +324,22 @@ namespace Licenta_Movie_Recommender.Controllers
             return RedirectToAction("Details", new { id = movieId });
         }
 
-        //adaugare film in watchlist
+
+        // creare lista custom 
         [HttpPost]
-        public async Task<IActionResult> AddToWatchlist(int movieId)
+        public async Task<IActionResult> CreateCustomList(string name, string description, int? sourceMovieId = null)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+           var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userIdString == null) return RedirectToAction("Login", "Account");
 
-            var userId = int.Parse(userIdString);
-
-            var activity = await _context.UserActivities
-                .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
-
-            if (activity == null)
-            {
-                activity = new UserMovieActivity
-                {
-                    UserId = userId,
-                    MovieId = movieId,
-                    Rating = 0,
-                    Status = 1,
-                    DateAdded = DateTime.Now
-                };
-                _context.UserActivities.Add(activity);
-            }
-            else
-            {
-                if (activity.Rating == 0)
-                {
-                    activity.Status = 1;
-                    activity.DateAdded = DateTime.Now;
-                }
-            }
-
-            await _context.SaveChangesAsync();
-            return RedirectToAction("Details", new { id = movieId });
-        }
-
-        // adaugare lista custom noua din profil
-        [HttpPost]
-        public async Task<IActionResult> CreateCustomList(string name, string description)
-        {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
-
-            //eroare nume gol
+            // Validare backend
             if (string.IsNullOrWhiteSpace(name))
             {
                 TempData["Error"] = "Eroare: Numele listei este obligatoriu și nu poate fi gol!";
-                return RedirectToAction("MyProfile");
+                
+                return sourceMovieId.HasValue 
+                    ? RedirectToAction("Details", new { id = sourceMovieId.Value }) 
+                    : RedirectToAction("MyProfile");
             }
 
             var userId = int.Parse(userIdString);
@@ -293,7 +348,7 @@ namespace Licenta_Movie_Recommender.Controllers
             {
                 UserId = userId,
                 Name = name,
-                Description = description ?? "",
+                Description = description ?? "", 
                 CreatedAt = DateTime.Now
             };
 
@@ -301,7 +356,30 @@ namespace Licenta_Movie_Recommender.Controllers
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"Lista '{name}' a fost creată cu succes!";
-            return RedirectToAction("MyProfile");
+            
+            
+            return sourceMovieId.HasValue 
+                ? RedirectToAction("Details", new { id = sourceMovieId.Value }) 
+                : RedirectToAction("MyProfile");
+        }
+
+        //pagina individuala lista custom
+        [HttpGet]
+        public async Task<IActionResult> CustomListDetails(int id)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            var userId = int.Parse(userIdString);
+
+            var customList = await _context.CustomLists
+                .Include(cl => cl.Movies)
+                .ThenInclude(clm => clm.Movie)
+                .FirstOrDefaultAsync(cl => cl.Id == id && cl.UserId == userId);
+
+            if (customList == null) return NotFound();
+
+            return View(customList);
         }
     }
 

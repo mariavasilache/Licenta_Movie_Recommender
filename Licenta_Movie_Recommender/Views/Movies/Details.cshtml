@@ -64,6 +64,7 @@
 
             <div class="card border-0 bg-light shadow-sm">
                 <div class="card-body p-4">
+                    @* adaugare watchlist *@
                     @if (User.Identity.IsAuthenticated)
                     {
                         <div class="row align-items-center">
@@ -79,6 +80,38 @@
                                 </form>
                             </div>
 
+                            @* liste custom *@
+                            @if (User.Identity.IsAuthenticated)
+                            {
+                                <div class="mt-4 p-3 bg-light rounded border">
+                                    <div class="d-flex justify-content-between align-items-center mb-2">
+                                        <h6 class="fw-bold text-muted small mb-0"><i class="bi bi-folder-plus"></i> Adaugă într-o listă</h6>
+                                        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#createListFromDetailsModal">
+                                            + Listă Nouă
+                                        </button>
+                                    </div>
+
+                                    @if (ViewBag.UserLists != null && ((List<Licenta_Movie_Recommender.Models.CustomList>)ViewBag.UserLists).Any())
+                                    {
+                                        <form asp-action="AddMovieToCustomList" method="post" class="d-flex gap-2">
+                                            <input type="hidden" name="movieId" value="@Model.Id" />
+                                            <select name="customListId" class="form-select form-select-sm" required>
+                                                <option value="">Alege lista...</option>
+                                                @foreach (var list in ViewBag.UserLists)
+                                                {
+                                                    <option value="@list.Id">@list.Name</option>
+                                                }
+                                            </select>
+                                            <button type="submit" class="btn btn-success btn-sm">Adaugă</button>
+                                        </form>
+                                    }
+                                    else
+                                    {
+                                        <p class="small text-muted mb-0">Nu ai creat nicio listă încă. Apasă pe "+ Listă Nouă" pentru a începe.</p>
+                                    }
+                                </div>
+                            }
+                             @* rating *@
                             <div class="col-md-6 border-start text-center text-md-start">
                                 <h6 class="mb-1 text-muted">Evaluează acest film:</h6>
                                 <form asp-controller="Movies" asp-action="SaveRating" method="post" class="d-flex align-items-center justify-content-center justify-content-md-start">
@@ -105,6 +138,36 @@
                 </div>
             </div>
 
+        </div>
+    </div>
+</div>
+
+@* --- MODAL PENTRU CREARE LISTA DIRECT DE PE FILM --- *@
+<div class="modal fade" id="createListFromDetailsModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-primary">Creează o listă nouă</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-action="CreateCustomList" method="post">
+                <input type="hidden" name="sourceMovieId" value="@Model.Id" />
+
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="listName" class="form-label fw-bold small">Numele listei</label>
+                        <input type="text" class="form-control" id="listName" name="name" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="listDesc" class="form-label fw-bold small">Descriere (opțional)</label>
+                        <textarea class="form-control" id="listDesc" name="description" rows="2" maxlength="500"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Anulează</button>
+                    <button type="submit" class="btn btn-success px-4">Salvează</button>
+                </div>
+            </form>
         </div>
     </div>
 </div>

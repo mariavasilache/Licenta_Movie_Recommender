@@ -3,6 +3,21 @@
 @{
     ViewData["Title"] = Model.Title;
 }
+@* --- MESAJE DE SUCCES / EROARE --- *@
+@if (TempData["Success"] != null)
+{
+    <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm" role="alert">
+        <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
+@if (TempData["Error"] != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show mt-3 shadow-sm" role="alert">
+        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+    </div>
+}
 
 <style>
     /* design sistem rating cu stelute */
@@ -64,70 +79,117 @@
 
             <div class="card border-0 bg-light shadow-sm">
                 <div class="card-body p-4">
-                    @* adaugare watchlist *@
+
+
+
                     @if (User.Identity.IsAuthenticated)
                     {
-                        <div class="row align-items-center">
-                            <div class="col-md-6 mb-3 mb-md-0 d-flex gap-2">
-                                <form asp-controller="Movies" asp-action="MarkAsWatched" method="post">
-                                    <input type="hidden" name="movieId" value="@Model.Id" />
-                                    <button type="submit" class="btn btn-success px-4 py-2"><i class="bi bi-check2-circle"></i> Văzut</button>
-                                </form>
+                        var rating = ViewBag.UserRating != null ? (int)ViewBag.UserRating : 0;
+                        var status = ViewBag.UserStatus != null ? (int)ViewBag.UserStatus : 0;
+                        var listsContainingMovie = ViewBag.ListsContainingMovie as List<int> ?? new List<int>();
+                        var userLists = ViewBag.UserLists as List<Licenta_Movie_Recommender.Models.CustomList> ?? new List<Licenta_Movie_Recommender.Models.CustomList>();
 
-                                <form asp-controller="Movies" asp-action="AddToWatchlist" method="post">
+                        <div class="mt-4 p-4 bg-light rounded border shadow-sm">
+                            <h5 class="fw-bold text-primary mb-3">Interacționează</h5>
+
+                            <div class="d-flex flex-wrap gap-2 mb-4">
+                                @if (status == 1)
+                                {
+                                    <button class="btn btn-warning shadow-sm" disabled><i class="bi bi-bookmark-check-fill"></i> Este în Watchlist</button>
+                                }
+                                else
+                                {
+                                    <form asp-action="AddToWatchlist" method="post">
+                                        <input type="hidden" name="movieId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-outline-warning shadow-sm"><i class="bi bi-bookmark-plus"></i> Adaugă în Watchlist</button>
+                                    </form>
+                                }
+
+                                @if (status == 2)
+                                {
+                                    <button class="btn btn-success shadow-sm" disabled><i class="bi bi-eye-fill"></i> Vizionat</button>
+                                }
+                                else
+                                {
+                                    <form asp-action="MarkAsWatched" method="post">
+                                        <input type="hidden" name="movieId" value="@Model.Id" />
+                                        <button type="submit" class="btn btn-outline-success shadow-sm"><i class="bi bi-eye"></i> Am văzut filmul</button>
+                                    </form>
+                                }
+                            </div>
+
+                            <div class="mb-4">
+                                <h6 class="fw-bold small text-muted">@(rating > 0 ? $"Nota ta: {rating}/5 (Alege alta pentru a o modifica)" : "Acordă o notă:")</h6>
+                                <form asp-action="SaveRating" method="post" class="d-flex align-items-center gap-2">
                                     <input type="hidden" name="movieId" value="@Model.Id" />
-                                    <button type="submit" class="btn btn-outline-primary px-4 py-2"><i class="bi bi-bookmark-plus"></i> Watchlist</button>
+                                    <select name="rating" class="form-select form-select-sm w-auto" required>
+                                        <option value="">Alege...</option>
+                                        @for (int i = 1; i <= 5; i++)
+                                        {
+                                            if (i == rating)
+                                            {
+                                                <option value="@i" selected>@i Stele</option>
+                                            }
+                                            else
+                                            {
+                                                <option value="@i">@i Stele</option>
+                                            }
+                                        }
+                                    </select>
+                                    <button type="submit" class="btn btn-primary btn-sm">Salvează Nota</button>
                                 </form>
                             </div>
 
-                            @* liste custom *@
-                            @if (User.Identity.IsAuthenticated)
-                            {
-                                <div class="mt-4 p-3 bg-light rounded border">
-                                    <div class="d-flex justify-content-between align-items-center mb-2">
-                                        <h6 class="fw-bold text-muted small mb-0"><i class="bi bi-folder-plus"></i> Adaugă într-o listă</h6>
-                                        <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#createListFromDetailsModal">
-                                            + Listă Nouă
-                                        </button>
-                                    </div>
-
-                                    @if (ViewBag.UserLists != null && ((List<Licenta_Movie_Recommender.Models.CustomList>)ViewBag.UserLists).Any())
-                                    {
-                                        <form asp-action="AddMovieToCustomList" method="post" class="d-flex gap-2">
-                                            <input type="hidden" name="movieId" value="@Model.Id" />
-                                            <select name="customListId" class="form-select form-select-sm" required>
-                                                <option value="">Alege lista...</option>
-                                                @foreach (var list in ViewBag.UserLists)
-                                                {
-                                                    <option value="@list.Id">@list.Name</option>
-                                                }
-                                            </select>
-                                            <button type="submit" class="btn btn-success btn-sm">Adaugă</button>
-                                        </form>
-                                    }
-                                    else
-                                    {
-                                        <p class="small text-muted mb-0">Nu ai creat nicio listă încă. Apasă pe "+ Listă Nouă" pentru a începe.</p>
-                                    }
+                            <div class="border-top pt-3">
+                                <div class="d-flex justify-content-between align-items-center mb-2">
+                                    <h6 class="fw-bold text-muted small mb-0"><i class="bi bi-collection"></i> Listele tale</h6>
+                                    <button type="button" class="btn btn-link btn-sm p-0 text-decoration-none fw-bold" data-bs-toggle="modal" data-bs-target="#createListFromDetailsModal">
+                                        + Listă Nouă
+                                    </button>
                                 </div>
-                            }
-                             @* rating *@
-                            <div class="col-md-6 border-start text-center text-md-start">
-                                <h6 class="mb-1 text-muted">Evaluează acest film:</h6>
-                                <form asp-controller="Movies" asp-action="SaveRating" method="post" class="d-flex align-items-center justify-content-center justify-content-md-start">
-                                    <input type="hidden" name="movieId" value="@Model.Id" />
-                                    <div class="star-rating me-3">
-                                        <input type="radio" id="star5" name="rating" value="5" /><label for="star5" title="5 stele - Capodoperă">★</label>
-                                        <input type="radio" id="star4" name="rating" value="4" /><label for="star4" title="4 stele - Foarte bun">★</label>
-                                        <input type="radio" id="star3" name="rating" value="3" /><label for="star3" title="3 stele - Bun">★</label>
-                                        <input type="radio" id="star2" name="rating" value="2" /><label for="star2" title="2 stele - Slab">★</label>
-                                        <input type="radio" id="star1" name="rating" value="1" /><label for="star1" title="1 stea - Oribil">★</label>
-                                    </div>
-                                    <button type="submit" class="btn btn-sm btn-warning fw-bold">Trimite Nota</button>
-                                </form>
+
+                                @if (userLists.Any())
+                                {
+                                    <ul class="list-group list-group-flush small border rounded">
+                                        @foreach (var list in userLists)
+                                        {
+                                            var isInList = listsContainingMovie.Contains(list.Id);
+                                            <li class="list-group-item d-flex justify-content-between align-items-center bg-transparent py-2">
+                                                <span>
+                                                    @if (isInList)
+                                                    {
+                                                        <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                                    }
+                                                    @list.Name
+                                                </span>
+                                                @if (isInList)
+                                                {
+                                                    <form asp-action="RemoveMovieFromCustomList" method="post" class="m-0">
+                                                        <input type="hidden" name="customListId" value="@list.Id" />
+                                                        <input type="hidden" name="movieId" value="@Model.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-danger py-0 px-2" title="Șterge din listă"><i class="bi bi-x"></i></button>
+                                                    </form>
+                                                }
+                                                else
+                                                {
+                                                    <form asp-action="AddMovieToCustomList" method="post" class="m-0">
+                                                        <input type="hidden" name="customListId" value="@list.Id" />
+                                                        <input type="hidden" name="movieId" value="@Model.Id" />
+                                                        <button type="submit" class="btn btn-sm btn-outline-success py-0 px-2" title="Adaugă în listă"><i class="bi bi-plus"></i></button>
+                                                    </form>
+                                                }
+                                            </li>
+                                        }
+                                    </ul>
+                                }
+                                else
+                                {
+                                    <p class="small text-muted mb-0">Nu ai creat nicio listă încă.</p>
+                                }
                             </div>
                         </div>
                     }
+
                     else
                     {
                         <div class="text-center py-2">

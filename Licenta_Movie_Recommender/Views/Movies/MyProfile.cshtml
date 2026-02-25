@@ -1,105 +1,156 @@
-﻿@model IEnumerable<Licenta_Movie_Recommender.Models.UserMovieActivity>
+﻿@model Licenta_Movie_Recommender.Models.ProfileDashboardViewModel
 
 @{
-    ViewData["Title"] = "Activitatea Mea";
-    // 3 liste pentru tab uri
-    var toate = Model.ToList();
-    var vazute = Model.Where(a => a.Status == 2).ToList();
-    var watchlist = Model.Where(a => a.Status == 1).ToList();
+    ViewData["Title"] = "Profilul Meu";
 }
 
-<div class="container mt-4">
-    <h2 class="mb-4">Activitatea Mea</h2>
+<div class="container mt-4 mb-5">
 
-    <ul class="nav nav-pills mb-4" id="profile-tabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active" id="toate-tab" data-bs-toggle="pill" data-bs-target="#toate" type="button" role="tab">
-                Toate (@toate.Count)
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="vazute-tab" data-bs-toggle="pill" data-bs-target="#vazute" type="button" role="tab">
-                Vazute (@vazute.Count)
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link" id="watchlist-tab" data-bs-toggle="pill" data-bs-target="#watchlist" type="button" role="tab">
-                Watchlist (@watchlist.Count)
-            </button>
-        </li>
-    </ul>
+    <div class="d-flex align-items-center mb-4 border-bottom pb-2">
+        <h2 class="text-primary fw-bold mb-0"><i class="bi bi-person-circle me-2"></i> Dashboard Profil</h2>
+    </div>
 
-    <div class="tab-content" id="profile-tabs-content">
+    @* --- MESAJE DE EROARE / SUCCES --- *@
+    @if (TempData["Error"] != null)
+    {
+        <div class="alert alert-danger alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
 
-        <div class="tab-pane fade show active" id="toate" role="tabpanel">
-            <div class="row">
-                @if (!toate.Any())
-                {
-                    <p class="text-muted">Nu ai nicio activitate inca.</p>
-                }
-                @foreach (var item in toate)
-                {
-                    <div class="col-md-2 mb-4">
-                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@item.MovieId" class="text-decoration-none">
-                            <div class="card h-100 movie-card shadow-sm position-relative">
-                                @if (item.Status == 2)
-                                {
-                                    <span class="position-absolute top-0 end-0 badge bg-success m-2">
-                                        Vazut @(item.Rating > 0 ? $" | Nota: {item.Rating}" : "")
-                                    </span>
-                                }
-                                else
-                                {
-                                    <span class="position-absolute top-0 end-0 badge bg-secondary m-2">Watchlist</span>
-                                }
-                                <img src="@item.Movie.PosterUrl" class="card-img-top" alt="@item.Movie.Title">
-                            </div>
-                        </a>
-                    </div>
-                }
+    @* --- SECTIUNEA 1: STATISTICI --- *@
+    <div class="row mb-5">
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card bg-primary text-white h-100 shadow border-0 rounded-3">
+                <div class="card-body text-center">
+                    <h1 class="display-5 fw-bold mb-0">@Model.TotalWatched</h1>
+                    <p class="mb-0 text-white-50 small text-uppercase fw-bold">Filme Văzute</p>
+                </div>
             </div>
         </div>
-
-        <div class="tab-pane fade" id="vazute" role="tabpanel">
-            <div class="row">
-                @if (!vazute.Any())
-                {
-                    <p class="text-muted">Nu ai vazut niciun film inca.</p>
-                }
-                @foreach (var item in vazute)
-                {
-                    <div class="col-md-2 mb-4">
-                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@item.MovieId" class="text-decoration-none">
-                            <div class="card h-100 movie-card shadow-sm position-relative">
-                                <span class="position-absolute top-0 end-0 badge bg-success m-2">
-                                    @(item.Rating > 0 ? $"Nota: {item.Rating}" : "Fara nota")
-                                </span>
-                                <img src="@item.Movie.PosterUrl" class="card-img-top" alt="@item.Movie.Title">
-                            </div>
-                        </a>
-                    </div>
-                }
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card bg-info text-white h-100 shadow border-0 rounded-3">
+                <div class="card-body text-center">
+                    <h1 class="display-5 fw-bold mb-0">@Model.TotalWatchlist</h1>
+                    <p class="mb-0 text-white-50 small text-uppercase fw-bold">În Watchlist</p>
+                </div>
             </div>
         </div>
-
-        <div class="tab-pane fade" id="watchlist" role="tabpanel">
-            <div class="row">
-                @if (!watchlist.Any())
-                {
-                    <p class="text-muted">Watchlist-ul este gol.</p>
-                }
-                @foreach (var item in watchlist)
-                {
-                    <div class="col-md-2 mb-4">
-                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@item.MovieId" class="text-decoration-none">
-                            <div class="card h-100 movie-card shadow-sm position-relative">
-                                <img src="@item.Movie.PosterUrl" class="card-img-top" alt="@item.Movie.Title">
-                            </div>
-                        </a>
-                    </div>
-                }
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card bg-success text-white h-100 shadow border-0 rounded-3">
+                <div class="card-body text-center">
+                    <h1 class="display-5 fw-bold mb-0">@Model.AverageRating</h1>
+                    <p class="mb-0 text-white-50 small text-uppercase fw-bold">Nota Medie</p>
+                </div>
             </div>
         </div>
+        <div class="col-md-3 col-6 mb-3">
+            <div class="card bg-warning text-dark h-100 shadow border-0 rounded-3">
+                <div class="card-body text-center d-flex flex-column justify-content-center">
+                    <h4 class="fw-bold mb-0 text-truncate">@Model.FavoriteGenre</h4>
+                    <p class="mb-0 text-dark-50 small text-uppercase fw-bold mt-1">Gen Preferat</p>
+                </div>
+            </div>
+        </div>
+    </div>
 
+    @* --- SECTIUNEA 2: PREVIEW FILMELE TALE --- *@
+    <h4 class="fw-bold mb-3 border-bottom pb-2">Activitate Recentă</h4>
+
+    <div class="row mb-4">
+        <div class="col-12 d-flex justify-content-between align-items-center mb-2">
+            <h6 class="text-muted fw-bold text-uppercase mb-0">Ultimele Filme Văzute</h6>
+            <a href="#" class="btn btn-sm btn-outline-primary">Vezi tot istoricul &raquo;</a>
+        </div>
+
+        @if (!Model.RecentWatched.Any())
+        {
+            <div class="col-12"><p class="text-muted small">Nu ai niciun film marcat ca văzut încă.</p></div>
+        }
+        else
+        {
+            @foreach (var activity in Model.RecentWatched)
+            {
+                <div class="col-md-2 col-sm-4 col-4 mb-3">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@activity.MovieId">
+                        <img src="@activity.Movie.PosterUrl" class="img-fluid rounded shadow-sm" alt="@activity.Movie.Title" onerror="this.src='https://placehold.co/200x300?text=Fara+Poster'">
+                    </a>
+                </div>
+            }
+        }
+    </div>
+
+    @* --- SECTIUNEA 3: LISTE CUSTOM --- *@
+    <div class="d-flex justify-content-between align-items-center mt-5 mb-3 border-bottom pb-2">
+        <h4 class="fw-bold mb-0">Listele Tale Custom</h4>
+        <button class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#createListModal">
+            <i class="bi bi-plus-lg"></i> Listă Nouă
+        </button>
+    </div>
+
+    <div class="row">
+        @if (!Model.CustomLists.Any())
+        {
+            <div class="col-12">
+                <div class="alert alert-light border text-center py-4">
+                    <p class="text-muted mb-0">Nu ai creat nicio listă personalizată încă. Apasă pe butonul verde pentru a începe!</p>
+                </div>
+            </div>
+        }
+        else
+        {
+            @foreach (var lista in Model.CustomLists)
+            {
+                <div class="col-md-4 mb-4">
+                    <div class="card h-100 shadow-sm border-0 bg-light">
+                        <div class="card-body">
+                            <h5 class="card-title fw-bold text-primary mb-1">@lista.Name</h5>
+                            <p class="text-muted small mb-3">@lista.Movies.Count filme adăugate</p>
+                            @if (!string.IsNullOrEmpty(lista.Description))
+                            {
+                                <p class="card-text small">@lista.Description</p>
+                            }
+                            <a href="#" class="btn btn-sm btn-outline-secondary w-100 mt-2">Deschide Lista</a>
+                        </div>
+                    </div>
+                </div>
+            }
+        }
+    </div>
+</div>
+
+@* --- FEREASTRA MODAL PENTRU CREARE LISTA --- *@
+<div class="modal fade" id="createListModal" tabindex="-1" aria-labelledby="createListModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content border-0 shadow">
+            <div class="modal-header bg-light">
+                <h5 class="modal-title fw-bold text-primary" id="createListModalLabel">Creează o listă nouă</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form asp-controller="Movies" asp-action="CreateCustomList" method="post">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="listName" class="form-label fw-bold small">Numele listei (ex: Filme de vizionat în tren)</label>
+                        <input type="text" class="form-control" id="listName" name="name" required maxlength="100">
+                    </div>
+                    <div class="mb-3">
+                        <label for="listDesc" class="form-label fw-bold small">Descriere (opțional)</label>
+                        <textarea class="form-control" id="listDesc" name="description" rows="2" maxlength="500"></textarea>
+                    </div>
+                </div>
+                <div class="modal-footer border-0">
+                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Anulează</button>
+                    <button type="submit" class="btn btn-success px-4">Salvează</button>
+                </div>
+            </form>
+        </div>
     </div>
 </div>

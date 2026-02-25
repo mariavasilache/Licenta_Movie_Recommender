@@ -152,13 +152,54 @@ namespace Licenta_Movie_Recommender.Controllers
 
             var userId = int.Parse(userIdString);
 
-            var userActivities = await _context.UserActivities
+            // toate activitatile userului pentru statistici
+            var allActivities = await _context.UserActivities
                 .Include(ua => ua.Movie)
                 .Where(ua => ua.UserId == userId)
                 .OrderByDescending(ua => ua.DateAdded)
                 .ToListAsync();
 
-            return View(userActivities);
+            // separam listele principale
+            var watchedMovies = allActivities.Where(a => a.Status == 2 || a.Rating > 0).ToList();
+            var watchlistMovies = allActivities.Where(a => a.Status == 1 && a.Rating == 0).ToList();
+
+            // calcul statistici
+            var avgRating = watchedMovies.Any(w => w.Rating > 0)
+                ? Math.Round(watchedMovies.Where(w => w.Rating > 0).Average(w => w.Rating), 1)
+                : 0;
+
+            var topGenre = watchedMovies
+                .Where(w => w.Movie != null && !string.IsNullOrEmpty(w.Movie.Genres))
+                .SelectMany(w => w.Movie.Genres.Split('|'))
+                .GroupBy(g => g)
+                .OrderByDescending(g => g.Count())
+                .Select(g => g.Key)
+                .FirstOrDefault();
+
+            //liste custom
+            var userLists = await _context.CustomLists
+                .Include(cl => cl.Movies)
+                .ThenInclude(clm => clm.Movie)
+                .Where(cl => cl.UserId == userId)
+                .OrderByDescending(cl => cl.CreatedAt)
+                .ToListAsync();
+
+            
+            var model = new ProfileDashboardViewModel
+            {
+                TotalWatched = watchedMovies.Count,
+                TotalWatchlist = watchlistMovies.Count,
+                AverageRating = avgRating,
+                FavoriteGenre = topGenre ?? "Nespecificat",
+
+               
+                RecentWatched = watchedMovies.Take(6).ToList(),
+                RecentWatchlist = watchlistMovies.Take(6).ToList(),
+
+                CustomLists = userLists
+            };
+
+            return View(model);
         }
 
         //lista filme vazute
@@ -231,5 +272,37 @@ namespace Licenta_Movie_Recommender.Controllers
             await _context.SaveChangesAsync();
             return RedirectToAction("Details", new { id = movieId });
         }
+
+        // adaugare lista custom noua din profil
+        [HttpPost]
+        public async Task<IActionResult> CreateCustomList(string name, string description)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            //eroare nume gol
+            if (string.IsNullOrWhiteSpace(name))
+            {
+                TempData["Error"] = "Eroare: Numele listei este obligatoriu și nu poate fi gol!";
+                return RedirectToAction("MyProfile");
+            }
+
+            var userId = int.Parse(userIdString);
+
+            var newList = new CustomList
+            {
+                UserId = userId,
+                Name = name,
+                Description = description ?? "",
+                CreatedAt = DateTime.Now
+            };
+
+            _context.CustomLists.Add(newList);
+            await _context.SaveChangesAsync();
+
+            TempData["Success"] = $"Lista '{name}' a fost creată cu succes!";
+            return RedirectToAction("MyProfile");
+        }
     }
+
 }

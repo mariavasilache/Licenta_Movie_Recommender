@@ -13,5 +13,8 @@ namespace Licenta_Movie_Recommender.Data
         public DbSet<User> Users { get; set; }
         public DbSet<Rating> Ratings { get; set; }
         public DbSet<UserMovieActivity> UserActivities { get; set; }
+
+        public DbSet<CustomList> CustomLists { get; set; }
+        public DbSet<CustomListMovie> CustomListMovies { get; set; }
     }
 }

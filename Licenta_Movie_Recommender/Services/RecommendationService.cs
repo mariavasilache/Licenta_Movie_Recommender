@@ -17,6 +17,15 @@ namespace Licenta_Movie_Recommender.Services
 
         public async Task<List<Movie>> GetRecommendationsAsync(int userId, int count = 6)
         {
+            var userRatingsCount = await _context.UserActivities
+                .CountAsync(ua => ua.UserId == userId && ua.Rating > 0);
+
+            // daca nu are cel putin 5 note oprim algoritmul 
+            if (userRatingsCount < 5 )
+            {
+                return new List<Movie>();
+            }
+
             // extragem toate notele pt antrenament
             var allRatings = await _context.UserActivities
                 .Where(ua => ua.Rating > 0)

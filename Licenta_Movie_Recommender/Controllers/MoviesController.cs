@@ -507,6 +507,58 @@ namespace Licenta_Movie_Recommender.Controllers
 
             return RedirectToAction("MyProfile");
         }
+
+        // ----------------------------------- WATCHLIST / ISTORIC COMPLET (INFINITE SCROLL) ----------------------------------
+
+        [HttpGet]
+        public IActionResult WatchHistory()
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            return View(); 
+        }
+
+       
+        [HttpGet]
+        public async Task<IActionResult> GetHistoryData(int tab = 1, int page = 1)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return Unauthorized();
+
+            var userId = int.Parse(userIdString);
+            int pageSize = 18; // Incarcam cate 18 filme la fiecare scroll
+
+            var query = _context.UserActivities
+                .Include(ua => ua.Movie)
+                .Where(ua => ua.UserId == userId);
+
+            // tab 1 = Vazute, tab 2 = Watchlist
+            if (tab == 1)
+            {
+                query = query.Where(a => a.Status == 2 || a.Rating > 0);
+            }
+            else
+            {
+                query = query.Where(a => a.Status == 1 && a.Rating == 0);
+            }
+
+            var activities = await query
+                .OrderByDescending(ua => ua.DateAdded)
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(a => new {
+                    movieId = a.MovieId,
+                    title = a.Movie != null ? a.Movie.Title : "Necunoscut",
+                    posterUrl = a.Movie != null ? a.Movie.PosterUrl : "",
+                    rating = a.Rating,
+                    status = a.Status,
+                    dateAdded = a.DateAdded.ToString("dd MMM yyyy")
+                })
+                .ToListAsync();
+
+            return Json(activities); 
+        }
     }
 
 }

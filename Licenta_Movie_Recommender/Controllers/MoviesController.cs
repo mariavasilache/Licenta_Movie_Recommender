@@ -246,6 +246,60 @@ namespace Licenta_Movie_Recommender.Controllers
             return RedirectToAction("Details", new { id = movieId });
         }
 
+
+        // sterge complet activitatea (scoate din vazute/watchlist si sterge nota)
+        [HttpPost]
+        public async Task<IActionResult> RemoveActivityStatus(int movieId)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            var userId = int.Parse(userIdString);
+
+            var activity = await _context.UserActivities
+                .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
+
+            if (activity != null)
+            {
+                // Stergem complet randul. Asta reseteaza atat Status cat si Nota
+                _context.UserActivities.Remove(activity);
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Statusul și nota au fost eliminate cu succes!";
+            }
+
+            return RedirectToAction("Details", new { id = movieId });
+        }
+
+
+        //sterge DOAR nota, dar pastreaza filmul in istoric
+        [HttpPost]
+        public async Task<IActionResult> RemoveRatingOnly(int movieId)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            var userId = int.Parse(userIdString);
+
+            var activity = await _context.UserActivities
+                .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
+
+            if (activity != null)
+            {
+                activity.Rating = 0; 
+
+                
+                if (activity.Status == 0)
+                {
+                    _context.UserActivities.Remove(activity);
+                }
+
+                await _context.SaveChangesAsync();
+                TempData["Success"] = "Nota a fost ștearsă!";
+            }
+            return RedirectToAction("Details", new { id = movieId });
+        }
+
+
         // adaugare film in lista custom
         [HttpPost]
         public async Task<IActionResult> AddMovieToCustomList(int customListId, int movieId)

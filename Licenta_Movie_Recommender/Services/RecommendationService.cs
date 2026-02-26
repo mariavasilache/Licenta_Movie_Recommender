@@ -3,6 +3,7 @@ using Microsoft.ML.Trainers;
 using Microsoft.EntityFrameworkCore;
 using Licenta_Movie_Recommender.Data;
 using Licenta_Movie_Recommender.Models;
+using System.Linq;
 
 namespace Licenta_Movie_Recommender.Services
 {
@@ -17,16 +18,21 @@ namespace Licenta_Movie_Recommender.Services
 
         public async Task<List<Movie>> GetRecommendationsAsync(int userId, int count = 6)
         {
-            var userRatingsCount = await _context.UserActivities
-                .CountAsync(ua => ua.UserId == userId && ua.Rating > 0);
+            // 1. extragem toata activitatea userului 
+            var currentUserActivities = await _context.UserActivities
+                .Include(ua => ua.Movie)
+                .Where(ua => ua.UserId == userId)
+                .ToListAsync();
+
+            var ratedActivities = currentUserActivities.Where(ua => ua.Rating > 0).ToList();
 
             // daca nu are cel putin 5 note oprim algoritmul 
-            if (userRatingsCount < 5 )
+            if (ratedActivities.Count < 5)
             {
                 return new List<Movie>();
             }
 
-            // extragem toate notele pt antrenament
+            // 2. extragem toate notele din toata baza de date pt antrenament (cold start ML.NET)
             var allRatings = await _context.UserActivities
                 .Where(ua => ua.Rating > 0)
                 .Select(ua => new MovieRatingData
@@ -36,19 +42,15 @@ namespace Licenta_Movie_Recommender.Services
                     Label = ua.Rating
                 }).ToListAsync();
 
-            // minim 10 note pt a functiona ok algoritmul
             if (allRatings.Count < 10)
             {
                 return new List<Movie>();
             }
 
-            // initializare ML.NET
+            // 3. initializare si antrenare ML.NET (collaborative filtering)
             MLContext mlContext = new MLContext();
-
-            // incarcare date
             IDataView trainingData = mlContext.Data.LoadFromEnumerable(allRatings);
 
-            // configurare algoritm matrix factorization
             var options = new MatrixFactorizationTrainer.Options
             {
                 MatrixColumnIndexColumnName = "UserIdEncoded",
@@ -58,56 +60,84 @@ namespace Licenta_Movie_Recommender.Services
                 ApproximationRank = 100
             };
 
-            // creare pipeline pt transformare date
             var pipeline = mlContext.Transforms.Conversion.MapValueToKey(outputColumnName: "UserIdEncoded", inputColumnName: nameof(MovieRatingData.UserId))
                 .Append(mlContext.Transforms.Conversion.MapValueToKey(outputColumnName: "MovieIdEncoded", inputColumnName: nameof(MovieRatingData.MovieId)))
                 .Append(mlContext.Recommendation().Trainers.MatrixFactorization(options));
 
-            // antrenare model
             var model = pipeline.Fit(trainingData);
-
-            // creare motor de predictie
             var predictionEngine = mlContext.Model.CreatePredictionEngine<MovieRatingData, MovieRatingPrediction>(model);
 
-            // lista filme vazute de user
-            var seenMovieIds = await _context.UserActivities
-                .Where(ua => ua.UserId == userId)
-                .Select(ua => ua.MovieId)
-                .ToListAsync();
 
+            // --- scor personalizat (bonus de gen / bonus watchlist)  ---
             
-            var unseenMovies = await _context.Movies
+            // top 3 genuri preferate din filmele notate min 4 
+            var topGenres = ratedActivities
+                .Where(ua => ua.Rating >= 4 && ua.Movie != null && !string.IsNullOrEmpty(ua.Movie.Genres))
+                .SelectMany(ua => ua.Movie.Genres.Split('|'))
+                .GroupBy(g => g)
+                .OrderByDescending(g => g.Count())
+                .Take(3)
+                .Select(g => g.Key)
+                .ToList();
+
+            // daca e vazut il excludem
+            var seenMovieIds = currentUserActivities
+                .Where(ua => ua.Status == 2 || ua.Rating > 0)
+                .Select(ua => ua.MovieId)
+                .ToHashSet();
+
+            // daca e in watchlist primeste bonus de scor
+            var watchlistMovieIds = currentUserActivities
+                .Where(ua => ua.Status == 1 && ua.Rating == 0)
+                .Select(ua => ua.MovieId)
+                .ToHashSet();
+
+
+            var candidateMovies = await _context.Movies
                 .Where(m => !seenMovieIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl))
-                .OrderByDescending(m => m.Id) // cele mai noi adaugate
-                .Take(200)
+                .OrderByDescending(m => m.Id)
+                .Take(1000)
                 .ToListAsync();
 
-            // calcul predictii
-            var predictions = new List<(Movie Movie, float Score)>();
+            // calcul scor final
+            var predictions = new List<(Movie Movie, float FinalScore)>();
 
-            foreach (var movie in unseenMovies)
+            foreach (var movie in candidateMovies)
             {
+                //factorul 1: scor ai
                 var prediction = predictionEngine.Predict(new MovieRatingData
                 {
                     UserId = userId,
                     MovieId = movie.Id
                 });
 
-                // ignoram valorile invalide
-                if (!float.IsNaN(prediction.Score))
+                float aiScore = float.IsNaN(prediction.Score) ? 0 : prediction.Score;
+
+                //factorul 2: bonus watchlist
+                float watchlistBonus = watchlistMovieIds.Contains(movie.Id) ? 1.5f : 0f;
+
+                //factorul 3: bonus de gen
+                float genreBonus = 0f;
+                if (!string.IsNullOrEmpty(movie.Genres) && topGenres.Any())
                 {
-                    predictions.Add((movie, prediction.Score));
+                    var movieGenres = movie.Genres.Split('|');
+                    // +0.5p pt fiecare gen preferat regasit in acest film
+                    int matches = movieGenres.Count(g => topGenres.Contains(g));
+                    genreBonus = matches * 0.5f;
                 }
+
+                //
+                float finalHybridScore = aiScore + watchlistBonus + genreBonus;
+
+                predictions.Add((movie, finalHybridScore));
             }
 
-            // returnam top recomandari
-            var recommendedMovies = predictions
-                .OrderByDescending(p => p.Score)
+            //top recomandari bazate pe scorul hibrid
+            return predictions
+                .OrderByDescending(p => p.FinalScore)
                 .Take(count)
                 .Select(p => p.Movie)
                 .ToList();
-
-            return recommendedMovies;
         }
     }
 }

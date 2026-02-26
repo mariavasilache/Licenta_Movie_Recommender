@@ -12,12 +12,15 @@ namespace Licenta_Movie_Recommender.Controllers
     {
         private readonly ApplicationDbContext _context;
         private readonly TmdbService _tmdbService;
+        private readonly RecommendationService _recommendationService;
 
-        public MoviesController(ApplicationDbContext context, TmdbService tmdbService)
+        public MoviesController(ApplicationDbContext context, TmdbService tmdbService, RecommendationService recommendationService)
         {
             _context = context;
             _tmdbService = tmdbService;
+            _recommendationService = recommendationService;
         }
+        
 
         [HttpGet]
         public async Task<IActionResult> Index([FromQuery] string sortOrder, [FromQuery] string genreFilter, [FromQuery] int page = 1)
@@ -85,6 +88,49 @@ namespace Licenta_Movie_Recommender.Controllers
 
             ViewBag.SearchTerm = term;
             return View("Index", rezultate);
+        }
+
+        // ----------------------------------- PAGINA RECOMANDARI ----------------------------------
+        [HttpGet]
+        public async Task<IActionResult> Recommendations()
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            var userId = int.Parse(userIdString);
+
+            
+            var recommendedMovies = await _recommendationService.GetRecommendationsAsync(userId, 12);
+
+            return View(recommendedMovies);
+        }
+
+        //marcare film cu "nu ma intereseaza"
+        [HttpPost]
+        public async Task<IActionResult> IgnoreMovie(int movieId)
+        {
+            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userIdString == null) return RedirectToAction("Login", "Account");
+
+            var userId = int.Parse(userIdString);
+            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
+
+            if (activity == null)
+            {
+                _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = movieId, Status = 3, DateAdded = DateTime.Now });
+            }
+            else
+            {
+                activity.Status = 3;
+                activity.DateAdded = DateTime.Now;
+            }
+
+            await _context.SaveChangesAsync();
+            TempData["Success"] = "Filmul a fost ascuns din recomandările tale viitoare!";
+
+            
+            string referer = Request.Headers["Referer"].ToString();
+            return string.IsNullOrEmpty(referer) ? RedirectToAction("Index", "Home") : Redirect(referer);
         }
 
 

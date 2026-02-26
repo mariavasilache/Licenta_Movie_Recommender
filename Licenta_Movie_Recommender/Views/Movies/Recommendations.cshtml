@@ -1,0 +1,50 @@
+﻿@model List<Licenta_Movie_Recommender.Models.Movie>
+
+@{
+    ViewData["Title"] = "Recomandări pentru tine";
+}
+
+<div class="container mt-5 mb-5">
+    <div class="d-flex align-items-center mb-4 border-bottom pb-2">
+        <h2 class="text-primary fw-bold mb-0"><i class="bi bi-magic me-2"></i> Recomandări Personalizate</h2>
+    </div>
+
+    @if (Model == null || !Model.Any())
+    {
+        <div class="alert alert-light border shadow-sm py-5 text-center rounded-3">
+            <i class="bi bi-info-circle display-4 d-block mb-3 text-info"></i>
+            <h4 class="fw-bold text-dark">Avem nevoie de mai multe date!</h4>
+            <p class="mb-0 text-muted">Algoritmul nostru inteligent are nevoie să evaluezi (cu note de la 1 la 5) <strong>cel puțin 5 filme</strong> pentru a-ți putea crea un profil precis de preferințe.</p>
+            <a asp-controller="Movies" asp-action="Index" class="btn btn-primary mt-4 px-4 shadow-sm"><i class="bi bi-film"></i> Explorează Catalogul</a>
+        </div>
+    }
+    else
+    {
+        <div class="alert alert-success shadow-sm mb-4 border-0" style="background-color: #d1e7dd; color: #0f5132;">
+            <i class="bi bi-check-circle-fill me-2"></i> <strong>Sistem Hibrid Activ:</strong> Aceste recomandări sunt calculate matematic pe baza filmelor pe care le-ai apreciat, a genurilor tale preferate și a intențiilor din Watchlist.
+        </div>
+
+        <div class="row">
+            @foreach (var movie in Model)
+            {
+                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="text-decoration-none">
+                        <div class="card h-100 border-0 shadow-sm movie-card transition-hover position-relative">
+                            <img src="@movie.PosterUrl" class="card-img-top rounded" alt="@movie.Title" style="aspect-ratio: 2/3; object-fit: cover;" onerror="this.src='https://placehold.co/200x300?text=Fara+Poster'" />
+
+                            <span class="position-absolute top-0 start-0 badge bg-danger m-2 shadow-sm"><i class="bi bi-heart-fill"></i> Pentru tine</span>
+
+                            <div class="card-body p-2 text-center bg-light rounded-bottom">
+                                <h6 class="card-title text-dark fw-bold mb-0 text-truncate" title="@movie.Title" style="font-size: 0.9rem;">@movie.Title</h6>
+                                @if (!string.IsNullOrEmpty(movie.Genres))
+                                {
+                                    <small class="text-muted" style="font-size: 0.75rem;">@movie.Genres.Split('|')[0]</small>
+                                }
+                            </div>
+                        </div>
+                    </a>
+                </div>
+            }
+        </div>
+    }
+</div>

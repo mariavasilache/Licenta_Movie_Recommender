@@ -48,6 +48,13 @@
 </style>
 
 <div class="container mt-5 mb-5">
+
+    <div class="mb-3">
+        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary shadow-sm px-3 py-2 fw-bold text-decoration-none">
+            <i class="bi bi-arrow-left me-1"></i> Înapoi
+        </a>
+    </div>
+
     <div class="row bg-white rounded shadow-sm p-4">
 
         <div class="col-md-4 text-center">
@@ -274,3 +281,41 @@
         </div>
     </div>
 </div>
+
+@section Scripts {
+    <script>
+        //doar butoanele de adaugare de pe pagina detalii
+        const actionForms = document.querySelectorAll('#action-buttons-container form[action*="AddToWatchlist"], #action-buttons-container form[action*="MarkAsWatched"]');
+
+        actionForms.forEach(form => {
+            form.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const btn = form.querySelector('button');
+                const originalHtml = btn.innerHTML;
+
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Se salvează...';
+                btn.disabled = true;
+
+                try {
+                    await fetch(form.action, { method: 'POST', body: new FormData(form) });
+
+                    // schimbare buton fara refresh
+                    if(form.action.includes('AddToWatchlist')) {
+                        btn.className = 'btn btn-warning shadow-sm text-dark fw-bold';
+                        btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> În Watchlist';
+                        form.action = '/Movies/RemoveActivityStatus'; //transformare in buton de stergere
+                    } else if (form.action.includes('MarkAsWatched')) {
+                        btn.className = 'btn btn-success shadow-sm fw-bold';
+                        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Vizionat';
+                        form.action = '/Movies/RemoveActivityStatus';
+                    }
+
+                    btn.disabled = false;
+                } catch (error) {
+                    btn.innerHTML = originalHtml;
+                    btn.disabled = false;
+                }
+            });
+        });
+    </script>
+}

@@ -69,75 +69,52 @@ namespace Licenta_Movie_Recommender.Services
 
 
             // --- scor personalizat (bonus de gen / bonus watchlist)  ---
-            
-            // top 3 genuri preferate din filmele notate min 4 
-            var topGenres = ratedActivities
-                .Where(ua => ua.Rating >= 4 && ua.Movie != null && !string.IsNullOrEmpty(ua.Movie.Genres))
-                .SelectMany(ua => ua.Movie.Genres.Split('|'))
-                .GroupBy(g => g)
-                .OrderByDescending(g => g.Count())
-                .Take(3)
-                .Select(g => g.Key)
-                .ToList();
 
-            // daca e vazut il excludem
-            var seenMovieIds = currentUserActivities
-                .Where(ua => ua.Status == 2 || ua.Rating > 0)
+            // top 3 genuri preferate din filmele notate min 4 SAU in watchlist
+            var favoriteGenres = currentUserActivities
+                 .Where(ua => ua.Rating >= 4 || ua.Status == 1)
+                 .Where(ua => ua.Movie != null && !string.IsNullOrEmpty(ua.Movie.Genres))
+                 .SelectMany(ua => ua.Movie.Genres.Split('|'))
+                 .GroupBy(g => g)
+                 .OrderByDescending(g => g.Count())
+                 .Take(3)
+                 .Select(g => g.Key)
+                 .ToList();
+
+            //excludem filme vazute, in watchlist, ignorate
+            //status 3 = "nu ma intereseaza"
+            var excludedMovieIds = currentUserActivities
+                .Where(ua => ua.Status == 1 || ua.Status == 2 || ua.Status == 3 || ua.Rating > 0)
                 .Select(ua => ua.MovieId)
                 .ToHashSet();
 
-            // daca e in watchlist primeste bonus de scor
-            var watchlistMovieIds = currentUserActivities
-                .Where(ua => ua.Status == 1 && ua.Rating == 0)
-                .Select(ua => ua.MovieId)
-                .ToHashSet();
-
-
+            //doar filme complet noi pentru rec
             var candidateMovies = await _context.Movies
-                .Where(m => !seenMovieIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl))
+                .Where(m => !excludedMovieIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl))
                 .OrderByDescending(m => m.Id)
                 .Take(1000)
                 .ToListAsync();
 
-            // calcul scor final
             var predictions = new List<(Movie Movie, float FinalScore)>();
 
             foreach (var movie in candidateMovies)
             {
-                //factorul 1: scor ai
-                var prediction = predictionEngine.Predict(new MovieRatingData
-                {
-                    UserId = userId,
-                    MovieId = movie.Id
-                });
-
+                var prediction = predictionEngine.Predict(new MovieRatingData { UserId = userId, MovieId = movie.Id });
                 float aiScore = float.IsNaN(prediction.Score) ? 0 : prediction.Score;
 
-                //factorul 2: bonus watchlist
-                float watchlistBonus = watchlistMovieIds.Contains(movie.Id) ? 1.5f : 0f;
-
-                //factorul 3: bonus de gen
+                //bonus de gen
                 float genreBonus = 0f;
-                if (!string.IsNullOrEmpty(movie.Genres) && topGenres.Any())
+                if (!string.IsNullOrEmpty(movie.Genres) && favoriteGenres.Any())
                 {
                     var movieGenres = movie.Genres.Split('|');
-                    // +0.5p pt fiecare gen preferat regasit in acest film
-                    int matches = movieGenres.Count(g => topGenres.Contains(g));
-                    genreBonus = matches * 0.5f;
+                    genreBonus = movieGenres.Count(g => favoriteGenres.Contains(g)) * 0.5f;
                 }
 
-                //
-                float finalHybridScore = aiScore + watchlistBonus + genreBonus;
-
-                predictions.Add((movie, finalHybridScore));
+                //scor final
+                predictions.Add((movie, aiScore + genreBonus));
             }
 
-            //top recomandari bazate pe scorul hibrid
-            return predictions
-                .OrderByDescending(p => p.FinalScore)
-                .Take(count)
-                .Select(p => p.Movie)
-                .ToList();
+            return predictions.OrderByDescending(p => p.FinalScore).Take(count).Select(p => p.Movie).ToList();
         }
     }
 }

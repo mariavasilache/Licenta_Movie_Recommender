@@ -1,27 +1,85 @@
+/*import font */
+@import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
+
+/* --- BAZA --- */
 html {
-  font-size: 14px;
+    font-size: 14px;
+    position: relative;
+    min-height: 100%;
 }
 
 @media (min-width: 768px) {
-  html {
-    font-size: 16px;
-  }
-}
-
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-  box-shadow: 0 0 0 0.1rem white, 0 0 0 0.25rem #258cfb;
-}
-
-html {
-  position: relative;
-  min-height: 100%;
+    html {
+        font-size: 16px;
+    }
 }
 
 body {
-  margin-bottom: 60px;
+    margin-bottom: 60px;
+    background-color: #141414; /* dark mode */
+    color: #e5e5e5;
+    font-family: 'Poppins', sans-serif;
+    -webkit-font-smoothing: antialiased;
 }
 
-/* efect animatie postere filme */
+/* --- FOCUS --- */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem #141414, 0 0 0 0.25rem #e50914; 
+}
+
+/* --- MENIU (NAVBAR) --- */
+.navbar {
+    background-color: rgba(20, 20, 20, 0.85) !important;
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    padding: 15px 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    color: #e50914 !important;
+    letter-spacing: 1px;
+}
+
+.nav-link {
+    color: #b3b3b3 !important;
+    font-weight: 500;
+    transition: color 0.3s ease;
+}
+
+    .nav-link:hover {
+        color: #ffffff !important;
+    }
+
+/* --- TITLURI SI TEXTE --- */
+h1, h2, h3, h4, h5, h6 {
+    color: #ffffff;
+    font-weight: 600;
+}
+
+.text-muted {
+    color: #a3a3a3 !important;
+}
+
+/* --- BORDURI SI FUNDALURI PENTRU CARDURI/MODALE --- */
+.card {
+    background-color: #1f1f1f;
+    border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.border-bottom {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+}
+
+.bg-white {
+    background-color: #1f1f1f !important;
+}
+
+.bg-light {
+    background-color: #2b2b2b !important;
+}
+
+/* --- EFECT ANIMATIE POSTERE FILME  --- */
 .movie-card {
     transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     cursor: pointer;
@@ -29,6 +87,7 @@ body {
 
     .movie-card:hover {
         transform: scale(1.05); /* mareste cardul cu 5% */
-        box-shadow: 0 15px 30px rgba(0,0,0,0.3) !important; /* umbra mai puternica */
+        /* Umbra adaptata pentru dark mode ca sa iasa in evidenta */
+        box-shadow: 0 15px 30px rgba(229, 9, 20, 0.15), 0 10px 10px rgba(0,0,0,0.5) !important;
         z-index: 10; /* il aduce deasupra celorlalte */
     }

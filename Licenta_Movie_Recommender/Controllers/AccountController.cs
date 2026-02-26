@@ -36,7 +36,7 @@ namespace Licenta_Movie_Recommender.Controllers
             await _context.SaveChangesAsync();
 
             await SignInUser(user);
-            return RedirectToAction("Index", "Movies");
+            return RedirectToAction("Index", "Home");
         }
 
         // afiseaza pagina de login

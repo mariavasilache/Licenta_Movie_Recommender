@@ -190,4 +190,27 @@
         });
     }
 
+    // --- LOGICA IGNORA PENTRU RECOMANDARI ---
+    document.addEventListener('click', async function (e) {
+        const btn = e.target.closest('.btn-ignore-rec');
+        if (btn) {
+            const movieId = btn.getAttribute('data-movie-id');
+            const container = btn.closest('.movie-container');
+
+            
+            container.style.transition = 'all 0.4s ease';
+            container.style.opacity = '0';
+            container.style.transform = 'scale(0.8)';
+
+            try {
+                await fetch(`/Movies/Ignore/${movieId}`, { method: 'POST' });
+                setTimeout(() => container.remove(), 400);
+            } catch (err) {
+                console.error("Eroare la ignorare:", err);
+                container.style.opacity = '1';
+                container.style.transform = 'scale(1)';
+            }
+        }
+    });
+
 });

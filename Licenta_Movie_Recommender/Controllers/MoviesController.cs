@@ -135,30 +135,26 @@ namespace Licenta_Movie_Recommender.Controllers
 
         //marcare film cu "nu ma intereseaza"
         [HttpPost]
-        public async Task<IActionResult> IgnoreMovie(int movieId)
+        public async Task<IActionResult> Ignore(int id)
         {
             var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            if (userIdString == null) return Unauthorized();
 
             var userId = int.Parse(userIdString);
-            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
+
+            var activity = await _context.UserActivities
+                .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == id);
 
             if (activity == null)
             {
-                _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = movieId, Status = 3, DateAdded = DateTime.Now });
-            }
-            else
-            {
-                activity.Status = 3;
-                activity.DateAdded = DateTime.Now;
+                activity = new UserMovieActivity { UserId = userId, MovieId = id };
+                _context.UserActivities.Add(activity);
             }
 
+            activity.Status = 3;
             await _context.SaveChangesAsync();
-            TempData["Success"] = "Filmul a fost ascuns din recomandările tale viitoare!";
 
-            
-            string referer = Request.Headers["Referer"].ToString();
-            return string.IsNullOrEmpty(referer) ? RedirectToAction("Index", "Home") : Redirect(referer);
+            return Ok();
         }
 
 

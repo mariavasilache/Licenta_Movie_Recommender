@@ -19,14 +19,5 @@
        
         <partial name="_MovieCard" model="movie" view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", inWatchlist }, { "IsWatched", isWatched } }' />
 
-        
-        <div class="px-1">
-            <button type="button"
-                    class="btn btn-sm btn-outline-danger w-100 mt-2 btn-ignore-discover"
-                    data-movie-id="@movie.Id"
-                    style="font-size: 0.65rem; border-color: rgba(220, 53, 69, 0.2); opacity: 0.7;">
-                <i class="bi bi-x-circle me-1"></i> Nu mă interesează
-            </button>
-        </div>
     </div>
 }

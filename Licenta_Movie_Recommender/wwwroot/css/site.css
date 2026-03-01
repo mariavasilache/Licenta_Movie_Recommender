@@ -1,4 +1,4 @@
-/*import font */
+/* --- IMPORT FONT --- */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 /* --- BAZA --- */
@@ -24,7 +24,7 @@ body {
 
 /* --- FOCUS --- */
 .btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem #141414, 0 0 0 0.25rem #e50914; 
+    box-shadow: 0 0 0 0.1rem #141414, 0 0 0 0.25rem #e50914;
 }
 
 /* --- MENIU (NAVBAR) --- */
@@ -61,7 +61,7 @@ h1, h2, h3, h4, h5, h6 {
     color: #a3a3a3 !important;
 }
 
-/* --- BORDURI SI FUNDALURI PENTRU CARDURI/MODALE --- */
+/* --- BORDURI SI FUNDALURI --- */
 .card {
     background-color: #1f1f1f;
     border: 1px solid rgba(255, 255, 255, 0.05);
@@ -71,54 +71,80 @@ h1, h2, h3, h4, h5, h6 {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-.bg-white {
-    background-color: #1f1f1f !important;
-}
-
-.bg-light {
-    background-color: #2b2b2b !important;
-}
-
-/* --- EFECT ANIMATIE POSTERE FILME  --- */
+/* --- MOVIE CARD & HOVER LOGIC --- */
 .movie-card {
     transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     cursor: pointer;
+    position: relative;
 }
 
     .movie-card:hover {
-        transform: scale(1.05); /* mareste cardul cu 5% */
-        /* Umbra adaptata pentru dark mode ca sa iasa in evidenta */
+        transform: scale(1.05);
         box-shadow: 0 15px 30px rgba(229, 9, 20, 0.15), 0 10px 10px rgba(0,0,0,0.5) !important;
-        z-index: 10; /* il aduce deasupra celorlalte */
+        z-index: 10;
     }
-        .movie-card:hover .movie-card-overlay {
-            opacity: 1 !important;
-            /* --- CORECTII CONTRAST DARK MODE --- */
-            /* fortare text din dark in luminos */
-            .text-dark {
-    color: #e5e5e5 !important;
+
+    
+    .movie-card .movie-actions {
+        opacity: 0;
+        transition: opacity 0.3s ease-in-out;
+        pointer-events: none;
+    }
+
+    
+    .movie-card:hover .movie-actions {
+        opacity: 1;
+        pointer-events: auto;
+    }
+
+/* --- BUTOANE ACTIUNE (Watchlist/Vazut) --- */
+.movie-actions .btn {
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px; 
+    backdrop-filter: blur(4px);
+    background-color: rgba(0,0,0,0.5);
 }
 
-/* texte butoane outline vizibile pe fundal negru */
-.btn-outline-warning,
-.btn-outline-success,
-.btn-outline-secondary,
-.btn-outline-danger {
+
+.btn-ignore-rec {
+    border: 1px solid rgba(255,255,255,0.1) !important;
+    color: #a3a3a3 !important;
+    transition: all 0.2s ease;
+}
+
+    .btn-ignore-rec:hover {
+        background-color: rgba(229, 9, 20, 0.1) !important;
+        color: #ff4444 !important;
+        border-color: #e50914 !important;
+    }
+
+
+.btn-outline-warning, .btn-outline-success, .btn-outline-secondary, .btn-outline-danger {
     color: #f8f9fa !important;
 }
 
-    /* a hover, culorile se inverseaza normal */
     .btn-outline-warning:hover {
         color: #212529 !important;
+        background-color: #ffc107;
     }
 
     .btn-outline-success:hover {
         color: #ffffff !important;
+        background-color: #198754;
     }
 
-/* ajustam culori pt grupuri de liste */
+
 .list-group-item {
     background-color: #1f1f1f !important;
     color: #e5e5e5 !important;
     border-color: rgba(255, 255, 255, 0.05) !important;
+}
+
+.text-dark {
+    color: #e5e5e5 !important;
 }

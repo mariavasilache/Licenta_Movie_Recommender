@@ -2,6 +2,8 @@
 
 @{
     ViewData["Title"] = "Recomandări pentru tine";
+    var userActivities = ViewBag.UserActivities as List<Licenta_Movie_Recommender.Models.UserMovieActivity>
+                         ?? new List<Licenta_Movie_Recommender.Models.UserMovieActivity>();
 }
 
 <div class="container mt-4 mb-5">
@@ -30,24 +32,26 @@
         <div class="row">
             @foreach (var movie in Model)
             {
-                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-5 position-relative">
+                var activity = userActivities.FirstOrDefault(a => a.MovieId == movie.Id);
+                var inWatchlist = activity != null && activity.Status == 1;
+                var isWatched = activity != null && activity.Status == 2;
 
-                    <span class="position-absolute badge bg-danger shadow-sm" style="top: 8px; left: 20px; z-index: 5; pointer-events: none;">
+                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-5 position-relative movie-container">
+
+                    <span class="position-absolute badge bg-danger shadow-sm" style="top: 8px; left: 20px; z-index: 5; pointer-events: none; font-size: 0.65rem;">
                         <i class="bi bi-heart-fill"></i> Pentru tine
                     </span>
 
-                    <partial name="_MovieCard" model="movie" />
+                    <partial name="_MovieCard" model="movie" view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", inWatchlist }, { "IsWatched", isWatched } }' />
 
-                    <div class="px-1">
+                    <div class="px-1 mt-2">
                         <button type="button"
-                                class="btn btn-sm btn-outline-secondary w-100 mt-2 btn-ignore-rec"
+                                class="btn btn-sm btn-outline-secondary w-100 btn-ignore-rec"
                                 data-movie-id="@movie.Id"
                                 style="font-size: 0.65rem; border-color: rgba(255,255,255,0.1); opacity: 0.7;">
                             <i class="bi bi-eye-slash"></i> Nu mă interesează
                         </button>
                     </div>
-
-                   
                 </div>
             }
         </div>

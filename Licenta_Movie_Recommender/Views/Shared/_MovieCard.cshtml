@@ -1,81 +1,31 @@
 ﻿@model Licenta_Movie_Recommender.Models.Movie
 @{
-    
-    var showButtons = ViewData["ShowButtons"] as bool? ?? true;
-    var inWatchlist = ViewData["InWatchlist"] as bool? ?? false;
-    var isWatched = ViewData["IsWatched"] as bool? ?? false;
-    bool hasValidPoster = !string.IsNullOrEmpty(Model.PosterUrl) &&
-                          Model.PosterUrl.StartsWith("http") &&
-                          !Model.PosterUrl.Contains("placeholder");
+    bool inWatchlist = ViewData["InWatchlist"] as bool? ?? false;
+    bool isWatched = ViewData["IsWatched"] as bool? ?? false;
 }
 
-<div class="card bg-transparent border-0 movie-card position-relative h-100">
-    <a href="/Movies/Details/@Model.Id" class="text-decoration-none d-block position-relative bg-dark rounded shadow-sm" style="aspect-ratio: 2/3; overflow: hidden;">
-        @if (hasValidPoster)
-        {
-            <img src="@Model.PosterUrl"
-                 class="card-img-top w-100 h-100"
-                 alt="@Model.Title"
-                 style="object-fit: cover;"
-                 onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
 
-            
-            <div class="align-items-center justify-content-center h-100 p-3 text-center fw-bold text-light bg-secondary"
-                 style="display: none; font-size: 0.8rem;">
-                @Model.Title
-            </div>
-        }
-        else
-        {
-            <div class="d-flex align-items-center justify-content-center h-100 p-3 text-center fw-bold text-light bg-secondary"
-                 style="font-size: 0.8rem;">
-                @Model.Title
-            </div>
-        }
+<div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
+
+    <div class="movie-actions position-absolute top-0 end-0 p-2 d-flex flex-column gap-2" style="z-index: 10;">
+        <button type="button" class="btn btn-sm @(inWatchlist ? "btn-warning" : "btn-outline-light") btn-watchlist-toggle" data-movie-id="@Model.Id">
+            <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+        </button>
+
+        <button type="button" class="btn btn-sm @(isWatched ? "btn-success" : "btn-outline-light") btn-watched-toggle" data-movie-id="@Model.Id">
+            <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
+        </button>
+    </div>
+
+    <a href="/Movies/Details/@Model.Id" class="text-decoration-none d-block position-relative bg-dark rounded shadow" style="aspect-ratio: 2/3; overflow: hidden;">
+        <img src="@Model.PosterUrl" class="card-img-top w-100 h-100" style="object-fit: cover;" onerror="this.src='https://placehold.co/300x450/2b2b2b/ffffff?text=@Model.Title'">
     </a>
-    
-    
 
-    @if (showButtons && User.Identity.IsAuthenticated)
-    {
-        <div class="movie-card-overlay position-absolute top-0 end-0 p-2 d-flex flex-column gap-2" style="opacity: 0; transition: opacity 0.3s; z-index: 10;">
-
-            @if (isWatched)
-            {
-                <span class="badge bg-success shadow-sm py-2 px-2" title="Vizionat"><i class="bi bi-check-circle-fill"></i></span>
-            }
-            else
-            {
-                @if (inWatchlist)
-                {
-                    <form asp-controller="Movies" asp-action="RemoveActivityStatus" method="post" class="m-0" data-original-action="watchlist">
-                        <input type="hidden" name="movieId" value="@Model.Id" />
-                        <button type="submit" class="btn btn-sm btn-warning w-100 fw-bold shadow-sm" title="În Watchlist">
-                            <i class="bi bi-bookmark-check-fill"></i>
-                        </button>
-                    </form>
-                }
-                else
-                {
-                    <form asp-controller="Movies" asp-action="AddToWatchlist" method="post" class="m-0" data-original-action="watchlist">
-                        <input type="hidden" name="movieId" value="@Model.Id" />
-                        <button type="submit" class="btn btn-sm btn-outline-warning w-100 shadow-sm" style="backdrop-filter: blur(4px); background-color: rgba(20,20,20,0.6);" title="Adaugă în Watchlist">
-                            <i class="bi bi-bookmark-plus"></i>
-                        </button>
-                    </form>
-                }
-
-                <form asp-controller="Movies" asp-action="MarkAsWatched" method="post" class="m-0" data-original-action="watched">
-                    <input type="hidden" name="movieId" value="@Model.Id" />
-                    <button type="submit" class="btn btn-sm btn-outline-success w-100 shadow-sm" style="backdrop-filter: blur(4px); background-color: rgba(20,20,20,0.6);" title="Marchează ca Văzut">
-                        <i class="bi bi-eye"></i>
-                    </button>
-                </form>
-            }
-        </div>
-    }
-
-    <div class="card-body px-1 py-2 text-center">
-        <h6 class="card-title text-light text-truncate mb-0" style="font-size: 0.95rem;">@Model.Title</h6>
+    <div class="card-body px-1 py-2 text-center" style="min-height: 65px;">
+        <h6 class="card-title text-light text-truncate mb-0" style="font-size: 0.92rem;">@Model.Title</h6>
+        @if (!string.IsNullOrEmpty(Model.Genres))
+        {
+            <small class="text-muted d-block text-truncate mt-1" style="font-size: 0.75rem; opacity: 0.7;">@Model.Genres.Split('|')[0]</small>
+        }
     </div>
 </div>

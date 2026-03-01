@@ -148,3 +148,48 @@ h1, h2, h3, h4, h5, h6 {
 .text-dark {
     color: #e5e5e5 !important;
 }
+
+/*stil pentru butonul de inapoi */
+.btn-outline-secondary.rounded-circle {
+    background-color: rgba(255, 255, 255, 0.03);
+    transition: all 0.2s ease;
+}
+
+    .btn-outline-secondary.rounded-circle:hover {
+        background-color: #e50914; 
+        border-color: #e50914;
+        color: white;
+        transform: translateX(-3px); 
+    }
+
+/* stil breadcrumbs  dark mode */
+.breadcrumb-item + .breadcrumb-item::before {
+    color: rgba(255, 255, 255, 0.3);
+    content: "/";
+}
+
+/* SKELETON LOADERS */
+.skeleton-poster {
+    aspect-ratio: 2/3;
+    background: linear-gradient(90deg, #1f1f1f 25%, #2b2b2b 50%, #1f1f1f 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+}
+
+.skeleton-text {
+    height: 12px;
+    background: linear-gradient(90deg, #1f1f1f 25%, #2b2b2b 50%, #1f1f1f 75%);
+    background-size: 200% 100%;
+    animation: skeleton-loading 1.5s infinite;
+    border-radius: 4px;
+}
+
+@keyframes skeleton-loading {
+    0% {
+        background-position: 200% 0;
+    }
+
+    100% {
+        background-position: -200% 0;
+    }
+}

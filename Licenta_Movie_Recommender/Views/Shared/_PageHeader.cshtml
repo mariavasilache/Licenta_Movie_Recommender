@@ -1,0 +1,28 @@
+﻿@model string
+
+<div class="d-flex align-items-center mb-4 border-bottom border-secondary pb-3">
+    <a href="javascript:history.back()"
+       class="btn btn-outline-secondary btn-sm rounded-circle me-3 shadow-sm d-flex align-items-center justify-content-center"
+       style="width: 38px; height: 38px; border-color: rgba(255,255,255,0.1);"
+       title="Înapoi">
+        <i class="bi bi-chevron-left fs-5"></i>
+    </a>
+
+    <div>
+        <h2 class="text-warning fw-bold mb-0">@Model</h2>
+        <nav aria-label="breadcrumb">
+            <ol class="breadcrumb mb-0" style="font-size: 0.8rem;">
+                <li class="breadcrumb-item">
+                    <a asp-controller="Home" asp-action="Index" class="text-muted text-decoration-none hover-white">Home</a>
+                </li>
+                <li class="breadcrumb-item active text-danger" aria-current="page">@Model</li>
+            </ol>
+        </nav>
+    </div>
+</div>
+
+<style>
+    .hover-white:hover {
+        color: white !important;
+    }
+</style>

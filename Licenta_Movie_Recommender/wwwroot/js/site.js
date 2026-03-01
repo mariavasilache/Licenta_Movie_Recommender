@@ -12,8 +12,15 @@
             this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
             this.disabled = true;
 
+            const skeletonCard = `
+        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-5">
+            <div class="skeleton-poster rounded mb-2"></div>
+            <div class="skeleton-text w-75 mx-auto"></div>
+            <div class="skeleton-text w-50 mx-auto mt-1"></div>
+        </div>`;
+            discoverGrid.innerHTML = skeletonCard.repeat(12);
+
             try {
-               
                 const response = await fetch(`/Home/GetDiscoverMovies?t=${Date.now()}`, {
                     headers: { 'X-Requested-With': 'XMLHttpRequest' }
                 });
@@ -25,9 +32,8 @@
                     }
                 }
             } catch (error) {
-                console.error("Eroare la refresh discover:", error);
+                console.error("Eroare la refresh:", error);
             } finally {
-                
                 this.innerHTML = originalHtml;
                 this.disabled = false;
             }

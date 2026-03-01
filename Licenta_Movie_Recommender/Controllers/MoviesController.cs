@@ -29,8 +29,9 @@ namespace Licenta_Movie_Recommender.Controllers
 
             ViewBag.CurrentSort = sortOrder;
             ViewBag.CurrentGenre = genreFilter;
+            ViewData["CurrentSort"] = sortOrder;
 
-            
+
             ViewBag.Genres = new List<string> { "Action", "Adventure", "Animation", "Comedy", "Crime", "Documentary", "Drama", "Fantasy", "Horror", "Mystery", "Romance", "Sci-Fi", "Thriller" };
 
             var moviesQuery = _context.Movies.AsQueryable();
@@ -69,6 +70,15 @@ namespace Licenta_Movie_Recommender.Controllers
 
             ViewBag.CurrentPage = page;
             ViewBag.TotalPages = (int)Math.Ceiling((double)totalMovies / pageSize);
+
+            if (User.Identity.IsAuthenticated)
+            {
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                ViewBag.UserActivities = await _context.UserActivities
+                    .AsNoTracking()
+                    .Where(ua => ua.UserId == userId)
+                    .ToListAsync();
+            }
 
             return View(movies);
         }

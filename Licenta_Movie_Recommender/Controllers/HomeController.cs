@@ -84,18 +84,33 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDiscoverMovies()
         {
-            
-            int randomSkip = Random.Shared.Next(0, 500);
+           
+            int randomStartId = Random.Shared.Next(1, 5000);
 
             var discoverMovies = await _context.Movies
                 .AsNoTracking() 
-                .Where(m => !string.IsNullOrEmpty(m.PosterUrl) && m.PosterUrl.StartsWith("http"))
-                .OrderBy(m => m.Id)
-                .Skip(randomSkip)
+                .Where(m => m.Id >= randomStartId && m.PosterUrl != null) 
                 .Take(12)
+                .Select(m => new Movie
+                { 
+                    Id = m.Id,
+                    Title = m.Title,
+                    PosterUrl = m.PosterUrl,
+                    Genres = m.Genres
+                })
                 .ToListAsync();
 
-           
+            
+            if (!discoverMovies.Any())
+            {
+                discoverMovies = await _context.Movies
+                    .AsNoTracking()
+                    .Where(m => m.PosterUrl != null)
+                    .Take(12)
+                    .Select(m => new Movie { Id = m.Id, Title = m.Title, PosterUrl = m.PosterUrl, Genres = m.Genres })
+                    .ToListAsync();
+            }
+
             if (User.Identity.IsAuthenticated)
             {
                 var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));

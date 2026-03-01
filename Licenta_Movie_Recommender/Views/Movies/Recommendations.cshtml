@@ -7,9 +7,7 @@
 }
 
 <div class="container mt-4 mb-5">
-    <div class="d-flex align-items-center mb-4 border-bottom border-secondary pb-3">
-        <h2 class="text-warning fw-bold mb-0"><i class="bi bi-magic me-2"></i> Recomandări Personalizate</h2>
-    </div>
+    <partial name="_PageHeader" model='"Recomandări Personalizate"' />
 
     @if (Model == null || !Model.Any())
     {

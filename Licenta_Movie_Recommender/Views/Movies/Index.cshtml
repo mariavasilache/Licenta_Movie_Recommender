@@ -1,54 +1,82 @@
 ﻿@model IEnumerable<Licenta_Movie_Recommender.Models.Movie>
-
 @{
     ViewData["Title"] = "Catalog Filme";
-    
-    var currentFilter = ViewData["CurrentFilter"] as string;
+    string sort = ViewBag.CurrentSort;
+    string genre = ViewBag.CurrentGenre;
+    int currentPage = ViewBag.CurrentPage;
+    int totalPages = ViewBag.TotalPages;
+    var userActivities = ViewBag.UserActivities as List<Licenta_Movie_Recommender.Models.UserMovieActivity> ?? new List<Licenta_Movie_Recommender.Models.UserMovieActivity>();
 }
 
 <div class="container mt-4 mb-5">
+    <partial name="_PageHeader" model='(string)ViewData["Title"]' />
 
-    <div class="d-flex justify-content-between align-items-center mb-4 border-bottom border-secondary pb-3">
-        <h2 class="fw-bold text-light m-0">
-            <i class="bi bi-collection-play text-danger me-2"></i> Catalog Filme
-        </h2>
+    @* --- FILTRARE SI SORTARE --- *@
+    <div class="filter-section bg-dark p-3 rounded-3 shadow-sm mb-4 border border-secondary" style="--bs-bg-opacity: .4;">
 
-        @if (!string.IsNullOrEmpty(currentFilter))
+        @* GENURI *@
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
+            <span class="text-muted small fw-bold text-uppercase me-2">Gen:</span>
+            <a asp-action="Index" asp-route-sortOrder="@sort"
+               class="btn btn-sm @(string.IsNullOrEmpty(genre) ? "btn-danger" : "btn-outline-secondary") rounded-pill px-3">Toate</a>
+
+            @foreach (var g in ViewBag.Genres as List<string>)
+            {
+                <a asp-action="Index" asp-route-genreFilter="@g" asp-route-sortOrder="@sort"
+                   class="btn btn-sm @(genre == g ? "btn-danger" : "btn-outline-secondary") rounded-pill px-3">@g</a>
+            }
+        </div>
+
+        @* SORTARE  *@
+        <div class="d-flex flex-wrap gap-2 align-items-center pt-2 border-top border-secondary">
+            <span class="text-muted small fw-bold text-uppercase me-2">Sortare:</span>
+
+            <a asp-action="Index" asp-route-genreFilter="@ViewBag.CurrentGenre" asp-route-sortOrder="title_asc"
+               class="btn btn-sm @(sort == "title_asc" ? "btn-warning text-dark" : "btn-outline-light") rounded-pill px-3 fw-bold">A - Z</a>
+
+            <a asp-action="Index" asp-route-genreFilter="@ViewBag.CurrentGenre" asp-route-sortOrder="title_desc"
+               class="btn btn-sm @(sort == "title_desc" ? "btn-warning text-dark" : "btn-outline-light") rounded-pill px-3 fw-bold">Z - A</a>
+
+            <a asp-action="Index" asp-route-genreFilter="@ViewBag.CurrentGenre" asp-route-sortOrder=""
+               class="btn btn-sm @(string.IsNullOrEmpty(sort) ? "btn-warning text-dark" : "btn-outline-light") rounded-pill px-3 fw-bold">Cele mai noi</a>
+
+            <a asp-action="Index" asp-route-genreFilter="@ViewBag.CurrentGenre" asp-route-sortOrder="oldest"
+               class="btn btn-sm @(sort == "oldest" ? "btn-warning text-dark" : "btn-outline-light") rounded-pill px-3 fw-bold">Cele mai vechi</a>
+        </div>
+    </div>
+
+    @* --- GRILA FILME --- *@
+    <div class="row">
+        @foreach (var movie in Model)
         {
-            <div class="text-muted">
-                Rezultate pentru: <strong class="text-light">"@currentFilter"</strong>
-                <a asp-action="Index" class="btn btn-sm btn-outline-danger ms-3 rounded-pill">
-                    <i class="bi bi-x"></i> Șterge filtrul
-                </a>
+            var activity = userActivities.FirstOrDefault(a => a.MovieId == movie.Id);
+            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-5">
+                <partial name="_MovieCard" model="movie" view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", activity?.Status == 1 }, { "IsWatched", activity?.Status == 2 } }' />
             </div>
         }
     </div>
 
-    @* --- ECRAN "MOVIE DOESN'T EXIST" --- *@
-    @if (!Model.Any())
+    @* --- PAGINARE --- *@
+    @if (totalPages > 1)
     {
-        <div class="alert bg-transparent border border-secondary shadow-sm text-center py-5 rounded-3 mt-4">
-            <i class="bi bi-search display-1 d-block mb-3 text-secondary opacity-25"></i>
-            <h3 class="fw-bold text-light">Nu am găsit niciun film</h3>
-            <p class="text-muted lead mb-4">Ne pare rău, dar nu există niciun film care să conțină <strong class="text-danger">"@currentFilter"</strong> în baza noastră de date.</p>
-            <a asp-action="Index" class="btn btn-danger px-4 py-2 shadow-sm fw-bold">
-                <i class="bi bi-arrow-left me-2"></i> Întoarce-te la întregul catalog
-            </a>
-        </div>
-    }
-    else
-    {
-        @* --- GRILA DE FILME --- *@
-        <div class="row">
-            @foreach (var movie in Model)
-            {
-                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
-                    <partial name="_MovieCard" model="movie" />
-                </div>
-            }
-        </div>
+        <nav class="mt-4">
+            <ul class="pagination justify-content-center">
+                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
+                    <a class="page-link bg-dark border-secondary text-light" asp-route-page="@(currentPage - 1)" asp-route-genreFilter="@genre" asp-route-sortOrder="@sort">Inapoi</a>
+                </li>
 
-       
-    }
+                @for (int i = 1; i <= totalPages; i++)
+                {
+                    <li class="page-item @(currentPage == i ? "active" : "")">
+                        <a class="page-link @(currentPage == i ? "bg-danger border-danger" : "bg-dark border-secondary text-light")"
+                           asp-route-page="@i" asp-route-genreFilter="@genre" asp-route-sortOrder="@sort">@i</a>
+                    </li>
+                }
 
+                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
+                    <a class="page-link bg-dark border-secondary text-light" asp-route-page="@(currentPage + 1)" asp-route-genreFilter="@genre" asp-route-sortOrder="@sort">Inainte</a>
+                </li>
+            </ul>
+        </nav>
+    }
 </div>

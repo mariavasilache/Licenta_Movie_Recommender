@@ -5,23 +5,18 @@
 }
 
 @* --- MESAJE DE SUCCES / EROARE --- *@
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
-@if (TempData["Error"] != null)
-{
-    <div class="alert alert-danger alert-dismissible fade show mt-3 shadow-sm" role="alert">
-        <i class="bi bi-exclamation-triangle-fill me-2"></i> @TempData["Error"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
+<div id="alert-container">
+    @if (TempData["Success"] != null)
+    {
+        <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm border-0" role="alert" style="background-color: rgba(25, 135, 84, 0.2); color: #75b798;">
+            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
+            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+</div>
 
 <style>
-    /* design curat sistem rating cu stelute */
+    /* design sistem rating cu stelute  */
     .star-rating {
         display: flex;
         flex-direction: row-reverse;
@@ -33,61 +28,77 @@
         }
 
         .star-rating label {
-            color: #444; /* Gri inchis adaptat la dark mode */
-            font-size: 2rem;
+            color: #555; 
+            font-size: 2.2rem;
             padding: 0 5px;
             cursor: pointer;
-            transition: color 0.2s;
+            transition: color 0.2s, transform 0.2s;
         }
 
-            /* Lumineaza stelutele in galben de la stanga la dreapta cand treci cu mouse-ul sau cand exista nota */
-            .star-rating input:checked ~ label,
-            .star-rating label:hover,
-            .star-rating label:hover ~ label {
-                color: #ffc107;
+            .star-rating label:hover {
+                transform: scale(1.1);
             }
+
+                .star-rating input:checked ~ label,
+                .star-rating label:hover,
+                .star-rating label:hover ~ label {
+                    color: #ffc107; 
+                }
+
+    /* Containerul principal*/
+    .details-card {
+        background-color: #1f1f1f;
+        border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+
+    .action-card {
+        background-color: #2b2b2b !important;
+        border: 1px solid rgba(255, 255, 255, 0.05) !important;
+    }
 </style>
 
-<div class="container mt-5 mb-5" id="main-details-container">
+<div class="container mt-4 mb-5" id="main-details-container">
 
-    <div class="mb-3">
-        <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary shadow-sm px-3 py-2 fw-bold text-decoration-none">
-            <i class="bi bi-arrow-left me-1"></i> Înapoi
-        </a>
-    </div>
+    @* --- HEADER CU BUTON DE INAPOI --- *@
+    <partial name="_PageHeader" model='(string)ViewData["Title"]' />
 
-    <div class="row bg-white rounded shadow-sm p-4">
+    <div class="row details-card rounded shadow-lg p-4 g-4">
 
+        @* --- POSTER --- *@
         <div class="col-md-4 text-center">
-            <img src="@Model.PosterUrl" class="img-fluid rounded shadow" alt="@Model.Title" style="max-height: 500px; object-fit: cover;" onerror="this.src='https://placehold.co/300x450/2b2b2b/ffffff?text=@Uri.EscapeDataString(Model.Title)'" />
+            <img src="@Model.PosterUrl"
+                 class="img-fluid rounded shadow-lg border border-secondary"
+                 alt="@Model.Title"
+                 style="max-height: 550px; width: 100%; object-fit: cover; border-color: rgba(255,255,255,0.1) !important;"
+                 onerror="this.src='https://placehold.co/400x600/2b2b2b/ffffff?text=@Uri.EscapeDataString(Model.Title)'" />
         </div>
 
-        <div class="col-md-8 mt-4 mt-md-0">
-            <h1 class="display-5 fw-bold mb-2">@Model.Title</h1>
+        @* --- INFORMATII --- *@
+        <div class="col-md-8">
+            <h1 class="display-4 fw-bold mb-2 text-warning">@Model.Title</h1>
 
-            <p class="text-muted">
-                <i class="bi bi-calendar3"></i> Lansare: <strong>@(string.IsNullOrEmpty(ViewBag.ReleaseDate) ? "N/A" : ViewBag.ReleaseDate)</strong> |
-                <i class="bi bi-star-fill text-warning"></i> Nota TMDB: <strong>@(ViewBag.TmdbRating > 0 ? ((double)ViewBag.TmdbRating).ToString("0.0") : "N/A")</strong> / 10
+            <p class="text-muted fs-5">
+                <i class="bi bi-calendar3 text-danger me-1"></i> Lansare: <span class="text-light">@(string.IsNullOrEmpty(ViewBag.ReleaseDate) ? "N/A" : ViewBag.ReleaseDate)</span> |
+                <i class="bi bi-star-fill text-warning me-1"></i> TMDB: <span class="text-light">@(ViewBag.TmdbRating > 0 ? ((double)ViewBag.TmdbRating).ToString("0.0") : "N/A")</span> <small>/ 10</small>
             </p>
 
-            <div class="mb-4">
+            <div class="mb-4 mt-3">
                 @if (!string.IsNullOrEmpty(Model.Genres))
                 {
                     @foreach (var gen in Model.Genres.Split('|'))
                     {
-                        <span class="badge bg-secondary me-1 fs-6 px-3 py-2">@gen</span>
+                        <span class="badge rounded-pill bg-dark border border-secondary me-2 fs-6 px-3 py-2 text-light">@gen</span>
                     }
                 }
             </div>
 
-            <h4 class="fw-bold">Sinopsis</h4>
-            <p class="lead" style="font-size: 1.1rem; line-height: 1.6;">
+            <h4 class="fw-bold text-warning border-bottom border-secondary pb-2 mb-3">Sinopsis</h4>
+            <p class="lead text-light opacity-75" style="line-height: 1.8;">
                 @ViewBag.Overview
             </p>
 
-            <hr class="my-4" />
-
-            <div class="card border-0 bg-light shadow-sm">
+            @* --- ZONA ACTIUNI USER --- *@
+            <div class="card action-card shadow-sm mt-5">
                 <div class="card-body p-4">
                     @if (User.Identity.IsAuthenticated)
                     {
@@ -96,7 +107,8 @@
                         var listsContainingMovie = ViewBag.ListsContainingMovie as List<int> ?? new List<int>();
                         var userLists = ViewBag.UserLists as List<Licenta_Movie_Recommender.Models.CustomList> ?? new List<Licenta_Movie_Recommender.Models.CustomList>();
 
-                        <div class="d-flex align-items-center justify-content-between mb-3 border-bottom pb-3">
+                        @* RATING  *@
+                        <div class="d-flex align-items-center justify-content-between mb-4 border-bottom border-secondary pb-3">
                             <form asp-action="SaveRating" method="post" class="m-0 d-flex align-items-center">
                                 <input type="hidden" name="movieId" value="@Model.Id" />
                                 <div class="star-rating me-3">
@@ -106,55 +118,50 @@
                                         <label for="star_@i" title="@i stele"><i class="bi bi-star-fill"></i></label>
                                     }
                                 </div>
-                                @if (rating > 0)
-                                {
-                                    <span class="badge bg-warning text-dark fs-6 shadow-sm">Nota: @rating</span>
-                                }
+                                <span id="rating-badge-container">
+                                    @if (rating > 0)
+                                    {
+                                        <span class="badge bg-warning text-dark fs-6 shadow-sm">Nota ta: @rating</span>
+                                    }
+                                </span>
                             </form>
 
                             @if (rating > 0)
                             {
                                 <form asp-action="RemoveRatingOnly" method="post" class="m-0">
                                     <input type="hidden" name="movieId" value="@Model.Id" />
-                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Șterge doar nota"><i class="bi bi-x-circle fs-5"></i></button>
+                                    <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Șterge nota">
+                                        <i class="bi bi-trash3 fs-5"></i>
+                                    </button>
                                 </form>
                             }
                         </div>
 
-                        <div class="d-flex flex-wrap gap-2" id="action-buttons-container">
+                        @* BUTTONS  *@
+                        <div class="d-flex flex-wrap gap-3" id="action-buttons-container">
 
+                            @* Vizionat *@
                             @if (status == 2 || rating > 0)
                             {
-                                @if (rating > 0)
-                                {
-                                    <button type="button" class="btn btn-success shadow-sm fw-bold" data-bs-toggle="modal" data-bs-target="#removeWatchedModal">
-                                        <i class="bi bi-check-circle-fill"></i> Vizionat
-                                    </button>
-                                }
-                                else
-                                {
-                                    <form asp-action="RemoveActivityStatus" method="post" class="m-0">
-                                        <input type="hidden" name="movieId" value="@Model.Id" />
-                                        <button type="submit" class="btn btn-success shadow-sm fw-bold" title="Anulează vizionarea">
-                                            <i class="bi bi-check-circle-fill"></i> Vizionat
-                                        </button>
-                                    </form>
-                                }
+                                <button type="button" class="btn btn-success px-4 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#removeWatchedModal">
+                                    <i class="bi bi-check-circle-fill me-2"></i> Vizionat
+                                </button>
                             }
                             else
                             {
                                 <form asp-action="MarkAsWatched" method="post" class="m-0">
                                     <input type="hidden" name="movieId" value="@Model.Id" />
-                                    <button type="submit" class="btn btn-outline-success shadow-sm"><i class="bi bi-eye"></i> Marchează ca văzut</button>
+                                    <button type="submit" class="btn btn-outline-success px-4 fw-bold"><i class="bi bi-eye me-2"></i> Marchează ca văzut</button>
                                 </form>
                             }
 
+                            @* Watchlist *@
                             @if (status == 1)
                             {
                                 <form asp-action="RemoveActivityStatus" method="post" class="m-0">
                                     <input type="hidden" name="movieId" value="@Model.Id" />
-                                    <button type="submit" class="btn btn-warning shadow-sm text-dark fw-bold">
-                                        <i class="bi bi-bookmark-check-fill"></i> În Watchlist
+                                    <button type="submit" class="btn btn-warning px-4 text-dark fw-bold shadow">
+                                        <i class="bi bi-bookmark-check-fill me-2"></i> În Watchlist
                                     </button>
                                 </form>
                             }
@@ -162,50 +169,48 @@
                             {
                                 <form asp-action="AddToWatchlist" method="post" class="m-0">
                                     <input type="hidden" name="movieId" value="@Model.Id" />
-                                    <button type="submit" class="btn btn-outline-warning shadow-sm text-dark"><i class="bi bi-bookmark-plus"></i> Watchlist</button>
+                                    <button type="submit" class="btn btn-outline-warning px-4 fw-bold"><i class="bi bi-bookmark-plus me-2"></i> Watchlist</button>
                                 </form>
                             }
 
+                            @* Dropdown Liste *@
                             <div class="dropdown">
-                                <button class="btn btn-outline-secondary shadow-sm dropdown-toggle" type="button" data-bs-toggle="dropdown" aria-expanded="false">
-                                    <i class="bi bi-folder-plus"></i> Adaugă în listă...
+                                <button class="btn btn-outline-info px-4 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
+                                    <i class="bi bi-folder-plus me-2"></i> Adaugă în listă
                                 </button>
-                                <ul class="dropdown-menu shadow-sm" style="min-width: 260px;">
+                                <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-secondary" style="min-width: 280px;">
                                     <li>
-                                        <button type="button" class="dropdown-item fw-bold text-primary py-2" data-bs-toggle="modal" data-bs-target="#createListFromDetailsModal">
-                                            <i class="bi bi-plus-lg me-2"></i> Listă nouă
+                                        <button type="button" class="dropdown-item fw-bold text-info py-2" data-bs-toggle="modal" data-bs-target="#createListFromDetailsModal">
+                                            <i class="bi bi-plus-circle-dotted me-2"></i> Creează listă nouă
                                         </button>
                                     </li>
                                     @if (userLists.Any())
                                     {
-                                        <li><hr class="dropdown-divider"></li>
+                                        <li><hr class="dropdown-divider border-secondary"></li>
                                         @foreach (var list in userLists)
                                         {
                                             var isInList = listsContainingMovie.Contains(list.Id);
                                             <li>
                                                 <div class="dropdown-item d-flex justify-content-between align-items-center py-2">
-                                                    <span class="text-truncate" style="max-width: 160px; font-size: 0.9rem;">
+                                                    <span class="text-truncate" style="max-width: 180px;">
                                                         @if (isInList)
                                                         {
-                                                            <i class="bi bi-check-circle-fill text-success me-1"></i>
+                                                            <i class="bi bi-check2 text-success me-1"></i>
                                                         }
                                                         @list.Name
                                                     </span>
-
                                                     @if (isInList)
                                                     {
                                                         <form asp-action="RemoveMovieFromCustomList" method="post" class="m-0">
-                                                            <input type="hidden" name="customListId" value="@list.Id" />
-                                                            <input type="hidden" name="movieId" value="@Model.Id" />
-                                                            <button type="submit" class="btn btn-sm btn-link text-danger p-0 ms-2" title="Șterge din @list.Name"><i class="bi bi-x-circle-fill fs-5"></i></button>
+                                                            <input type="hidden" name="customListId" value="@list.Id" /><input type="hidden" name="movieId" value="@Model.Id" />
+                                                            <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-dash-circle"></i></button>
                                                         </form>
                                                     }
                                                     else
                                                     {
                                                         <form asp-action="AddMovieToCustomList" method="post" class="m-0">
-                                                            <input type="hidden" name="customListId" value="@list.Id" />
-                                                            <input type="hidden" name="movieId" value="@Model.Id" />
-                                                            <button type="submit" class="btn btn-sm btn-link text-success p-0 ms-2" title="Adaugă în @list.Name"><i class="bi bi-plus-circle fs-5"></i></button>
+                                                            <input type="hidden" name="customListId" value="@list.Id" /><input type="hidden" name="movieId" value="@Model.Id" />
+                                                            <button type="submit" class="btn btn-link text-success p-0"><i class="bi bi-plus-circle"></i></button>
                                                         </form>
                                                     }
                                                 </div>
@@ -218,60 +223,59 @@
                     }
                     else
                     {
-                        <div class="text-center py-2">
-                            <h5 class="text-muted mb-3"><i class="bi bi-lock"></i> Autentifică-te pentru a salva filme și a acorda note.</h5>
-                            <a asp-controller="Account" asp-action="Login" class="btn btn-primary px-5">Intră în cont</a>
+                        <div class="text-center py-3">
+                            <p class="text-muted mb-3 fs-5">Vrei să salvezi filmul sau să îi dai o notă?</p>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-warning px-5 fw-bold text-dark">Autentifică-te acum</a>
                         </div>
                     }
                 </div>
             </div>
-
         </div>
     </div>
 </div>
 
-@* --- MODALELE RAMAN LA FEL --- *@
-<div class="modal fade" id="createListFromDetailsModal" tabindex="-1" aria-hidden="true">
-    <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold text-primary">Creează o listă nouă</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+<div class="modal fade" id="createListFromDetailsModal" tabindex="-1">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content bg-dark border-secondary shadow-lg">
+            <div class="modal-header border-secondary">
+                <h5 class="modal-title fw-bold text-info">Listă nouă</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="CreateCustomList" method="post">
                 <input type="hidden" name="sourceMovieId" value="@Model.Id" />
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="listName" class="form-label fw-bold small">Numele listei</label>
-                        <input type="text" class="form-control" id="listName" name="name" required maxlength="100">
+                        <label class="form-label text-muted small fw-bold">NUME LISTĂ</label>
+                        <input type="text" class="form-control bg-dark text-white border-secondary" name="name" required maxlength="100" placeholder="Ex: Favorite 2024">
                     </div>
                     <div class="mb-3">
-                        <label for="listDesc" class="form-label fw-bold small">Descriere (opțional)</label>
-                        <textarea class="form-control" id="listDesc" name="description" rows="2" maxlength="500"></textarea>
+                        <label class="form-label text-muted small fw-bold">DESCRIERE (OPȚIONAL)</label>
+                        <textarea class="form-control bg-dark text-white border-secondary" name="description" rows="2" maxlength="500"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Anulează</button>
-                    <button type="submit" class="btn btn-success px-4">Salvează</button>
+                <div class="modal-footer border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anulează</button>
+                    <button type="submit" class="btn btn-info px-4 fw-bold">Creează și adaugă</button>
                 </div>
             </form>
         </div>
     </div>
 </div>
 
-<div class="modal fade" id="removeWatchedModal" tabindex="-1" aria-hidden="true">
+<div class="modal fade" id="removeWatchedModal" tabindex="-1">
     <div class="modal-dialog modal-dialog-centered">
-        <div class="modal-content border-0 shadow-lg">
+        <div class="modal-content bg-dark border-danger shadow-lg">
             <div class="modal-header bg-danger text-white border-0">
-                <h5 class="modal-title fw-bold"><i class="bi bi-exclamation-triangle-fill me-2"></i> Atenție</h5>
-                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
+                <h5 class="modal-title fw-bold">Atenție!</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
-            <div class="modal-body py-4">
-                <p class="mb-1" style="font-size: 1.1rem;">Dacă anulezi vizionarea acestui film, <strong>se va șterge automat și nota</strong> pe care i-ai acordat-o.</p>
-                <p class="text-muted mb-0 mt-2">Ești sigur că vrei să continui?</p>
+            <div class="modal-body py-4 text-center">
+                <i class="bi bi-exclamation-octagon text-danger display-4 mb-3 d-block"></i>
+                <p class="fs-5 mb-0 text-light">Dacă anulezi vizionarea, <strong>nota acordată va fi ștearsă</strong>.</p>
+                <p class="text-muted">Sigur vrei să continui?</p>
             </div>
-            <div class="modal-footer border-0 bg-light">
-                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Renunță</button>
+            <div class="modal-footer border-0 justify-content-center pb-4">
+                <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">Nu, lasă așa</button>
                 <form asp-action="RemoveActivityStatus" method="post" class="m-0">
                     <input type="hidden" name="movieId" value="@Model.Id" />
                     <button type="submit" class="btn btn-danger px-4 fw-bold">Da, șterge tot</button>
@@ -283,90 +287,84 @@
 
 @section Scripts {
     <script>
-       
-        const actionForms = document.querySelectorAll('#action-buttons-container form[action*="AddToWatchlist"], #action-buttons-container form[action*="MarkAsWatched"]');
-
-        actionForms.forEach(form => {
+        // --- AJAX PENTRU BUTOANE WATCHLIST / VAZUT (FARA RELOAD!) ---
+        document.querySelectorAll('#action-buttons-container form').forEach(form => {
             form.addEventListener('submit', async (e) => {
                 e.preventDefault();
+
                 const btn = form.querySelector('button');
                 const originalHtml = btn.innerHTML;
+                const actionUrl = form.action;
 
-                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span> Se salvează...';
+                btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
                 btn.disabled = true;
 
                 try {
-                    await fetch(form.action, { method: 'POST', body: new FormData(form) });
+                    const response = await fetch(actionUrl, {
+                        method: 'POST',
+                        body: new FormData(form)
+                    });
 
-                    if(form.action.includes('AddToWatchlist')) {
-                        btn.className = 'btn btn-warning shadow-sm text-dark fw-bold';
-                        btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> În Watchlist';
-                        form.action = '/Movies/RemoveActivityStatus';
-                    } else if (form.action.includes('MarkAsWatched')) {
-                        btn.className = 'btn btn-success shadow-sm fw-bold';
-                        btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Vizionat';
-                        form.action = '/Movies/RemoveActivityStatus';
+                    if (response.ok) {
+                        if (actionUrl.includes('AddToWatchlist')) {
+                            btn.className = 'btn btn-warning px-4 text-dark fw-bold shadow';
+                            btn.innerHTML = '<i class="bi bi-bookmark-check-fill me-2"></i> În Watchlist';
+                            form.action = '/Movies/RemoveActivityStatus';
+                        }
+                        else if (actionUrl.includes('MarkAsWatched')) {
+                            btn.className = 'btn btn-success px-4 fw-bold shadow';
+                            btn.innerHTML = '<i class="bi bi-check-circle-fill me-2"></i> Vizionat';
+                            form.action = '/Movies/RemoveActivityStatus';
+                        }
+                        else if (actionUrl.includes('RemoveActivityStatus')) {
+                            if (btn.classList.contains('btn-warning')) {
+                                btn.className = 'btn btn-outline-warning px-4 fw-bold';
+                                btn.innerHTML = '<i class="bi bi-bookmark-plus me-2"></i> Watchlist';
+                                form.action = '/Movies/AddToWatchlist';
+                            } else {
+                                btn.className = 'btn btn-outline-success px-4 fw-bold';
+                                btn.innerHTML = '<i class="bi bi-eye me-2"></i> Marchează ca văzut';
+                                form.action = '/Movies/MarkAsWatched';
+                            }
+                        }
                     }
-
-                    btn.disabled = false;
                 } catch (error) {
+                    console.error("Eroare AJAX:", error);
                     btn.innerHTML = originalHtml;
+                } finally {
                     btn.disabled = false;
                 }
             });
         });
 
-        // --- AJAX PENTRU STELUTELE DE RATING ---
-        (function () {
-            const ratingInputs = document.querySelectorAll('.ajax-rating');
-            if (!ratingInputs.length) return;
+        // --- AJAX PENTRU RATING (STELUTE) ---
+        document.querySelectorAll('.ajax-rating').forEach(input => {
+            input.addEventListener('change', async (e) => {
+                const selectedRating = e.target.value;
+                const form = e.target.closest('form');
 
-            ratingInputs.forEach(input => {
-                input.addEventListener('change', async (e) => {
-                    const selectedRating = e.target.value;
-                    const form = e.target.closest('form');
+                try {
+                    const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+                    if (response.ok) {
+                        const badgeContainer = document.getElementById('rating-badge-container');
+                        badgeContainer.innerHTML = `<span class="badge bg-warning text-dark fs-6 shadow-sm">Nota ta: ${selectedRating}</span>`;
 
-                    try {
-                        const response = await fetch(form.action, {
-                            method: 'POST',
-                            body: new FormData(form)
-                        });
-
-                        if (!response.ok) throw new Error('Eroare retea');
-
-                        
-                        let badge = form.querySelector('.badge.bg-warning');
-                        if (badge) {
-                            badge.textContent = `Nota: ${selectedRating}`;
-                        } else {
-                            badge = document.createElement('span');
-                            badge.className = 'badge bg-warning text-dark fs-6 shadow-sm ms-3';
-                            badge.textContent = `Nota: ${selectedRating}`;
-                            form.appendChild(badge);
-                        }
-
-                        
-                        const oldAlert = document.getElementById('ratingAlert');
-                        if(oldAlert) oldAlert.remove();
-
-                        
-                        const alertHtml = `
-                            <div id="ratingAlert" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
-                                <i class="bi bi-check-circle-fill me-2"></i> Ai acordat nota <strong>${selectedRating}</strong> acestui film.
-                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-                            </div>
-                        `;
-
-                        const mainContainer = document.getElementById('main-details-container');
-                        if(mainContainer) {
-                            mainContainer.insertAdjacentHTML('afterbegin', alertHtml);
-                        }
-
-                    } catch (error) {
-                        console.error("Eroare la salvarea notei", error);
+                        showToast(`Ai acordat nota ${selectedRating}!`, 'success');
                     }
-                });
+                } catch (error) { console.error("Eroare rating", error); }
             });
-        })();
+        });
+
+        function showToast(message, type) {
+            const toastHtml = `
+                <div class="alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-4 shadow-lg border-0"
+                     style="z-index: 9999; min-width: 250px; background-color: #198754; color: white;">
+                    <i class="bi bi-check-circle-fill me-2"></i> ${message}
+                </div>`;
+            document.body.insertAdjacentHTML('afterbegin', toastHtml);
+            const alert = document.querySelector('.alert');
+            setTimeout(() => alert?.remove(), 2500);
+        }
     </script>
+}
 }

@@ -82,34 +82,44 @@
     });
 
     // --- REFRESH DINAMIC (AJAX) SECTIUNE DESCOPERA ---
-    const btnRefresh = document.getElementById('btnRefreshDiscover');
-    const discoverGrid = document.getElementById('discoverGrid');
+    document.addEventListener('DOMContentLoaded', () => {
+        const btnRefresh = document.getElementById('btnRefreshDiscover');
+        const discoverGrid = document.getElementById('discoverGrid');
 
-    if (btnRefresh && discoverGrid) {
-        btnRefresh.addEventListener('click', async function () {
-            const originalHtml = btnRefresh.innerHTML;
-            btnRefresh.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-            btnRefresh.disabled = true;
+        if (btnRefresh && discoverGrid) {
+            btnRefresh.addEventListener('click', async function () {
+                
+                if (this.disabled) return;
 
-            try {
-                const response = await fetch('/Home/Index?refreshDiscover=true');
-                const htmlString = await response.text();
+                
+                const originalHtml = this.innerHTML;
+                this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                this.disabled = true;
 
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlString, 'text/html');
-                const newGrid = doc.getElementById('discoverGrid');
+                try {
+                   
+                    const response = await fetch(`/Home/GetDiscoverMovies?t=${Date.now()}`, {
+                        headers: { 'X-Requested-With': 'XMLHttpRequest' }
+                    });
 
-                if (newGrid) {
-                    discoverGrid.innerHTML = newGrid.innerHTML;
+                    if (response.ok) {
+                        const htmlSnippet = await response.text();
+
+                        
+                        if (htmlSnippet.trim() !== "") {
+                            discoverGrid.innerHTML = htmlSnippet;
+                        }
+                    }
+                } catch (error) {
+                    console.error("Eroare la refresh:", error);
+                } finally {
+                    
+                    this.innerHTML = originalHtml;
+                    this.disabled = false;
                 }
-            } catch (error) {
-                console.error("Eroare la refresh-ul sectiunii descopera:", error);
-            } finally {
-                btnRefresh.innerHTML = originalHtml;
-                btnRefresh.disabled = false;
-            }
-        });
-    }
+            });
+        }
+    });
 
     // --- BARA DE CAUTARE LIVE (PREVIEW) ---
     const searchInput = document.getElementById('searchInput');

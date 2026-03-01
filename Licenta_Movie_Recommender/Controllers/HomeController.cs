@@ -71,9 +71,9 @@ namespace Licenta_Movie_Recommender.Controllers
                         .ToListAsync();
 
                     var pool = await _recService.GetRecommendationsAsync(userId, 20);
-                    var randomRecommendations = pool.OrderBy(x => Guid.NewGuid()).Take(6).ToList();
+                    var topRecommendations = pool.Take(6).ToList();
 
-                    return View(randomRecommendations);
+                    return View(topRecommendations);
                 }
             }
 
@@ -81,27 +81,30 @@ namespace Licenta_Movie_Recommender.Controllers
         }
 
         // --- METODA OPTIMIZATA REFRESH RAPID (AJAX) ---
+        [HttpGet]
         public async Task<IActionResult> GetDiscoverMovies()
         {
+            
+            int randomSkip = Random.Shared.Next(0, 500);
+
             var discoverMovies = await _context.Movies
+                .AsNoTracking() 
                 .Where(m => !string.IsNullOrEmpty(m.PosterUrl) && m.PosterUrl.StartsWith("http"))
-                .OrderBy(m => Guid.NewGuid())
-                .Take(12) // Aduce 12 filme noi
+                .OrderBy(m => m.Id)
+                .Skip(randomSkip)
+                .Take(12)
                 .ToListAsync();
 
+           
             if (User.Identity.IsAuthenticated)
             {
-                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userIdString != null)
-                {
-                    var userId = int.Parse(userIdString);
-                    ViewBag.UserActivities = await _context.UserActivities
-                        .Where(ua => ua.UserId == userId)
-                        .ToListAsync();
-                }
+                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                ViewBag.UserActivities = await _context.UserActivities
+                    .AsNoTracking()
+                    .Where(ua => ua.UserId == userId)
+                    .ToListAsync();
             }
 
-            
             return PartialView("_DiscoverMovies", discoverMovies);
         }
 

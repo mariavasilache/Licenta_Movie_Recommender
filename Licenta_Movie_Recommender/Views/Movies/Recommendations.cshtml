@@ -23,31 +23,22 @@
         <div class="alert bg-dark border border-success shadow-sm mb-4 rounded-3 d-flex align-items-center p-3">
             <i class="bi bi-check-circle-fill text-success fs-3 me-3"></i>
             <div class="text-light">
-                <strong class="text-success">Sistem Hibrid Activ:</strong> Aceste recomandări sunt calculate matematic pe baza filmelor pe care le-ai apreciat, a genurilor tale preferate și a intențiilor din Watchlist.
+                <strong class="text-success">Sistem Hibrid Activ:</strong> Aceste recomandări sunt calculate matematic pe baza filmelor pe care le-ai apreciat și a genurilor tale preferate.
             </div>
         </div>
 
         <div class="row">
             @foreach (var movie in Model)
             {
-                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4 position-relative">
+                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-5 position-relative">
 
-                    
                     <span class="position-absolute badge bg-danger shadow-sm" style="top: 8px; left: 20px; z-index: 5; pointer-events: none;">
                         <i class="bi bi-heart-fill"></i> Pentru tine
                     </span>
 
-                    
                     <partial name="_MovieCard" model="movie" />
 
                    
-                    @if (!string.IsNullOrEmpty(movie.Genres))
-                    {
-                        <div class="text-center mt-1">
-                            <small class="text-muted" style="font-size: 0.75rem;">@movie.Genres.Split('|')[0]</small>
-                        </div>
-                    }
-
                 </div>
             }
         </div>

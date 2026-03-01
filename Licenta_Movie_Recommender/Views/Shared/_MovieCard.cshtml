@@ -4,31 +4,31 @@
     var showButtons = ViewData["ShowButtons"] as bool? ?? true;
     var inWatchlist = ViewData["InWatchlist"] as bool? ?? false;
     var isWatched = ViewData["IsWatched"] as bool? ?? false;
+    bool hasValidPoster = !string.IsNullOrEmpty(Model.PosterUrl) &&
+                          Model.PosterUrl.StartsWith("http") &&
+                          !Model.PosterUrl.Contains("placeholder");
 }
 
 <div class="card bg-transparent border-0 movie-card position-relative h-100">
     <a href="/Movies/Details/@Model.Id" class="text-decoration-none d-block position-relative bg-dark rounded shadow-sm" style="aspect-ratio: 2/3; overflow: hidden;">
-
-        @if (!string.IsNullOrEmpty(Model.PosterUrl))
+        @if (hasValidPoster)
         {
-            @* umaginea principala *@
             <img src="@Model.PosterUrl"
                  class="card-img-top w-100 h-100"
                  alt="@Model.Title"
                  style="object-fit: cover;"
                  onerror="this.style.display='none'; this.nextElementSibling.style.display='flex';" />
 
-            @* div rezerva ascuns, devine vizibil (flex) doar la eroare *@
+            
             <div class="align-items-center justify-content-center h-100 p-3 text-center fw-bold text-light bg-secondary"
-                 style="display: none; font-size: 0.9rem;">
+                 style="display: none; font-size: 0.8rem;">
                 @Model.Title
             </div>
         }
         else
         {
-            @* caz url null  *@
             <div class="d-flex align-items-center justify-content-center h-100 p-3 text-center fw-bold text-light bg-secondary"
-                 style="font-size: 0.9rem;">
+                 style="font-size: 0.8rem;">
                 @Model.Title
             </div>
         }

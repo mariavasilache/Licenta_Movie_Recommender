@@ -90,6 +90,34 @@ namespace Licenta_Movie_Recommender.Controllers
             return View("Index", rezultate);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> SearchPreview(string q)
+        {
+            
+            if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
+                return Json(new { movies = new List<object>(), totalCount = 0 });
+
+            //nr filme care contin textul
+            var totalCount = await _context.Movies
+                .Where(m => m.Title.Contains(q))
+                .CountAsync();
+
+            //primele 5 pt preview
+            var movies = await _context.Movies
+                .Where(m => m.Title.Contains(q))
+                .Take(5)
+                .Select(m => new {
+                    id = m.Id,
+                    title = m.Title,
+                    posterUrl = m.PosterUrl,
+                    
+                })
+                .ToListAsync();
+
+           
+            return Json(new { movies = movies, totalCount = totalCount });
+        }
+
         // ----------------------------------- PAGINA RECOMANDARI ----------------------------------
         [HttpGet]
         public async Task<IActionResult> Recommendations()

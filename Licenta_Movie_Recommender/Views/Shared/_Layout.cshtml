@@ -31,9 +31,13 @@
                         </li>
                     </ul>
 
-                    <form class="d-flex" asp-controller="Movies" asp-action="Search" method="get">
-                        <input class="form-control me-2" type="search" name="term" placeholder="Cauta un film..." aria-label="Search">
-                        <button class="btn btn-outline-primary" type="submit">Cauta</button>
+                    <form class="d-flex position-relative ms-auto" asp-controller="Movies" asp-action="Index" method="get" id="searchForm">
+                        <input class="form-control me-2 bg-dark text-light border-secondary" type="search" placeholder="Caută filme..." aria-label="Search" name="searchString" id="searchInput" value="@ViewData["CurrentFilter"]" autocomplete="off">
+                        <button class="btn btn-outline-danger" type="submit"><i class="bi bi-search"></i></button>
+
+                        <div id="searchPreviewDropdown" class="dropdown-menu w-100 shadow-lg p-0" style="position: absolute; top: 110%; left: 0; display: none; background-color: #1f1f1f; border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; overflow: hidden; z-index: 1050;">
+                            <div id="searchResultsList" class="list-group list-group-flush m-0"></div>
+                        </div>
                     </form>
 
                     <ul class="navbar-nav ms-3">

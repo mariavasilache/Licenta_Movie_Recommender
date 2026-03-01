@@ -3,37 +3,48 @@
 }
 
 <div class="container mt-4 mb-5">
-    <div class="d-flex align-items-center mb-4 border-bottom pb-3">
-        <h2 class="text-primary fw-bold mb-0"><i class="bi bi-clock-history me-2"></i> Activitatea Ta</h2>
-        <a asp-action="MyProfile" class="btn btn-sm btn-outline-secondary ms-auto">&laquo; Înapoi la Profil</a>
+    <div class="d-flex align-items-center mb-4 border-bottom border-secondary pb-3">
+        <h2 class="text-danger fw-bold mb-0"><i class="bi bi-clock-history me-2"></i> Activitatea Ta</h2>
+        <a asp-action="MyProfile" asp-controller="Account" class="btn btn-sm btn-outline-light opacity-75 ms-auto">&laquo; Înapoi la Profil</a>
     </div>
 
-    <ul class="nav nav-pills nav-fill mb-4 bg-light rounded shadow-sm p-1" id="historyTabs" role="tablist">
+    @* --- TAB-URILE (Adaptate pentru Dark Mode) --- *@
+    <ul class="nav nav-pills nav-fill mb-4 bg-dark border border-secondary rounded shadow-sm p-1" id="historyTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold" id="watched-tab" data-bs-toggle="tab" data-bs-target="#watched" type="button" role="tab" onclick="switchTab(1)">
+            <button class="nav-link active fw-bold text-light" id="watched-tab" data-bs-toggle="tab" data-bs-target="#watched" type="button" role="tab" onclick="switchTab(1)">
                 <i class="bi bi-eye-fill"></i> Filme Văzute
             </button>
         </li>
         <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab" onclick="switchTab(2)">
+            <button class="nav-link fw-bold text-light" id="watchlist-tab" data-bs-toggle="tab" data-bs-target="#watchlist" type="button" role="tab" onclick="switchTab(2)">
                 <i class="bi bi-bookmark-fill"></i> Watchlist
             </button>
         </li>
     </ul>
 
+    <style>
+        /* Schimbam culoarea de selectie a tab-urilor pe fundal inchis */
+        .nav-pills .nav-link.active {
+            background-color: #dc3545 !important; /* Rosu Netflix/Cinema */
+            color: white !important;
+        }
+    </style>
+
     <div class="tab-content">
+        @* TAB-UL 1: VAZUTE *@
         <div class="tab-pane fade show active" id="watched" role="tabpanel">
             <div class="row" id="grid-1"></div>
             <div id="loader-1" class="text-center my-4" style="display:none;">
-                <div class="spinner-border text-primary shadow-sm" role="status"></div>
+                <div class="spinner-border text-danger shadow-sm" role="status"></div>
                 <div class="small text-muted mt-2 fw-bold">Încărcăm filmele...</div>
             </div>
         </div>
 
+        @* TAB-UL 2: WATCHLIST *@
         <div class="tab-pane fade" id="watchlist" role="tabpanel">
             <div class="row" id="grid-2"></div>
             <div id="loader-2" class="text-center my-4" style="display:none;">
-                <div class="spinner-border text-primary shadow-sm" role="status"></div>
+                <div class="spinner-border text-danger shadow-sm" role="status"></div>
                 <div class="small text-muted mt-2 fw-bold">Încărcăm filmele...</div>
             </div>
         </div>
@@ -42,13 +53,12 @@
 
 @section Scripts {
     <script>
-        // logica de infinite scroll
+        // Logica de infinite scroll
         let currentTab = 1;
         let pages = { 1: 1, 2: 1 };
         let hasMore = { 1: true, 2: true };
         let isLoading = false;
 
-        
         function switchTab(tabId) {
             currentTab = tabId;
             if(pages[tabId] === 1 && hasMore[tabId]) {
@@ -56,7 +66,6 @@
             }
         }
 
-        
         async function loadMore() {
             if(isLoading || !hasMore[currentTab]) return;
             isLoading = true;
@@ -64,7 +73,6 @@
             let tab = currentTab;
             let page = pages[tab];
 
-           
             document.getElementById('loader-' + tab).style.display = 'block';
 
             try {
@@ -72,36 +80,49 @@
                 let data = await response.json();
 
                 if(data.length === 0) {
-                    hasMore[tab] = false; // nu mai sunt filme
+                    hasMore[tab] = false; // Nu mai sunt filme
                     if(page === 1) {
-                        document.getElementById('grid-' + tab).innerHTML = '<div class="col-12"><div class="alert alert-light border text-center py-4 text-muted">Nu există nicio activitate aici.</div></div>';
+                        // Empty state adaptat la Dark Mode
+                        document.getElementById('grid-' + tab).innerHTML = `
+                            <div class="col-12">
+                                <div class="alert bg-transparent border border-secondary text-center py-5 rounded-3 text-muted">
+                                    <i class="bi bi-clock-history display-6 d-block mb-3 opacity-50"></i>
+                                    Nu există nicio activitate aici.
+                                </div>
+                            </div>`;
                     }
                 } else {
                     let html = '';
                     data.forEach(movie => {
-                        
-                        let badge = '';
-                        if(movie.rating > 0) badge = `<span class="position-absolute top-0 end-0 badge bg-warning text-dark m-1 shadow-sm"><i class="bi bi-star-fill"></i> ${movie.rating}</span>`;
-                        else if (movie.status == 1) badge = `<span class="position-absolute top-0 end-0 badge bg-warning m-1 shadow-sm"><i class="bi bi-bookmark-fill"></i></span>`;
-                        else badge = `<span class="position-absolute top-0 end-0 badge bg-success m-1 shadow-sm"><i class="bi bi-eye-fill"></i></span>`;
 
                         
+                        let badge = '';
+                        if(movie.rating > 0) badge = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-star-fill"></i> ${movie.rating}</span>`;
+                        else if (movie.status == 1) badge = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;" title="În Watchlist"><i class="bi bi-bookmark-fill"></i></span>`;
+                        else badge = `<span class="position-absolute badge bg-success m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;" title="Vizionat"><i class="bi bi-eye-fill"></i></span>`;
+
+                        //html din _moviecard
                         html += `
-                        <div class="col-md-2 col-sm-4 col-4 mb-4">
-                            <a href="/Movies/Details/${movie.movieId}" class="text-decoration-none">
-                                <div class="position-relative movie-card transition-hover">
-                                    <img src="${movie.posterUrl}" class="img-fluid rounded shadow-sm" alt="${movie.title}" style="width: 100%; aspect-ratio: 2/3; object-fit: cover;" onerror="this.src='https://placehold.co/200x300?text=Fara+Poster'">
-                                    ${badge}
+                        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4 position-relative">
+                            <div class="card bg-transparent border-0 movie-card position-relative h-100">
+                                <a href="/Movies/Details/${movie.movieId}" class="text-decoration-none d-block">
+                                    <img src="${movie.posterUrl}" class="card-img-top rounded shadow-sm w-100" alt="${movie.title}" style="aspect-ratio: 2/3; object-fit: cover;" onerror="this.src='https://placehold.co/300x450/2b2b2b/ffffff?text=${encodeURIComponent(movie.title)}'">
+                                </a>
+
+                                ${badge}
+
+                                <div class="card-body px-1 py-2 text-center">
+                                    <h6 class="card-title text-light text-truncate mb-0" style="font-size: 0.95rem;">${movie.title}</h6>
                                 </div>
-                                <div class="small fw-bold text-dark mt-2 text-truncate" title="${movie.title}">${movie.title}</div>
-                                <div class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-calendar-event"></i> Adăugat: ${movie.dateAdded}</div>
-                            </a>
+                            </div>
+                            <div class="text-center mt-1">
+                                <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-clock-history"></i> Adăugat: ${movie.dateAdded}</small>
+                            </div>
                         </div>`;
                     });
 
-                    
                     document.getElementById('grid-' + tab).insertAdjacentHTML('beforeend', html);
-                    pages[tab]++; 
+                    pages[tab]++;
                 }
             } catch (e) {
                 console.error("Eroare la incarcarea filmelor: ", e);

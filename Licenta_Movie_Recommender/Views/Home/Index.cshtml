@@ -5,30 +5,6 @@
     var discoverMovies = ViewBag.DiscoverMovies as List<Licenta_Movie_Recommender.Models.Movie> ?? new List<Licenta_Movie_Recommender.Models.Movie>();
 }
 
-<style>
-    .movie-card-overlay {
-        position: absolute;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: rgba(0, 0, 0, 0.8);
-        opacity: 0;
-        transition: opacity 0.2s ease-in-out;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        align-items: center;
-        padding: 10px;
-        border-radius: calc(.25rem - 1px);
-        backdrop-filter: blur(2px);
-    }
-
-    .movie-card:hover .movie-card-overlay {
-        opacity: 1;
-    }
-</style>
-
 @if (TempData["Success"] != null)
 {
     <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm container" role="alert">
@@ -42,21 +18,22 @@
     <p class="lead text-muted">Descoperă următoarele tale filme preferate.</p>
 </div>
 
+@* --- SECTIUNEA 1: RECOMANDARI --- *@
 @if (User.Identity.IsAuthenticated)
 {
     <div class="container mb-5">
         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-            <h3 class="fw-bold mb-0"><i class="bi bi-stars text-warning me-2"></i> Top Alegeri Pentru Tine</h3>
+            <h3 class="fw-bold mb-0 text-light"><i class="bi bi-stars text-warning me-2"></i> Top Alegeri Pentru Tine</h3>
             @if (Model.Any())
             {
-                <a asp-action="Recommendations" asp-controller="Movies" class="btn btn-sm btn-primary">Vezi mai multe &raquo;</a>
+                <a asp-action="Recommendations" asp-controller="Movies" class="btn btn-sm btn-outline-danger">Vezi mai multe &raquo;</a>
             }
         </div>
 
         @if (!Model.Any())
         {
-            <div class="alert alert-light border shadow-sm text-center py-4 rounded-3">
-                <i class="bi bi-film display-6 d-block mb-2 text-secondary"></i>
+            <div class="alert bg-transparent border border-secondary shadow-sm text-center py-4 rounded-3 text-light">
+                <i class="bi bi-film display-6 d-block mb-3 text-secondary opacity-50"></i>
                 <h5 class="fw-bold">Deblochează Recomandările Inteligente</h5>
                 <p class="text-muted mb-3 small">Evaluează cel puțin 5 filme pentru a ajuta algoritmul nostru să învețe ce îți place.</p>
             </div>
@@ -66,31 +43,13 @@
             <div class="row">
                 @foreach (var movie in Model)
                 {
+                    // Preluam starile filmului ca sa le trimitem la card
+                    var activity = userActivities.FirstOrDefault(a => a.MovieId == movie.Id);
+                    var inWatchlist = activity != null && activity.Status == 1 && activity.Rating == 0;
+                    var isWatched = activity != null && (activity.Status == 2 || activity.Rating > 0);
+
                     <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
-                        <div class="card h-100 border-0 shadow-sm movie-card position-relative bg-dark text-white">
-                            <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title" style="aspect-ratio: 2/3; object-fit: cover;" onerror="this.src='https://placehold.co/200x300?text=Fara+Poster'" />
-
-                            <div class="movie-card-overlay text-center">
-                                <h6 class="fw-bold mb-3 w-100 text-truncate px-1">@movie.Title</h6>
-
-                                <form asp-controller="Movies" asp-action="AddToWatchlist" method="post" class="m-0 w-100 mb-2">
-                                    <input type="hidden" name="movieId" value="@movie.Id" />
-                                    <button type="submit" class="btn btn-outline-warning btn-sm w-100 shadow-sm"><i class="bi bi-bookmark-plus"></i> Watchlist</button>
-                                </form>
-
-                                <form asp-controller="Movies" asp-action="MarkAsWatched" method="post" class="m-0 w-100 mb-2">
-                                    <input type="hidden" name="movieId" value="@movie.Id" />
-                                    <button type="submit" class="btn btn-outline-success btn-sm w-100 bg-dark shadow-sm"><i class="bi bi-eye"></i> Văzut</button>
-                                </form>
-
-                                <form asp-controller="Movies" asp-action="IgnoreMovie" method="post" class="m-0 w-100 mb-2">
-                                    <input type="hidden" name="movieId" value="@movie.Id" />
-                                    <button type="submit" class="btn btn-outline-danger btn-sm w-100 bg-dark shadow-sm" title="Ascunde din recomandari"><i class="bi bi-x-circle"></i> Ignoră</button>
-                                </form>
-
-                                <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="btn btn-primary btn-sm w-100 mt-auto shadow-sm">Detalii</a>
-                            </div>
-                        </div>
+                        <partial name="_MovieCard" model="movie" view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", inWatchlist }, { "IsWatched", isWatched } }' />
                     </div>
                 }
             </div>
@@ -100,29 +59,26 @@
 else
 {
     <div class="container text-center mb-5">
-        <a asp-controller="Account" asp-action="Login" class="btn btn-primary px-4 shadow">Intră în cont</a>
+        <a asp-controller="Account" asp-action="Login" class="btn btn-danger px-4 shadow">Intră în cont</a>
         <a asp-controller="Account" asp-action="Register" class="btn btn-outline-secondary px-4 ms-2 shadow-sm">Creează cont</a>
     </div>
 }
 
-
-
-
-
+@* --- SECTIUNEA 2: DESCOPERA  --- *@
 <div class="container mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <h3 class="fw-bold mb-0 text-secondary"><i class="bi bi-dice-5 me-2"></i> Descoperă </h3>
+        <h3 class="fw-bold mb-0 text-light"><i class="bi bi-dice-5 me-2 text-primary"></i> Descoperă </h3>
         <div class="d-flex gap-2">
-            <a asp-action="Index" asp-controller="Home" asp-route-refreshDiscover="true" class="btn btn-sm btn-outline-secondary" title="Aduce alte filme aleatorii">
+            <button type="button" id="btnRefreshDiscover" class="btn btn-sm btn-outline-secondary text-light" title="Aduce alte filme aleatorii">
                 <i class="bi bi-arrow-clockwise"></i> Refresh
-            </a>
+            </button>
             <a asp-controller="Movies" asp-action="Index" class="btn btn-sm btn-secondary">Catalog &raquo;</a>
         </div>
     </div>
 
-    <p class="text-muted mb-4 border-bottom pb-3">Nu știi la ce să te uiți? Încearcă una dintre aceste sugestii surpriză extrase din catalogul nostru!</p>
+    <p class="text-muted mb-4 pb-2">Nu știi la ce să te uiți? Încearcă una dintre aceste sugestii surpriză extrase din catalogul nostru!</p>
 
-    <div class="row">
+    <div class="row" id="discoverGrid">
         @foreach (var movie in discoverMovies)
         {
             var activity = userActivities.FirstOrDefault(a => a.MovieId == movie.Id);
@@ -130,51 +86,50 @@ else
             var isWatched = activity != null && (activity.Status == 2 || activity.Rating > 0);
             var isIgnored = activity != null && activity.Status == 3;
 
-            //daca a apasat "nu ma intereseaza" ascundem si din discover
+            // Ascundem daca a dat "ignora"
             if (isIgnored) continue;
 
             <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
-                <div class="card h-100 border-0 shadow-sm movie-card position-relative bg-dark text-white">
-                    <img src="@movie.PosterUrl" class="card-img-top" alt="@movie.Title" style="aspect-ratio: 2/3; object-fit: cover;" onerror="this.src='https://placehold.co/200x300?text=Fara+Poster'" />
-
-                    <div class="movie-card-overlay text-center">
-                        <h6 class="fw-bold mb-3 w-100 text-truncate px-1">@movie.Title</h6>
-
-                        @if (User.Identity.IsAuthenticated)
-                        {
-                            @if (inWatchlist)
-                            {
-                                <form asp-controller="Movies" asp-action="RemoveActivityStatus" method="post" class="m-0 w-100 mb-2">
-                                    <input type="hidden" name="movieId" value="@movie.Id" />
-                                    <button type="submit" class="btn btn-warning btn-sm w-100 fw-bold shadow-sm"><i class="bi bi-bookmark-check-fill"></i> În Watchlist</button>
-                                </form>
-                            }
-                            else if (!isWatched)
-                            {
-                                <form asp-controller="Movies" asp-action="AddToWatchlist" method="post" class="m-0 w-100 mb-2">
-                                    <input type="hidden" name="movieId" value="@movie.Id" />
-                                    <button type="submit" class="btn btn-outline-warning btn-sm w-100 shadow-sm"><i class="bi bi-bookmark-plus"></i> Watchlist</button>
-                                </form>
-                            }
-
-                            @if (!isWatched)
-                            {
-                                <form asp-controller="Movies" asp-action="MarkAsWatched" method="post" class="m-0 w-100 mb-2">
-                                    <input type="hidden" name="movieId" value="@movie.Id" />
-                                    <button type="submit" class="btn btn-outline-success btn-sm w-100 bg-dark shadow-sm"><i class="bi bi-eye"></i> Văzut</button>
-                                </form>
-                            }
-                            else
-                            {
-                                <span class="badge bg-success w-100 py-2 mb-2"><i class="bi bi-check-circle-fill"></i> Vizionat</span>
-                            }
-                        }
-
-                        <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="btn btn-primary btn-sm w-100 mt-auto shadow-sm">Detalii</a>
-                    </div>
-                </div>
+                <partial name="_MovieCard" model="movie" view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", inWatchlist }, { "IsWatched", isWatched } }' />
             </div>
         }
     </div>
 </div>
 
+//refresh button
+@section Scripts {
+    <script>
+        document.getElementById('btnRefreshDiscover')?.addEventListener('click', async function() {
+            const btn = this;
+            const originalHtml = btn.innerHTML;
+
+            //loading animation
+            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btn.disabled = true;
+
+            try {
+                
+                const response = await fetch('/Home/Index?refreshDiscover=true');
+                const htmlString = await response.text();
+
+                
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlString, 'text/html');
+
+                
+                const newGrid = doc.getElementById('discoverGrid');
+
+                
+                if (newGrid) {
+                    document.getElementById('discoverGrid').innerHTML = newGrid.innerHTML;
+                }
+            } catch (error) {
+                console.error("Eroare la refresh-ul sectiunii descopera:", error);
+            } finally {
+                // 6. Punem butonul in starea initiala
+                btn.innerHTML = originalHtml;
+                btn.disabled = false;
+            }
+        });
+    </script>
+}

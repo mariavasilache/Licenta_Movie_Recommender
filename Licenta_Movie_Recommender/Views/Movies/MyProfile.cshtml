@@ -22,14 +22,14 @@
         </div>
     }
 
-    <div class="d-flex align-items-center mb-4 border-bottom pb-2">
-        <h2 class="text-primary fw-bold mb-0"><i class="bi bi-person-circle me-2"></i> Dashboard Profil</h2>
+    <div class="d-flex align-items-center mb-4 border-bottom border-secondary pb-3">
+        <h2 class="text-danger fw-bold mb-0"><i class="bi bi-person-circle me-2"></i> Dashboard Profil</h2>
     </div>
 
     @* --- SECTIUNEA 1: STATISTICI --- *@
     <div class="row mb-5">
         <div class="col-md-3 col-6 mb-3">
-            <div class="card bg-primary text-white h-100 shadow border-0 rounded-3">
+            <div class="card bg-danger text-white h-100 shadow border-0 rounded-3" style="background: linear-gradient(135deg, #e50914 0%, #b81d24 100%);">
                 <div class="card-body text-center">
                     <h1 class="display-5 fw-bold mb-0">@Model.TotalWatched</h1>
                     <p class="mb-0 text-white-50 small text-uppercase fw-bold">Filme Văzute</p>
@@ -37,15 +37,15 @@
             </div>
         </div>
         <div class="col-md-3 col-6 mb-3">
-            <div class="card bg-info text-white h-100 shadow border-0 rounded-3">
+            <div class="card bg-warning text-dark h-100 shadow border-0 rounded-3" style="background: linear-gradient(135deg, #ffc107 0%, #e0a800 100%);">
                 <div class="card-body text-center">
                     <h1 class="display-5 fw-bold mb-0">@Model.TotalWatchlist</h1>
-                    <p class="mb-0 text-white-50 small text-uppercase fw-bold">În Watchlist</p>
+                    <p class="mb-0 text-dark-50 small text-uppercase fw-bold">În Watchlist</p>
                 </div>
             </div>
         </div>
         <div class="col-md-3 col-6 mb-3">
-            <div class="card bg-success text-white h-100 shadow border-0 rounded-3">
+            <div class="card bg-success text-white h-100 shadow border-0 rounded-3" style="background: linear-gradient(135deg, #28a745 0%, #218838 100%);">
                 <div class="card-body text-center">
                     <h1 class="display-5 fw-bold mb-0">@Model.AverageRating</h1>
                     <p class="mb-0 text-white-50 small text-uppercase fw-bold">Nota Medie</p>
@@ -53,19 +53,19 @@
             </div>
         </div>
         <div class="col-md-3 col-6 mb-3">
-            <div class="card bg-warning text-dark h-100 shadow border-0 rounded-3">
+            <div class="card bg-secondary text-white h-100 shadow border-0 rounded-3" style="background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);">
                 <div class="card-body text-center d-flex flex-column justify-content-center">
                     <h4 class="fw-bold mb-0 text-truncate">@Model.FavoriteGenre</h4>
-                    <p class="mb-0 text-dark-50 small text-uppercase fw-bold mt-1">Gen Preferat</p>
+                    <p class="mb-0 text-white-50 small text-uppercase fw-bold mt-1">Gen Preferat</p>
                 </div>
             </div>
         </div>
     </div>
 
-    @* --- SECTIUNEA 2: PREVIEW WATCHLIST --- *@
-    <div class="d-flex justify-content-between align-items-center mt-4 mb-3 border-bottom pb-2">
-        <h4 class="fw-bold mb-0">Activitate Recentă</h4>
-        <a asp-action="WatchHistory" class="btn btn-sm btn-outline-primary">Vezi tot istoricul &raquo;</a>
+    @* --- SECTIUNEA 2: PREVIEW WATCHLIST SI VAZUTE --- *@
+    <div class="d-flex justify-content-between align-items-center mt-4 mb-3 border-bottom border-secondary pb-2">
+        <h4 class="fw-bold text-light mb-0">Activitate Recentă</h4>
+        <a asp-action="WatchHistory" class="btn btn-sm btn-outline-danger rounded-pill px-3">Vezi tot istoricul &raquo;</a>
     </div>
 
     <h6 class="text-muted fw-bold text-uppercase mb-3" style="font-size: 0.85rem;">Ultimele Filme Văzute</h6>
@@ -78,26 +78,25 @@
         {
             @foreach (var activity in Model.RecentWatched.Take(6))
             {
-                <div class="col-md-2 col-sm-4 col-4 mb-3">
-                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@activity.MovieId" class="text-decoration-none">
-                        <div class="position-relative">
-                            <img src="@activity.Movie.PosterUrl" class="img-fluid rounded shadow-sm" alt="@activity.Movie.Title" onerror="this.src='https://placehold.co/200x300?text=Fara+Poster'">
-                            @if (activity.Rating > 0)
-                            {
-                                <span class="position-absolute top-0 end-0 badge bg-warning text-dark m-1 shadow-sm"><i class="bi bi-star-fill"></i> @activity.Rating</span>
-                            }
-                            else
-                            {
-                                <span class="position-absolute top-0 end-0 badge bg-success m-1 shadow-sm" title="Vizionat"><i class="bi bi-eye-fill"></i></span>
-                            }
-                        </div>
-                    </a>
+                <div class="col-lg-2 col-md-3 col-sm-4 col-4 mb-3 position-relative">
+                    
+                    <partial name="_MovieCard" model="activity.Movie" view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false } }' />
+
+                    
+                    @if (activity.Rating > 0)
+                    {
+                        <span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-star-fill"></i> @activity.Rating</span>
+                    }
+                    else
+                    {
+                        <span class="position-absolute badge bg-success m-1 shadow-sm" title="Vizionat" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-eye-fill"></i></span>
+                    }
                 </div>
             }
         }
     </div>
 
-    <h6 class="text-muted fw-bold text-uppercase mb-3 mt-2" style="font-size: 0.85rem;">Adăugate în Watchlist</h6>
+    <h6 class="text-muted fw-bold text-uppercase mb-3 mt-4" style="font-size: 0.85rem;">Adăugate în Watchlist</h6>
     <div class="row mb-4">
         @if (!Model.RecentWatchlist.Any())
         {
@@ -107,23 +106,19 @@
         {
             @foreach (var activity in Model.RecentWatchlist.Take(6))
             {
-                <div class="col-md-2 col-sm-4 col-4 mb-3">
-                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@activity.MovieId" class="text-decoration-none">
-                        <div class="position-relative">
-                            <img src="@activity.Movie.PosterUrl" class="img-fluid rounded shadow-sm" alt="@activity.Movie.Title" onerror="this.src='https://placehold.co/200x300?text=Fara+Poster'">
-                            <span class="position-absolute top-0 end-0 badge bg-warning text-dark m-1 shadow-sm" title="În Watchlist"><i class="bi bi-bookmark-fill"></i></span>
-                        </div>
-                    </a>
+                <div class="col-lg-2 col-md-3 col-sm-4 col-4 mb-3 position-relative">
+                    <partial name="_MovieCard" model="activity.Movie" view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false } }' />
+                    <span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" title="În Watchlist" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-bookmark-fill"></i></span>
                 </div>
             }
         }
     </div>
 
     @* --- SECTIUNEA 3: LISTELE TALE --- *@
-    <div class="d-flex justify-content-between align-items-center mt-5 mb-3 border-bottom pb-2">
-        <h4 class="fw-bold mb-0">Listele Tale </h4>
-        <button class="btn btn-success btn-sm shadow-sm" data-bs-toggle="modal" data-bs-target="#createListModal">
-            <i class="bi bi-plus-lg"></i> Listă Nouă
+    <div class="d-flex justify-content-between align-items-center mt-5 mb-3 border-bottom border-secondary pb-3">
+        <h4 class="fw-bold text-light mb-0">Listele Tale Personalizate</h4>
+        <button class="btn btn-danger btn-sm shadow-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#createListModal">
+            <i class="bi bi-plus-lg me-1"></i> Listă Nouă
         </button>
     </div>
 
@@ -131,8 +126,10 @@
         @if (!Model.CustomLists.Any())
         {
             <div class="col-12">
-                <div class="alert alert-light border text-center py-4">
-                    <p class="text-muted mb-0">Nu ai creat nicio listă personalizată încă. Apasă pe butonul verde pentru a începe!</p>
+                <div class="alert bg-transparent border border-secondary text-center py-5 rounded-3">
+                    <i class="bi bi-collection display-6 d-block mb-3 text-secondary opacity-50"></i>
+                    <p class="text-light mb-0 fw-bold">Nu ai creat nicio listă personalizată încă.</p>
+                    <p class="text-muted small mt-1">Apasă pe butonul roșu pentru a începe!</p>
                 </div>
             </div>
         }
@@ -141,7 +138,7 @@
             @foreach (var lista in Model.CustomLists)
             {
                 <div class="col-md-4 mb-4">
-                    <div class="card h-100 shadow-sm border-0 bg-light">
+                    <div class="card h-100 shadow-sm border border-secondary" style="background-color: #1a1a1a;">
                         <div class="card-body d-flex flex-column">
 
                             <div class="d-flex mb-3 ps-2 pt-1" style="min-height: 85px;">
@@ -151,38 +148,38 @@
                                     @foreach (var item in lista.Movies.OrderByDescending(m => m.AddedAt).Take(4))
                                     {
                                         <img src="@item.Movie.PosterUrl"
-                                             class="rounded shadow"
-                                             style="width: 55px; height: 80px; object-fit: cover; margin-left: -15px; border: 2px solid #f8f9fa; z-index: @zIndex;"
-                                             onerror="this.src='https://placehold.co/55x80?text=Img'" />
+                                             class="rounded shadow-lg"
+                                             style="width: 55px; height: 80px; object-fit: cover; margin-left: -15px; border: 2px solid #1a1a1a; z-index: @zIndex;"
+                                             onerror="this.src='https://placehold.co/55x80/2b2b2b/ffffff?text=@Uri.EscapeDataString(item.Movie.Title)'" />
                                         zIndex--;
                                     }
                                 }
                                 else
                                 {
-                                    <div class="d-flex align-items-center justify-content-center w-100 rounded bg-white border" style="height: 80px; border-style: dashed !important;">
-                                        <span class="text-muted small"><i class="bi bi-camera-reels"></i> Listă goală</span>
+                                    <div class="d-flex align-items-center justify-content-center w-100 rounded border border-secondary" style="height: 80px; border-style: dashed !important; background-color: rgba(255,255,255,0.02);">
+                                        <span class="text-muted small"><i class="bi bi-camera-reels me-1"></i> Listă goală</span>
                                     </div>
                                 }
                             </div>
 
-                            <h5 class="card-title fw-bold text-primary mb-1">@lista.Name</h5>
+                            <h5 class="card-title fw-bold text-danger mb-1">@lista.Name</h5>
                             <p class="text-muted small mb-2">
                                 <i class="bi bi-film"></i> @lista.Movies.Count filme
-                                <span class="mx-1">&bull;</span>
+                                <span class="mx-1 opacity-50">&bull;</span>
                                 <i class="bi bi-clock-history"></i> @lista.CreatedAt.ToString("dd MMM yyyy")
                             </p>
 
                             @if (!string.IsNullOrEmpty(lista.Description))
                             {
-                                <p class="card-text small text-muted text-truncate mb-3">@lista.Description</p>
+                                <p class="card-text small text-light opacity-75 text-truncate mb-3">@lista.Description</p>
                             }
                             else
                             {
                                 <p class="card-text small text-muted fst-italic mb-3">Fără descriere</p>
                             }
 
-                            <div class="d-flex gap-2 mt-auto">
-                                <a asp-controller="Movies" asp-action="CustomListDetails" asp-route-id="@lista.Id" class="btn btn-sm btn-outline-secondary flex-grow-1 fw-bold">Deschide</a>
+                            <div class="d-flex gap-2 mt-auto pt-2 border-top border-secondary">
+                                <a asp-controller="Movies" asp-action="CustomListDetails" asp-route-id="@lista.Id" class="btn btn-sm btn-outline-light flex-grow-1 fw-bold">Deschide Lista</a>
 
                                 <form asp-controller="Movies" asp-action="DeleteCustomList" method="post" class="m-0" onsubmit="return confirm('Sigur vrei să ștergi lista @lista.Name? Acțiunea este ireversibilă!');">
                                     <input type="hidden" name="id" value="@lista.Id" />
@@ -200,25 +197,25 @@
 @* --- FEREASTRA MODAL PENTRU CREARE LISTA --- *@
 <div class="modal fade" id="createListModal" tabindex="-1" aria-labelledby="createListModalLabel" aria-hidden="true">
     <div class="modal-dialog">
-        <div class="modal-content border-0 shadow">
-            <div class="modal-header bg-light">
-                <h5 class="modal-title fw-bold text-primary" id="createListModalLabel">Creează o listă nouă</h5>
-                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+        <div class="modal-content border-0 shadow-lg" style="background-color: #1f1f1f;">
+            <div class="modal-header border-bottom border-secondary">
+                <h5 class="modal-title fw-bold text-danger" id="createListModalLabel">Creează o listă nouă</h5>
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close"></button>
             </div>
             <form asp-controller="Movies" asp-action="CreateCustomList" method="post">
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label for="listName" class="form-label fw-bold small">Numele listei</label>
-                        <input type="text" class="form-control" id="listName" name="name" required maxlength="100">
+                        <label for="listName" class="form-label fw-bold small text-light">Numele listei</label>
+                        <input type="text" class="form-control bg-dark text-light border-secondary" id="listName" name="name" required maxlength="100">
                     </div>
                     <div class="mb-3">
-                        <label for="listDesc" class="form-label fw-bold small">Descriere (opțional)</label>
-                        <textarea class="form-control" id="listDesc" name="description" rows="2" maxlength="500"></textarea>
+                        <label for="listDesc" class="form-label fw-bold small text-light">Descriere (opțional)</label>
+                        <textarea class="form-control bg-dark text-light border-secondary" id="listDesc" name="description" rows="2" maxlength="500"></textarea>
                     </div>
                 </div>
-                <div class="modal-footer border-0">
-                    <button type="button" class="btn btn-light" data-bs-dismiss="modal">Anulează</button>
-                    <button type="submit" class="btn btn-success px-4">Salvează</button>
+                <div class="modal-footer border-top border-secondary">
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anulează</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-bold">Salvează Lista</button>
                 </div>
             </form>
         </div>

@@ -21,7 +21,7 @@
 }
 
 <style>
-    /* design sistem rating cu stelute */
+    /* design curat sistem rating cu stelute */
     .star-rating {
         display: flex;
         flex-direction: row-reverse;
@@ -33,13 +33,14 @@
         }
 
         .star-rating label {
-            color: #ddd;
+            color: #444; /* Gri inchis adaptat la dark mode */
             font-size: 2rem;
             padding: 0 5px;
             cursor: pointer;
             transition: color 0.2s;
         }
 
+            /* Lumineaza stelutele in galben de la stanga la dreapta cand treci cu mouse-ul sau cand exista nota */
             .star-rating input:checked ~ label,
             .star-rating label:hover,
             .star-rating label:hover ~ label {
@@ -47,7 +48,7 @@
             }
 </style>
 
-<div class="container mt-5 mb-5">
+<div class="container mt-5 mb-5" id="main-details-container">
 
     <div class="mb-3">
         <a href="javascript:history.back()" class="btn btn-sm btn-outline-secondary shadow-sm px-3 py-2 fw-bold text-decoration-none">
@@ -58,7 +59,7 @@
     <div class="row bg-white rounded shadow-sm p-4">
 
         <div class="col-md-4 text-center">
-            <img src="@Model.PosterUrl" class="img-fluid rounded shadow" alt="@Model.Title" style="max-height: 500px; object-fit: cover;" onerror="this.src='https://placehold.co/300x450?text=Fara+Imagine'" />
+            <img src="@Model.PosterUrl" class="img-fluid rounded shadow" alt="@Model.Title" style="max-height: 500px; object-fit: cover;" onerror="this.src='https://placehold.co/300x450/2b2b2b/ffffff?text=@Uri.EscapeDataString(Model.Title)'" />
         </div>
 
         <div class="col-md-8 mt-4 mt-md-0">
@@ -101,7 +102,7 @@
                                 <div class="star-rating me-3">
                                     @for (int i = 5; i >= 1; i--)
                                     {
-                                        <input type="radio" id="star_@i" name="rating" value="@i" @(rating == i ? "checked" : "") onchange="this.form.submit()" />
+                                        <input type="radio" id="star_@i" name="rating" value="@i" @(rating == i ? "checked" : "") class="ajax-rating" />
                                         <label for="star_@i" title="@i stele"><i class="bi bi-star-fill"></i></label>
                                     }
                                 </div>
@@ -120,7 +121,7 @@
                             }
                         </div>
 
-                        <div class="d-flex flex-wrap gap-2">
+                        <div class="d-flex flex-wrap gap-2" id="action-buttons-container">
 
                             @if (status == 2 || rating > 0)
                             {
@@ -229,7 +230,7 @@
     </div>
 </div>
 
-@* --- MODAL PENTRU CREARE LISTA DIRECT DE PE FILM --- *@
+@* --- MODALELE RAMAN LA FEL --- *@
 <div class="modal fade" id="createListFromDetailsModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog">
         <div class="modal-content border-0 shadow">
@@ -239,7 +240,6 @@
             </div>
             <form asp-action="CreateCustomList" method="post">
                 <input type="hidden" name="sourceMovieId" value="@Model.Id" />
-
                 <div class="modal-body">
                     <div class="mb-3">
                         <label for="listName" class="form-label fw-bold small">Numele listei</label>
@@ -259,7 +259,6 @@
     </div>
 </div>
 
-@* --- MODAL STERGERE NOTA --- *@
 <div class="modal fade" id="removeWatchedModal" tabindex="-1" aria-hidden="true">
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content border-0 shadow-lg">
@@ -284,7 +283,7 @@
 
 @section Scripts {
     <script>
-        //doar butoanele de adaugare de pe pagina detalii
+       
         const actionForms = document.querySelectorAll('#action-buttons-container form[action*="AddToWatchlist"], #action-buttons-container form[action*="MarkAsWatched"]');
 
         actionForms.forEach(form => {
@@ -299,11 +298,10 @@
                 try {
                     await fetch(form.action, { method: 'POST', body: new FormData(form) });
 
-                    // schimbare buton fara refresh
                     if(form.action.includes('AddToWatchlist')) {
                         btn.className = 'btn btn-warning shadow-sm text-dark fw-bold';
                         btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> În Watchlist';
-                        form.action = '/Movies/RemoveActivityStatus'; //transformare in buton de stergere
+                        form.action = '/Movies/RemoveActivityStatus';
                     } else if (form.action.includes('MarkAsWatched')) {
                         btn.className = 'btn btn-success shadow-sm fw-bold';
                         btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Vizionat';
@@ -317,5 +315,58 @@
                 }
             });
         });
+
+        // --- AJAX PENTRU STELUTELE DE RATING ---
+        (function () {
+            const ratingInputs = document.querySelectorAll('.ajax-rating');
+            if (!ratingInputs.length) return;
+
+            ratingInputs.forEach(input => {
+                input.addEventListener('change', async (e) => {
+                    const selectedRating = e.target.value;
+                    const form = e.target.closest('form');
+
+                    try {
+                        const response = await fetch(form.action, {
+                            method: 'POST',
+                            body: new FormData(form)
+                        });
+
+                        if (!response.ok) throw new Error('Eroare retea');
+
+                        
+                        let badge = form.querySelector('.badge.bg-warning');
+                        if (badge) {
+                            badge.textContent = `Nota: ${selectedRating}`;
+                        } else {
+                            badge = document.createElement('span');
+                            badge.className = 'badge bg-warning text-dark fs-6 shadow-sm ms-3';
+                            badge.textContent = `Nota: ${selectedRating}`;
+                            form.appendChild(badge);
+                        }
+
+                        
+                        const oldAlert = document.getElementById('ratingAlert');
+                        if(oldAlert) oldAlert.remove();
+
+                        
+                        const alertHtml = `
+                            <div id="ratingAlert" class="alert alert-success alert-dismissible fade show shadow-sm" role="alert">
+                                <i class="bi bi-check-circle-fill me-2"></i> Ai acordat nota <strong>${selectedRating}</strong> acestui film.
+                                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                            </div>
+                        `;
+
+                        const mainContainer = document.getElementById('main-details-container');
+                        if(mainContainer) {
+                            mainContainer.insertAdjacentHTML('afterbegin', alertHtml);
+                        }
+
+                    } catch (error) {
+                        console.error("Eroare la salvarea notei", error);
+                    }
+                });
+            });
+        })();
     </script>
 }

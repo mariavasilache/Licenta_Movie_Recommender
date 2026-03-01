@@ -1,22 +1,23 @@
 ﻿document.addEventListener('DOMContentLoaded', () => {
-    
+
+    // --- BUTOANE ACTIUNE RAPIDA (WATCHLIST / VAZUT) ---
     document.body.addEventListener('submit', async (e) => {
         const form = e.target;
 
         // daca actiunea are loc pe un poster de film
         if (form.closest('.movie-card-overlay')) {
             e.preventDefault();
+            e.stopPropagation();
 
             const btn = form.querySelector('button');
+            if (!btn) return;
             const actionUrl = form.action;
-            const overlay = form.closest('.movie-card-overlay'); 
+            const overlay = form.closest('.movie-card-overlay');
 
-            
             if (!form.dataset.originalAction) {
                 if (actionUrl.includes('AddToWatchlist')) form.dataset.originalAction = 'watchlist';
                 else if (actionUrl.includes('MarkAsWatched')) form.dataset.originalAction = 'watched';
                 else if (actionUrl.includes('RemoveActivityStatus')) {
-                    
                     form.dataset.originalAction = btn.className.includes('btn-warning') ? 'watchlist' : 'watched';
                 }
             }
@@ -26,18 +27,14 @@
             btn.disabled = true;
 
             try {
-                // trimitem cererea in fundal
                 await fetch(actionUrl, { method: 'POST', body: new FormData(form) });
                 btn.disabled = false;
 
-                //logica schimbare butoane
                 if (actionUrl.includes('AddToWatchlist')) {
-                    //activare watchlist
                     btn.className = 'btn btn-warning btn-sm w-100 fw-bold shadow-sm';
                     btn.innerHTML = '<i class="bi bi-bookmark-check-fill"></i> În Watchlist';
                     form.action = form.action.replace('AddToWatchlist', 'RemoveActivityStatus');
 
-                    //dezactivare vazut
                     const siblingForm = Array.from(overlay.querySelectorAll('form')).find(f => f.dataset.originalAction === 'watched');
                     if (siblingForm && siblingForm.action.includes('Remove')) {
                         const sBtn = siblingForm.querySelector('button');
@@ -47,12 +44,10 @@
                     }
                 }
                 else if (actionUrl.includes('MarkAsWatched')) {
-                    // activare vazut
                     btn.className = 'btn btn-success btn-sm w-100 shadow-sm';
                     btn.innerHTML = '<i class="bi bi-check-circle-fill"></i> Vizionat';
                     form.action = form.action.replace('MarkAsWatched', 'RemoveActivityStatus');
 
-                    // dezactivare automata butonul watchlist
                     const siblingForm = Array.from(overlay.querySelectorAll('form')).find(f => f.dataset.originalAction === 'watchlist');
                     if (siblingForm && siblingForm.action.includes('Remove')) {
                         const sBtn = siblingForm.querySelector('button');
@@ -62,7 +57,6 @@
                     }
                 }
                 else if (actionUrl.includes('IgnoreMovie')) {
-                    // disparitie card
                     const card = form.closest('.col-lg-2, .col-md-3, .col-sm-4, .col-6');
                     card.style.transition = "all 0.3s ease";
                     card.style.opacity = "0";
@@ -70,7 +64,6 @@
                     setTimeout(() => card.remove(), 300);
                 }
                 else if (actionUrl.includes('RemoveActivityStatus')) {
-                    // reintoarcere buton stare initiala
                     if (form.dataset.originalAction === 'watchlist') {
                         btn.className = 'btn btn-outline-warning btn-sm w-100 shadow-sm';
                         btn.innerHTML = '<i class="bi bi-bookmark-plus"></i> Watchlist';
@@ -88,6 +81,36 @@
         }
     });
 
+    // --- REFRESH DINAMIC (AJAX) SECTIUNE DESCOPERA ---
+    const btnRefresh = document.getElementById('btnRefreshDiscover');
+    const discoverGrid = document.getElementById('discoverGrid');
+
+    if (btnRefresh && discoverGrid) {
+        btnRefresh.addEventListener('click', async function () {
+            const originalHtml = btnRefresh.innerHTML;
+            btnRefresh.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+            btnRefresh.disabled = true;
+
+            try {
+                const response = await fetch('/Home/Index?refreshDiscover=true');
+                const htmlString = await response.text();
+
+                const parser = new DOMParser();
+                const doc = parser.parseFromString(htmlString, 'text/html');
+                const newGrid = doc.getElementById('discoverGrid');
+
+                if (newGrid) {
+                    discoverGrid.innerHTML = newGrid.innerHTML;
+                }
+            } catch (error) {
+                console.error("Eroare la refresh-ul sectiunii descopera:", error);
+            } finally {
+                btnRefresh.innerHTML = originalHtml;
+                btnRefresh.disabled = false;
+            }
+        });
+    }
+
     // --- BARA DE CAUTARE LIVE (PREVIEW) ---
     const searchInput = document.getElementById('searchInput');
     const searchDropdown = document.getElementById('searchPreviewDropdown');
@@ -104,37 +127,31 @@
                 return;
             }
 
-            // asteptam 300ms (debounce)
             debounceTimer = setTimeout(async () => {
                 try {
                     const response = await fetch(`/Movies/SearchPreview?q=${encodeURIComponent(query)}`);
-                    const data = await response.json(); // primim obiectul { movies, totalCount }
+                    const data = await response.json();
 
                     searchResultsList.innerHTML = '';
 
-                    // Cazul 1: nu s-a gasit nimic
                     if (data.totalCount === 0) {
                         searchResultsList.innerHTML = `
                             <div class="list-group-item bg-transparent text-muted border-0 p-4 text-center">
                                 <i class="bi bi-search display-6 d-block mb-2 opacity-25"></i>
                                 Nu am găsit niciun film numit "<span class="text-light">${query}</span>".
                             </div>`;
-                    }
-                    // Cazul 2: exista filme de afisat
-                    else {
+                    } else {
                         data.movies.forEach(movie => {
                             searchResultsList.innerHTML += `
                                 <a href="/Movies/Details/${movie.id}" class="list-group-item list-group-item-action d-flex align-items-center bg-transparent text-light border-bottom border-secondary" style="border-color: rgba(255,255,255,0.05) !important;">
-                                    <img src="${movie.posterUrl}" class="rounded me-3 shadow-sm" style="width: 35px; height: 50px; object-fit: cover;" onerror="this.src='https://placehold.co/35x50?text=NA'">
+                                    <img src="${movie.posterUrl}" class="rounded me-3 shadow-sm" style="width: 35px; height: 50px; object-fit: cover;" onerror="this.src='https://placehold.co/35x50/2b2b2b/ffffff?text=${encodeURIComponent(movie.title)}'">
                                     <div>
                                         <h6 class="mb-0 fw-bold fs-6">${movie.title}</h6>
-                                       
                                     </div>
                                 </a>
                             `;
                         });
 
-                        // daca exista mai mult de 5 filme, buton "vezi mai multe"
                         if (data.totalCount > 5) {
                             const remaining = data.totalCount - 5;
                             searchResultsList.innerHTML += `
@@ -150,14 +167,12 @@
             }, 300);
         });
 
-        // ascundere meniul la click pe langa
         document.addEventListener('click', function (e) {
             if (!searchInput.contains(e.target) && !searchDropdown.contains(e.target)) {
                 searchDropdown.style.display = 'none';
             }
         });
 
-        // reafisare la click inapoi in bara
         searchInput.addEventListener('focus', function () {
             if (this.value.trim().length >= 2 && searchResultsList.innerHTML !== '') {
                 searchDropdown.style.display = 'block';

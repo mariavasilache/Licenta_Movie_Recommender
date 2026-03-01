@@ -91,3 +91,34 @@ h1, h2, h3, h4, h5, h6 {
         box-shadow: 0 15px 30px rgba(229, 9, 20, 0.15), 0 10px 10px rgba(0,0,0,0.5) !important;
         z-index: 10; /* il aduce deasupra celorlalte */
     }
+        .movie-card:hover .movie-card-overlay {
+            opacity: 1 !important;
+            /* --- CORECTII CONTRAST DARK MODE --- */
+            /* fortare text din dark in luminos */
+            .text-dark {
+    color: #e5e5e5 !important;
+}
+
+/* texte butoane outline vizibile pe fundal negru */
+.btn-outline-warning,
+.btn-outline-success,
+.btn-outline-secondary,
+.btn-outline-danger {
+    color: #f8f9fa !important;
+}
+
+    /* a hover, culorile se inverseaza normal */
+    .btn-outline-warning:hover {
+        color: #212529 !important;
+    }
+
+    .btn-outline-success:hover {
+        color: #ffffff !important;
+    }
+
+/* ajustam culori pt grupuri de liste */
+.list-group-item {
+    background-color: #1f1f1f !important;
+    color: #e5e5e5 !important;
+    border-color: rgba(255, 255, 255, 0.05) !important;
+}

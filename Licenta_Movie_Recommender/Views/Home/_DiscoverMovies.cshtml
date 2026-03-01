@@ -1,0 +1,18 @@
+﻿@model List<Licenta_Movie_Recommender.Models.Movie>
+@{
+    var userActivities = ViewBag.UserActivities as List<Licenta_Movie_Recommender.Models.UserMovieActivity> ?? new List<Licenta_Movie_Recommender.Models.UserMovieActivity>();
+}
+
+@foreach (var movie in Model)
+{
+    var activity = userActivities.FirstOrDefault(a => a.MovieId == movie.Id);
+    var inWatchlist = activity != null && activity.Status == 1 && activity.Rating == 0;
+    var isWatched = activity != null && (activity.Status == 2 || activity.Rating > 0);
+    var isIgnored = activity != null && activity.Status == 3;
+
+    if (isIgnored) continue;
+
+    <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+        <partial name="_MovieCard" model="movie" view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", inWatchlist }, { "IsWatched", isWatched } }' />
+    </div>
+}

@@ -19,19 +19,57 @@ namespace Licenta_Movie_Recommender.Controllers
             _recService = recService;
         }
 
-       
-        private async Task<List<Movie>> FetchRandomMoviesAsync(List<int> excludedIds)
+        //metoda fetch
+        private async Task<List<Movie>> FetchAndStoreDiscoverMoviesAsync(List<int> excludedIds)
         {
-            int total = await _context.Movies.CountAsync();
-            int skip = Random.Shared.Next(0, Math.Max(0, total - 20));
+            int maxId = await _context.Movies.MaxAsync(m => (int?)m.Id) ?? 5000;
+            var randomIds = new List<int>();
 
-            return await _context.Movies
-                .AsNoTracking()
-                .Where(m => !excludedIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl) && m.PosterUrl.StartsWith("http"))
-                .OrderBy(m => Guid.NewGuid())
-                .Skip(skip)
-                .Take(12)
-                .ToListAsync();
+            int modernStart = Math.Max(1, maxId - 2500);
+            for (int i = 0; i < 20; i++)
+            {
+                randomIds.Add(Random.Shared.Next(modernStart, maxId + 1));
+            }
+
+            for (int i = 0; i < 15; i++)
+            {
+                randomIds.Add(Random.Shared.Next(1, maxId + 1));
+            }
+
+            var discoverMovies = await _context.Movies
+                 .AsNoTracking()
+                 .Where(m => randomIds.Contains(m.Id) &&
+                             !excludedIds.Contains(m.Id) &&
+                             !string.IsNullOrEmpty(m.PosterUrl) &&
+                             m.PosterUrl.StartsWith("http"))
+                 .OrderBy(m => Guid.NewGuid())
+                 .Take(12)
+                 .ToListAsync();
+
+            //daca nu avem destule filme
+            if (discoverMovies.Count < 12)
+            {
+                var currentIds = discoverMovies.Select(dm => dm.Id).ToList();
+                var extra = await _context.Movies
+                    .AsNoTracking()
+                    .Where(m => !excludedIds.Contains(m.Id) &&
+                                !currentIds.Contains(m.Id) &&
+                                !string.IsNullOrEmpty(m.PosterUrl))
+                    .OrderBy(m => Guid.NewGuid())
+                    .Take(12 - discoverMovies.Count)
+                    .ToListAsync();
+                discoverMovies.AddRange(extra);
+            }
+
+            //actualizare cookies
+            var newIds = string.Join(",", discoverMovies.Select(m => m.Id));
+            Response.Cookies.Append("DiscoverMovies", newIds, new CookieOptions
+            {
+                MaxAge = TimeSpan.FromMinutes(60),
+                HttpOnly = true
+            });
+
+            return discoverMovies;
         }
 
         public async Task<IActionResult> Index(bool refreshDiscover = false)
@@ -40,7 +78,6 @@ namespace Licenta_Movie_Recommender.Controllers
             List<int> excludedIds = new List<int>();
             int userId = 0;
 
-            //activitate user
             if (User.Identity.IsAuthenticated)
             {
                 userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
@@ -49,7 +86,7 @@ namespace Licenta_Movie_Recommender.Controllers
                 excludedIds = activities.Select(ua => ua.MovieId).ToList();
             }
 
-            //logica cookie
+            
             if (!refreshDiscover && Request.Cookies.TryGetValue("DiscoverMovies", out string cookieValue))
             {
                 var movieIds = cookieValue.Split(',', StringSplitOptions.RemoveEmptyEntries)
@@ -65,27 +102,20 @@ namespace Licenta_Movie_Recommender.Controllers
             
             if (refreshDiscover || discoverMovies.Count < 12)
             {
-                discoverMovies = await FetchRandomMoviesAsync(excludedIds); 
-
-               
-                var newIds = string.Join(",", discoverMovies.Select(m => m.Id));
-                Response.Cookies.Append("DiscoverMovies", newIds, new CookieOptions { MaxAge = TimeSpan.FromMinutes(60), HttpOnly = true });
+                discoverMovies = await FetchAndStoreDiscoverMoviesAsync(excludedIds);
             }
 
             ViewBag.DiscoverMovies = discoverMovies;
 
-            //recomandari
             if (userId > 0)
             {
                 var pool = await _recService.GetRecommendationsAsync(userId, 20);
-                var topRecommendations = pool.Take(6).ToList();
-                return View(topRecommendations);
+                return View(pool.Take(6).ToList());
             }
 
             return View(new List<Movie>());
         }
 
-        // --- METODA PT BUTONUL DE REFRESH AJAX ---
         [HttpGet]
         public async Task<IActionResult> GetDiscoverMovies()
         {
@@ -100,7 +130,7 @@ namespace Licenta_Movie_Recommender.Controllers
             }
 
            
-            var discoverMovies = await FetchRandomMoviesAsync(excludedIds);
+            var discoverMovies = await FetchAndStoreDiscoverMoviesAsync(excludedIds);
 
             return PartialView("_DiscoverMovies", discoverMovies);
         }

@@ -25,7 +25,7 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public IActionResult Index(string sortOrder, string genreFilter, string searchString)
         {
-            
+
             ViewBag.CurrentSort = sortOrder;
             ViewBag.CurrentGenre = genreFilter;
             ViewBag.CurrentSearch = searchString;
@@ -223,7 +223,7 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> AddToWatchlist(int movieId)
         {
-            await ToggleWatchlist(movieId); 
+            await ToggleWatchlist(movieId);
             TempData["Success"] = "Statusul Watchlist a fost actualizat!";
             return RedirectToAction("Details", new { id = movieId });
         }
@@ -231,7 +231,7 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> MarkAsWatched(int movieId)
         {
-            await ToggleWatched(movieId); 
+            await ToggleWatched(movieId);
             TempData["Success"] = "Statusul Vizionat a fost actualizat!";
             return RedirectToAction("Details", new { id = movieId });
         }
@@ -248,6 +248,7 @@ namespace Licenta_Movie_Recommender.Controllers
             if (activity == null)
             {
                 _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = movieId, Rating = rating, Status = 2, DateAdded = DateTime.Now });
+
             }
             else
             {
@@ -258,7 +259,7 @@ namespace Licenta_Movie_Recommender.Controllers
 
             await _context.SaveChangesAsync();
             TempData["Success"] = $"Ai acordat nota {rating} / 5 acestui film!";
-            return RedirectToAction("Details", new { id = movieId });
+            return Json(new { success = true, rating = rating, status = 2 });
         }
 
         [HttpPost]
@@ -271,14 +272,14 @@ namespace Licenta_Movie_Recommender.Controllers
 
             if (activity != null)
             {
-                
+
                 bool hadRating = activity.Rating > 0;
                 bool hadStatus = activity.Status > 0;
 
                 _context.UserActivities.Remove(activity);
                 await _context.SaveChangesAsync();
 
-               
+
                 if (hadRating && hadStatus)
                     TempData["Success"] = "Statusul și nota au fost eliminate cu succes!";
                 else if (hadRating)
@@ -304,7 +305,7 @@ namespace Licenta_Movie_Recommender.Controllers
                 await _context.SaveChangesAsync();
                 TempData["Success"] = "Nota a fost ștearsă!";
             }
-            return RedirectToAction("Details", new { id = movieId });
+            return Json(new { success = true });
         }
 
         #endregion
@@ -451,7 +452,8 @@ namespace Licenta_Movie_Recommender.Controllers
             else if (tab == 0) query = query.Where(a => a.Status != 3);
 
             var activities = await query.OrderByDescending(ua => ua.DateAdded).Skip((page - 1) * 18).Take(18)
-                .Select(a => new {
+                .Select(a => new
+                {
                     movieId = a.MovieId,
                     title = a.Movie != null ? a.Movie.Title : "Necunoscut",
                     posterUrl = a.Movie != null ? a.Movie.PosterUrl : "",

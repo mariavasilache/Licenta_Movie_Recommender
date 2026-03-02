@@ -156,6 +156,45 @@ document.addEventListener('DOMContentLoaded', () => {
         }
     });
 
+    //rating
+    const ratingForm = document.querySelector('.rating-form'); 
+    if (ratingForm) {
+        ratingForm.addEventListener('change', async function (e) {
+            const formData = new FormData(ratingForm);
+
+            try {
+                const response = await fetch('/Movies/SaveRating', {
+                    method: 'POST',
+                    body: formData
+                });
+
+                if (response.ok) {
+                    const result = await response.json();
+
+                    //buton stergere
+                    const btnRemoveRating = document.getElementById('btnRemoveRating');
+                    if (btnRemoveRating) btnRemoveRating.classList.remove('d-none');
+
+                    //schimbare butoane 
+                    const btnWatchlist = document.querySelector('.btn-watchlist-toggle');
+                    const btnWatched = document.querySelector('.btn-watched-toggle');
+
+                    if (btnWatchlist && btnWatched) {
+                        
+                        btnWatchlist.classList.replace('btn-active-watchlist', 'btn-outline-light');
+                        btnWatchlist.querySelector('i').classList.replace('bi-bookmark-fill', 'bi-bookmark');
+
+                        
+                        btnWatched.classList.replace('btn-outline-light', 'btn-active-watched');
+                        btnWatched.querySelector('i').classList.replace('bi-check-circle', 'bi-check-circle-fill');
+                    }
+                }
+            } catch (err) {
+                console.error("Eroare la salvare rating:", err);
+            }
+        });
+    }
+
     // 3. search preview
     const searchInput = document.getElementById('searchInput');
     const searchDropdown = document.getElementById('searchPreviewDropdown');

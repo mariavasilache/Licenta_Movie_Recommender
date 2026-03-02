@@ -104,45 +104,20 @@
                                 </div>
                             </div>`;
                     }
-                } else {
+                }  else {
                     let html = '';
                     data.forEach(movie => {
-
                         
-                        let badge = '';
-                        if(movie.rating > 0) badge = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-star-fill"></i> ${movie.rating}</span>`;
-                        else if (movie.status == 1) badge = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;" title="În Watchlist"><i class="bi bi-bookmark-fill"></i></span>`;
-                        else badge = `<span class="position-absolute badge bg-success m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;" title="Vizionat"><i class="bi bi-eye-fill"></i></span>`;
-
-                        //html din _moviecard
-                                html += `
-        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
-            <div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
-
-                <a href="/Movies/Details/${movie.movieId}" class="text-decoration-none d-flex align-items-center justify-content-center position-relative bg-dark rounded shadow skeleton-poster text-center p-3" style="aspect-ratio: 2/3; overflow: hidden;">
-                    <span class="text-secondary fw-bold" style="z-index: 1; font-size: 0.95rem;">${movie.title}</span>
-                    <img src="${movie.posterUrl}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
-                         onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
-                         onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton-poster');">
-                </a>
-
-                ${badge}
-
-                <div class="card-body px-1 py-2 text-center d-flex flex-column" style="min-height: 65px;">
-                    <h6 class="card-title text-light text-truncate mb-1" style="font-size: 0.92rem;">${movie.title}</h6>
-                    <small class="text-muted mt-auto" style="font-size: 0.75rem; opacity: 0.7;"><i class="bi bi-clock-history"></i> Adăugat: ${movie.dateAdded}</small>
-                </div>
-
-            </div>
-        </div>`;
+                        html += createMovieCardHtml(movie, { showBadges: true, showDate: true });
                     });
 
                     document.getElementById('grid-' + tab).insertAdjacentHTML('beforeend', html);
                     pages[tab]++;
-                }
-            } catch (e) {
+                
+                
+                    } catch (e) {
                 console.error("Eroare la incarcarea filmelor: ", e);
-            }
+                     }
 
             document.getElementById('loader-' + tab).style.display = 'none';
             isLoading = false;

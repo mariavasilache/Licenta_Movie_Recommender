@@ -1,5 +1,52 @@
-﻿document.addEventListener('DOMContentLoaded', () => {
+﻿function getSkeletonsHtml(count = 12) {
+    const skeleton = `
+        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+            <div class="skeleton-poster rounded mb-2" style="aspect-ratio: 2/3;"></div>
+            <div class="skeleton-text w-75 mx-auto"></div>
+            <div class="skeleton-text w-50 mx-auto mt-1"></div>
+        </div>`;
+    return skeleton.repeat(count);
+}
 
+function createMovieCardHtml(movie, options = { showBadges: false, showDate: false }) {
+    const id = movie.id || movie.movieId;
+
+    let badgeHtml = '';
+    if (options.showBadges) {
+        if (movie.rating > 0) {
+            badgeHtml = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-star-fill"></i> ${movie.rating}</span>`;
+        } else if (movie.status === 1) {
+            badgeHtml = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;" title="În Watchlist"><i class="bi bi-bookmark-fill"></i></span>`;
+        } else if (movie.status === 2) {
+            badgeHtml = `<span class="position-absolute badge bg-success m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;" title="Vizionat"><i class="bi bi-eye-fill"></i></span>`;
+        }
+    }
+
+    const dateHtml = (options.showDate && movie.dateAdded)
+        ? `<small class="text-muted mt-auto" style="font-size: 0.75rem; opacity: 0.7;"><i class="bi bi-clock-history"></i> ${movie.dateAdded}</small>`
+        : '';
+
+    return `
+    <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4 movie-container">
+        <div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
+            <a href="/Movies/Details/${id}" class="text-decoration-none d-flex align-items-center justify-content-center position-relative bg-dark rounded shadow skeleton-poster text-center p-3" style="aspect-ratio: 2/3; overflow: hidden;">
+                <span class="text-secondary fw-bold" style="z-index: 1; font-size: 0.85rem;">${movie.title}</span>
+                <img src="${movie.posterUrl}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
+                     onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
+                     onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton-poster');">
+            </a>
+            ${badgeHtml}
+            <div class="card-body px-1 py-2 text-center d-flex flex-column" style="min-height: 65px;">
+                <h6 class="card-title text-light text-truncate mb-1" style="font-size: 0.92rem;">${movie.title}</h6>
+                ${dateHtml}
+            </div>
+        </div>
+    </div>`;
+}
+
+
+document.addEventListener('DOMContentLoaded', () => {
+    
     // --- 1. REFRESH DINAMIC (SECTIUNE DISCOVER) ---
     const btnRefresh = document.getElementById('btnRefreshDiscover');
     const discoverGrid = document.getElementById('discoverGrid');
@@ -12,13 +59,7 @@
             this.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
             this.disabled = true;
 
-            const skeletonCard = `
-        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-5">
-            <div class="skeleton-poster rounded mb-2"></div>
-            <div class="skeleton-text w-75 mx-auto"></div>
-            <div class="skeleton-text w-50 mx-auto mt-1"></div>
-        </div>`;
-            discoverGrid.innerHTML = skeletonCard.repeat(12);
+            discoverGrid.innerHTML = getSkeletonsHtml(12);
 
             try {
                 const response = await fetch(`/Home/GetDiscoverMovies?t=${Date.now()}`, {

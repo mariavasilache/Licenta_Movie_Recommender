@@ -45,38 +45,73 @@
         </div>
     </div>
 
-    @* --- GRILA FILME --- *@
-    <div class="row">
-        @foreach (var movie in Model)
-        {
-            var activity = userActivities.FirstOrDefault(a => a.MovieId == movie.Id);
-            <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-5">
-                <partial name="_MovieCard" model="movie" view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", activity?.Status == 1 }, { "IsWatched", activity?.Status == 2 } }' />
-            </div>
-        }
+    @* --- GRILA FILME (INFINITE SCROLL) --- *@
+    <div id="catalogGrid" class="row">
+        @* JavaScript va injecta filmele aici *@
     </div>
 
-    @* --- PAGINARE --- *@
-    @if (totalPages > 1)
-    {
-        <nav class="mt-4">
-            <ul class="pagination justify-content-center">
-                <li class="page-item @(currentPage == 1 ? "disabled" : "")">
-                    <a class="page-link bg-dark border-secondary text-light" asp-route-page="@(currentPage - 1)" asp-route-genreFilter="@genre" asp-route-sortOrder="@sort">Inapoi</a>
-                </li>
-
-                @for (int i = 1; i <= totalPages; i++)
-                {
-                    <li class="page-item @(currentPage == i ? "active" : "")">
-                        <a class="page-link @(currentPage == i ? "bg-danger border-danger" : "bg-dark border-secondary text-light")"
-                           asp-route-page="@i" asp-route-genreFilter="@genre" asp-route-sortOrder="@sort">@i</a>
-                    </li>
-                }
-
-                <li class="page-item @(currentPage == totalPages ? "disabled" : "")">
-                    <a class="page-link bg-dark border-secondary text-light" asp-route-page="@(currentPage + 1)" asp-route-genreFilter="@genre" asp-route-sortOrder="@sort">Inainte</a>
-                </li>
-            </ul>
-        </nav>
-    }
+    @* --- LOADER PENTRU SCROLL --- *@
+    <div id="catalogLoader" class="text-center my-5" style="display:none;">
+        <div class="spinner-border text-danger shadow-sm" role="status"></div>
+        <div class="small text-muted mt-2 fw-bold">Se încarcă catalogul...</div>
+    </div>
 </div>
+
+@section Scripts {
+    <script>
+        let page = 1;
+        let isLoading = false;
+        let hasMore = true;
+
+        const urlParams = new URLSearchParams(window.location.search);
+        const sortOrder = urlParams.get('sortOrder') || "";
+        const genreFilter = urlParams.get('genreFilter') || "";
+
+        async function loadMovies() {
+            if (isLoading || !hasMore) return;
+            isLoading = true;
+
+            const loader = document.getElementById('catalogLoader');
+            if(loader) loader.style.display = 'block';
+
+            try {
+                
+                const response = await fetch(`/Movies/GetCatalogData?page=${page}&sortOrder=${sortOrder}&genreFilter=${genreFilter}`);
+                const movies = await response.json();
+
+                if (movies.length === 0) {
+                    hasMore = false;
+                    if (page === 1) {
+                        document.getElementById('catalogGrid').innerHTML = '<div class="col-12 text-center text-muted py-5">Nu am găsit niciun film pentru criteriile selectate.</div>';
+                    }
+                } else {
+                    const grid = document.getElementById('catalogGrid');
+                    let html = '';
+                    movies.forEach(movie => {
+                        
+                        html += createMovieCardHtml(movie);
+                    });
+
+                    grid.insertAdjacentHTML('beforeend', html);
+                    page++;
+                }
+            } catch (error) {
+                console.error("Eroare la încărcarea catalogului:", error);
+            } finally {
+                isLoading = false;
+                if(loader) loader.style.display = 'none';
+            }
+        }
+
+        // eveniment scroll
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 600) {
+                loadMovies();
+            }
+        });
+
+        
+        document.addEventListener('DOMContentLoaded', loadMovies);
+    </script>
+}
+   

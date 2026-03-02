@@ -83,6 +83,47 @@ namespace Licenta_Movie_Recommender.Controllers
             return View(movies);
         }
 
+        [HttpGet]
+        public async Task<IActionResult> GetCatalogData(string sortOrder, string genreFilter, int page = 1)
+        {
+            int pageSize = 24;
+            var moviesQuery = _context.Movies.AsQueryable();
+
+            if (!string.IsNullOrEmpty(genreFilter))
+            {
+                moviesQuery = moviesQuery.Where(m => m.Genres != null && m.Genres.Contains(genreFilter));
+            }
+
+            if (sortOrder == "title_asc")
+            {
+                moviesQuery = moviesQuery.OrderBy(m => m.Title);
+            }
+            else if (sortOrder == "title_desc")
+            {
+                moviesQuery = moviesQuery.OrderByDescending(m => m.Title);
+            }
+            else if (sortOrder == "oldest")
+            {
+                moviesQuery = moviesQuery.OrderBy(m => m.Id);
+            }
+            else
+            {
+                moviesQuery = moviesQuery.OrderByDescending(m => m.Id);
+            }
+
+            var movies = await moviesQuery
+                .Skip((page - 1) * pageSize)
+                .Take(pageSize)
+                .Select(m => new {
+                    id = m.Id,
+                    title = m.Title,
+                    posterUrl = m.PosterUrl
+                })
+                .ToListAsync();
+
+            return Json(movies);
+        }
+
         //search bar
         public async Task<IActionResult> Search(string term)
         {

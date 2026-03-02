@@ -86,7 +86,7 @@ else
             var isWatched = activity != null && (activity.Status == 2 || activity.Rating > 0);
             var isIgnored = activity != null && activity.Status == 3;
 
-            // Ascundem daca a dat "ignora"
+            // ascundem daca a dat "ignora"
             if (isIgnored) continue;
 
             <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
@@ -96,40 +96,3 @@ else
     </div>
 </div>
 
-//refresh button
-@section Scripts {
-    <script>
-        document.getElementById('btnRefreshDiscover')?.addEventListener('click', async function() {
-            const btn = this;
-            const originalHtml = btn.innerHTML;
-
-            //loading animation
-            btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-            btn.disabled = true;
-
-            try {
-                
-                const response = await fetch('/Home/Index?refreshDiscover=true');
-                const htmlString = await response.text();
-
-                
-                const parser = new DOMParser();
-                const doc = parser.parseFromString(htmlString, 'text/html');
-
-                
-                const newGrid = doc.getElementById('discoverGrid');
-
-                
-                if (newGrid) {
-                    document.getElementById('discoverGrid').innerHTML = newGrid.innerHTML;
-                }
-            } catch (error) {
-                console.error("Eroare la refresh-ul sectiunii descopera:", error);
-            } finally {
-                // 6. Punem butonul in starea initiala
-                btn.innerHTML = originalHtml;
-                btn.disabled = false;
-            }
-        });
-    </script>
-}

@@ -19,106 +19,88 @@ namespace Licenta_Movie_Recommender.Controllers
             _recService = recService;
         }
 
+       
+        private async Task<List<Movie>> FetchRandomMoviesAsync(List<int> excludedIds)
+        {
+            int total = await _context.Movies.CountAsync();
+            int skip = Random.Shared.Next(0, Math.Max(0, total - 20));
+
+            return await _context.Movies
+                .AsNoTracking()
+                .Where(m => !excludedIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl) && m.PosterUrl.StartsWith("http"))
+                .OrderBy(m => Guid.NewGuid())
+                .Skip(skip)
+                .Take(12)
+                .ToListAsync();
+        }
+
         public async Task<IActionResult> Index(bool refreshDiscover = false)
         {
             List<Movie> discoverMovies = new List<Movie>();
+            List<int> excludedIds = new List<int>();
+            int userId = 0;
 
-            // logica discover
+            //activitate user
+            if (User.Identity.IsAuthenticated)
+            {
+                userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
+                var activities = await _context.UserActivities.Where(ua => ua.UserId == userId).ToListAsync();
+                ViewBag.UserActivities = activities;
+                excludedIds = activities.Select(ua => ua.MovieId).ToList();
+            }
+
+            //logica cookie
             if (!refreshDiscover && Request.Cookies.TryGetValue("DiscoverMovies", out string cookieValue))
             {
                 var movieIds = cookieValue.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                           .Select(id => int.TryParse(id, out var i) ? i : 0)
-                                          .Where(i => i != 0).ToList();
+                                          .Where(i => i != 0 && !excludedIds.Contains(i)).ToList();
 
                 if (movieIds.Any())
                 {
-                    discoverMovies = await _context.Movies
-                        .Where(m => movieIds.Contains(m.Id))
-                        .ToListAsync();
+                    discoverMovies = await _context.Movies.Where(m => movieIds.Contains(m.Id)).ToListAsync();
                 }
             }
 
-            // daca nu sunt filme in cookie sau s-a dat refresh,  12 filme noi
+            
             if (refreshDiscover || discoverMovies.Count < 12)
             {
-                discoverMovies = await _context.Movies
-                    .Where(m => !string.IsNullOrEmpty(m.PosterUrl) && m.PosterUrl.StartsWith("http"))
-                    .OrderBy(m => Guid.NewGuid())
-                    .Take(12)
-                    .ToListAsync();
+                discoverMovies = await FetchRandomMoviesAsync(excludedIds); 
 
+               
                 var newIds = string.Join(",", discoverMovies.Select(m => m.Id));
-                Response.Cookies.Append("DiscoverMovies", newIds, new CookieOptions
-                {
-                    MaxAge = TimeSpan.FromMinutes(60),
-                    HttpOnly = true
-                });
+                Response.Cookies.Append("DiscoverMovies", newIds, new CookieOptions { MaxAge = TimeSpan.FromMinutes(60), HttpOnly = true });
             }
 
-           
             ViewBag.DiscoverMovies = discoverMovies;
 
-            //activitate user si Recomandari
-            if (User.Identity.IsAuthenticated)
+            //recomandari
+            if (userId > 0)
             {
-                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userIdString != null)
-                {
-                    var userId = int.Parse(userIdString);
-
-                    ViewBag.UserActivities = await _context.UserActivities
-                        .Where(ua => ua.UserId == userId)
-                        .ToListAsync();
-
-                    var pool = await _recService.GetRecommendationsAsync(userId, 20);
-                    var topRecommendations = pool.Take(6).ToList();
-
-                    return View(topRecommendations);
-                }
+                var pool = await _recService.GetRecommendationsAsync(userId, 20);
+                var topRecommendations = pool.Take(6).ToList();
+                return View(topRecommendations);
             }
 
             return View(new List<Movie>());
         }
 
-        // --- METODA OPTIMIZATA REFRESH RAPID (AJAX) ---
+        // --- METODA PT BUTONUL DE REFRESH AJAX ---
         [HttpGet]
         public async Task<IActionResult> GetDiscoverMovies()
         {
-           
-            int randomStartId = Random.Shared.Next(1, 5000);
-
-            var discoverMovies = await _context.Movies
-                .AsNoTracking() 
-                .Where(m => m.Id >= randomStartId && m.PosterUrl != null) 
-                .Take(12)
-                .Select(m => new Movie
-                { 
-                    Id = m.Id,
-                    Title = m.Title,
-                    PosterUrl = m.PosterUrl,
-                    Genres = m.Genres
-                })
-                .ToListAsync();
-
-            
-            if (!discoverMovies.Any())
-            {
-                discoverMovies = await _context.Movies
-                    .AsNoTracking()
-                    .Where(m => m.PosterUrl != null)
-                    .Take(12)
-                    .Select(m => new Movie { Id = m.Id, Title = m.Title, PosterUrl = m.PosterUrl, Genres = m.Genres })
-                    .ToListAsync();
-            }
+            List<int> excludedIds = new List<int>();
 
             if (User.Identity.IsAuthenticated)
             {
                 var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-                ViewBag.UserActivities = await _context.UserActivities
-                    .AsNoTracking()
-                    .Where(ua => ua.UserId == userId)
-                    .ToListAsync();
+                var activities = await _context.UserActivities.AsNoTracking().Where(ua => ua.UserId == userId).ToListAsync();
+                ViewBag.UserActivities = activities;
+                excludedIds = activities.Select(ua => ua.MovieId).ToList();
             }
+
+           
+            var discoverMovies = await FetchRandomMoviesAsync(excludedIds);
 
             return PartialView("_DiscoverMovies", discoverMovies);
         }

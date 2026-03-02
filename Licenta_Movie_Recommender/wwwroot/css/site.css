@@ -61,6 +61,11 @@ h1, h2, h3, h4, h5, h6 {
     color: #a3a3a3 !important;
 }
 
+
+.text-dark:not(.badge):not(.btn) {
+    color: #e5e5e5 !important;
+}
+
 /* --- BORDURI SI FUNDALURI --- */
 .card {
     background-color: #1f1f1f;
@@ -71,7 +76,7 @@ h1, h2, h3, h4, h5, h6 {
     border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
 }
 
-/* --- MOVIE CARD & HOVER LOGIC --- */
+/* --- MOVIE CARD SI HOVER --- */
 .movie-card {
     transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     cursor: pointer;
@@ -84,20 +89,18 @@ h1, h2, h3, h4, h5, h6 {
         z-index: 10;
     }
 
-    
     .movie-card .movie-actions {
         opacity: 0;
         transition: opacity 0.3s ease-in-out;
         pointer-events: none;
     }
 
-    
     .movie-card:hover .movie-actions {
         opacity: 1;
         pointer-events: auto;
     }
 
-/* --- BUTOANE ACTIUNE (Watchlist/Vazut) --- */
+/* --- BUTOANE ACTIUNE  --- */
 .movie-actions .btn {
     width: 32px;
     height: 32px;
@@ -105,12 +108,46 @@ h1, h2, h3, h4, h5, h6 {
     display: flex;
     align-items: center;
     justify-content: center;
-    border-radius: 4px; 
+    border-radius: 4px;
     backdrop-filter: blur(4px);
     background-color: rgba(0,0,0,0.5);
+    transition: all 0.2s ease-in-out;
 }
 
+    .movie-actions .btn:hover {
+        transform: scale(1.15);
+    }
 
+/* --- EFECTE GLOW PENTRU BUTOANE SI BADGE-URI ACTIVE --- */
+.btn-active-watchlist {
+    background-color: #ffc107 !important;
+    color: #000 !important;
+    border-color: #ffc107 !important;
+    box-shadow: 0 0 12px rgba(255, 193, 7, 0.7) !important;
+}
+
+.btn-active-watched {
+    background-color: #28a745 !important;
+    color: #fff !important;
+    border-color: #28a745 !important;
+    box-shadow: 0 0 12px rgba(40, 167, 69, 0.7) !important;
+}
+
+.badge-glow {
+    font-weight: 700;
+    letter-spacing: 0.5px;
+}
+
+.bg-warning.badge-glow {
+    box-shadow: 0 0 10px rgba(255, 193, 7, 0.6);
+    color: #000 !important;
+}
+
+.bg-success.badge-glow {
+    box-shadow: 0 0 10px rgba(40, 167, 69, 0.6);
+}
+
+/* --- ALTE BUTOANE --- */
 .btn-ignore-rec {
     border: 1px solid rgba(255,255,255,0.1) !important;
     color: #a3a3a3 !important;
@@ -122,7 +159,6 @@ h1, h2, h3, h4, h5, h6 {
         color: #ff4444 !important;
         border-color: #e50914 !important;
     }
-
 
 .btn-outline-warning, .btn-outline-success, .btn-outline-secondary, .btn-outline-danger {
     color: #f8f9fa !important;
@@ -138,37 +174,32 @@ h1, h2, h3, h4, h5, h6 {
         background-color: #198754;
     }
 
+    /* stil buton inapoi */
+    .btn-outline-secondary.rounded-circle {
+        background-color: rgba(255, 255, 255, 0.03);
+        transition: all 0.2s ease;
+    }
 
+        .btn-outline-secondary.rounded-circle:hover {
+            background-color: #e50914;
+            border-color: #e50914;
+            color: white;
+            transform: translateX(-3px);
+        }
+
+/* --- LISTE SI BREADCRUMBS --- */
 .list-group-item {
     background-color: #1f1f1f !important;
     color: #e5e5e5 !important;
     border-color: rgba(255, 255, 255, 0.05) !important;
 }
 
-.text-dark {
-    color: #e5e5e5 !important;
-}
-
-/*stil pentru butonul de inapoi */
-.btn-outline-secondary.rounded-circle {
-    background-color: rgba(255, 255, 255, 0.03);
-    transition: all 0.2s ease;
-}
-
-    .btn-outline-secondary.rounded-circle:hover {
-        background-color: #e50914; 
-        border-color: #e50914;
-        color: white;
-        transform: translateX(-3px); 
-    }
-
-/* stil breadcrumbs  dark mode */
 .breadcrumb-item + .breadcrumb-item::before {
     color: rgba(255, 255, 255, 0.3);
     content: "/";
 }
 
-/* SKELETON LOADERS */
+/* --- SKELETON LOADERS --- */
 .skeleton-poster {
     aspect-ratio: 2/3;
     background: linear-gradient(90deg, #1f1f1f 25%, #2b2b2b 50%, #1f1f1f 75%);

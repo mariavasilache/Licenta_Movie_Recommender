@@ -56,9 +56,8 @@ namespace Licenta_Movie_Recommender.Services
 
             
             var candidateMovies = await _context.Movies
+                .AsNoTracking()
                 .Where(m => !excludedMovieIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl))
-                .OrderByDescending(m => m.Id)
-                .Take(400) // limita pt viteza 
                 .ToListAsync();
 
             var predictions = new List<(Movie Movie, float FinalScore)>();
@@ -78,7 +77,7 @@ namespace Licenta_Movie_Recommender.Services
                 if (!string.IsNullOrEmpty(movie.Genres) && favoriteGenres.Any())
                 {
                     var movieGenres = movie.Genres.Split('|');
-                    genreBonus = movieGenres.Count(g => favoriteGenres.Contains(g)) * 1.5f;
+                    genreBonus = movieGenres.Count(g => favoriteGenres.Contains(g)) * 2.0f;
                 }
 
                 predictions.Add((movie, aiScore + genreBonus));
@@ -103,13 +102,14 @@ namespace Licenta_Movie_Recommender.Services
                 if (_predictionEngine != null && DateTime.Now.Subtract(_lastTrainingTime).TotalMinutes <= 20)
                     return;
 
+                //negative reinforcement
                 var allRatings = _context.UserActivities
-                    .Where(ua => ua.Rating > 0)
+                    .Where(ua => ua.Rating > 0 || ua.Status == 3)
                     .Select(ua => new MovieRatingData
                     {
                         UserId = ua.UserId,
                         MovieId = ua.MovieId,
-                        Label = (float)ua.Rating
+                        Label = ua.Status == 3 ? 1.0f : (float)ua.Rating
                     }).ToList();
 
                 if (allRatings.Count < 5) return;

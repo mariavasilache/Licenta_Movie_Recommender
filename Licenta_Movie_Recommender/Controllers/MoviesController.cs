@@ -607,20 +607,24 @@ namespace Licenta_Movie_Recommender.Controllers
             if (userIdString == null) return Unauthorized();
 
             var userId = int.Parse(userIdString);
-            int pageSize = 18; // Incarcam cate 18 filme la fiecare scroll
+            int pageSize = 18; // incarca cate 18 filme la fiecare scroll
 
             var query = _context.UserActivities
                 .Include(ua => ua.Movie)
                 .Where(ua => ua.UserId == userId);
 
-            // tab 1 = Vazute, tab 2 = Watchlist
+            // tab 0 = toate, tab 1 = vazute, tab 2 = watchlist
             if (tab == 1)
             {
                 query = query.Where(a => a.Status == 2 || a.Rating > 0);
             }
-            else
+            else if (tab == 2)
             {
                 query = query.Where(a => a.Status == 1 && a.Rating == 0);
+            }
+            else if (tab == 0) // toate activitatile, excludem filmele ignorate / status 3
+            {
+                query = query.Where(a => a.Status != 3);
             }
 
             var activities = await query

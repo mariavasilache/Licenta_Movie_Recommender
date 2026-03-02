@@ -8,11 +8,16 @@
         <a asp-action="MyProfile" asp-controller="Account" class="btn btn-sm btn-outline-light opacity-75 ms-auto">&laquo; Înapoi la Profil</a>
     </div>
 
-    @* --- TAB-URILE (Adaptate pentru Dark Mode) --- *@
+    @* --- TABS --- *@
     <ul class="nav nav-pills nav-fill mb-4 bg-dark border border-secondary rounded shadow-sm p-1" id="historyTabs" role="tablist">
         <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold text-light" id="watched-tab" data-bs-toggle="tab" data-bs-target="#watched" type="button" role="tab" onclick="switchTab(1)">
-                <i class="bi bi-eye-fill"></i> Filme Văzute
+            <button class="nav-link active fw-bold text-light" id="all-tab" data-bs-toggle="tab" data-bs-target="#all" type="button" role="tab" onclick="switchTab(0)">
+                <i class="bi bi-collection-play-fill"></i> Toate
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-light" id="watched-tab" data-bs-toggle="tab" data-bs-target="#watched" type="button" role="tab" onclick="switchTab(1)">
+                <i class="bi bi-eye-fill"></i> Văzute
             </button>
         </li>
         <li class="nav-item" role="presentation">
@@ -23,7 +28,6 @@
     </ul>
 
     <style>
-        /* Schimbam culoarea de selectie a tab-urilor pe fundal inchis */
         .nav-pills .nav-link.active {
             background-color: #dc3545 !important; /* Rosu Netflix/Cinema */
             color: white !important;
@@ -31,8 +35,17 @@
     </style>
 
     <div class="tab-content">
+        @* TAB-UL 0: TOATE *@
+        <div class="tab-pane fade show active" id="all" role="tabpanel">
+            <div class="row" id="grid-0"></div>
+            <div id="loader-0" class="text-center my-4" style="display:none;">
+                <div class="spinner-border text-danger shadow-sm" role="status"></div>
+                <div class="small text-muted mt-2 fw-bold">Încărcăm filmele...</div>
+            </div>
+        </div>
+
         @* TAB-UL 1: VAZUTE *@
-        <div class="tab-pane fade show active" id="watched" role="tabpanel">
+        <div class="tab-pane fade" id="watched" role="tabpanel">
             <div class="row" id="grid-1"></div>
             <div id="loader-1" class="text-center my-4" style="display:none;">
                 <div class="spinner-border text-danger shadow-sm" role="status"></div>
@@ -54,9 +67,9 @@
 @section Scripts {
     <script>
         // Logica de infinite scroll
-        let currentTab = 1;
-        let pages = { 1: 1, 2: 1 };
-        let hasMore = { 1: true, 2: true };
+        let currentTab = 0;
+        let pages = { 0: 1, 1: 1, 2: 1 };
+        let hasMore = {0: true, 1: true, 2: true };
         let isLoading = false;
 
         function switchTab(tabId) {
@@ -80,9 +93,9 @@
                 let data = await response.json();
 
                 if(data.length === 0) {
-                    hasMore[tab] = false; // Nu mai sunt filme
+                    hasMore[tab] = false; // nu mai sunt filme
                     if(page === 1) {
-                        // Empty state adaptat la Dark Mode
+                        // empty state adaptat la Dark Mode
                         document.getElementById('grid-' + tab).innerHTML = `
                             <div class="col-12">
                                 <div class="alert bg-transparent border border-secondary text-center py-5 rounded-3 text-muted">
@@ -102,23 +115,26 @@
                         else badge = `<span class="position-absolute badge bg-success m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;" title="Vizionat"><i class="bi bi-eye-fill"></i></span>`;
 
                         //html din _moviecard
-                        html += `
-                        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4 position-relative">
-                            <div class="card bg-transparent border-0 movie-card position-relative h-100">
-                                <a href="/Movies/Details/${movie.movieId}" class="text-decoration-none d-block">
-                                    <img src="${movie.posterUrl}" class="card-img-top rounded shadow-sm w-100" alt="${movie.title}" style="aspect-ratio: 2/3; object-fit: cover;" onerror="this.src='https://placehold.co/300x450/2b2b2b/ffffff?text=${encodeURIComponent(movie.title)}'">
-                                </a>
+                                html += `
+        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+            <div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
 
-                                ${badge}
+                <a href="/Movies/Details/${movie.movieId}" class="text-decoration-none d-flex align-items-center justify-content-center position-relative bg-dark rounded shadow skeleton-poster text-center p-3" style="aspect-ratio: 2/3; overflow: hidden;">
+                    <span class="text-secondary fw-bold" style="z-index: 1; font-size: 0.95rem;">${movie.title}</span>
+                    <img src="${movie.posterUrl}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
+                         onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
+                         onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton-poster');">
+                </a>
 
-                                <div class="card-body px-1 py-2 text-center">
-                                    <h6 class="card-title text-light text-truncate mb-0" style="font-size: 0.95rem;">${movie.title}</h6>
-                                </div>
-                            </div>
-                            <div class="text-center mt-1">
-                                <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-clock-history"></i> Adăugat: ${movie.dateAdded}</small>
-                            </div>
-                        </div>`;
+                ${badge}
+
+                <div class="card-body px-1 py-2 text-center d-flex flex-column" style="min-height: 65px;">
+                    <h6 class="card-title text-light text-truncate mb-1" style="font-size: 0.92rem;">${movie.title}</h6>
+                    <small class="text-muted mt-auto" style="font-size: 0.75rem; opacity: 0.7;"><i class="bi bi-clock-history"></i> Adăugat: ${movie.dateAdded}</small>
+                </div>
+
+            </div>
+        </div>`;
                     });
 
                     document.getElementById('grid-' + tab).insertAdjacentHTML('beforeend', html);

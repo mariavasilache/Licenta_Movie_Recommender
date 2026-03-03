@@ -25,7 +25,6 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public IActionResult Index(string sortOrder, string genreFilter, string searchString)
         {
-
             ViewBag.CurrentSort = sortOrder;
             ViewBag.CurrentGenre = genreFilter;
             ViewBag.CurrentSearch = searchString;
@@ -40,34 +39,51 @@ namespace Licenta_Movie_Recommender.Controllers
             int pageSize = 24;
             var moviesQuery = _context.Movies.AsNoTracking().AsQueryable();
 
-            // 1. Filtrare după căutare (dacă utilizatorul vine de pe bara de search)
             if (!string.IsNullOrEmpty(searchString))
-            {
                 moviesQuery = moviesQuery.Where(m => m.Title.Contains(searchString));
-            }
 
-            // 2. Filtrare după gen
             if (!string.IsNullOrEmpty(genreFilter))
-            {
                 moviesQuery = moviesQuery.Where(m => m.Genres != null && m.Genres.Contains(genreFilter));
-            }
 
-            // 3. Sortare
             moviesQuery = sortOrder switch
             {
                 "title_asc" => moviesQuery.OrderBy(m => m.Title),
                 "title_desc" => moviesQuery.OrderByDescending(m => m.Title),
                 "oldest" => moviesQuery.OrderBy(m => m.Id),
-                _ => moviesQuery.OrderByDescending(m => m.Id), // Implicit: cele mai noi
+                _ => moviesQuery.OrderByDescending(m => m.Id),
             };
 
-            var movies = await moviesQuery
+            var moviesData = await moviesQuery
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
-                .Select(m => new { id = m.Id, title = m.Title, posterUrl = m.PosterUrl })
+                .Select(m => new { m.Id, m.Title, m.PosterUrl, m.Genres })
                 .ToListAsync();
 
-            return Json(movies);
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            var movieIds = moviesData.Select(m => m.Id).ToList();
+
+            var activities = new List<UserMovieActivity>();
+            if (!string.IsNullOrEmpty(userId) && movieIds.Any())
+            {
+                activities = await _context.UserActivities
+                    .Where(ua => ua.UserId == userId && movieIds.Contains(ua.MovieId))
+                    .ToListAsync();
+            }
+
+            var result = moviesData.Select(m => {
+                var act = activities.FirstOrDefault(a => a.MovieId == m.Id);
+                return new
+                {
+                    id = m.Id,
+                    title = m.Title,
+                    posterUrl = m.PosterUrl,
+                    genres = m.Genres,
+                    status = act != null ? act.Status : 0,
+                    rating = act != null ? act.Rating : 0
+                };
+            });
+
+            return Json(result);
         }
 
         [HttpGet]
@@ -96,7 +112,6 @@ namespace Licenta_Movie_Recommender.Controllers
         {
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Account");
-
 
             ViewBag.UserActivities = await _context.UserActivities
                 .AsNoTracking()
@@ -167,143 +182,95 @@ namespace Licenta_Movie_Recommender.Controllers
 
         #region 4. ACTIVITATI UTILIZATOR (AJAX & FORMS)
 
-        // --- AJAX (butoane carduri) ---
         [HttpPost]
-        public async Task<IActionResult> ToggleWatchlist(int id)
+        public async Task<IActionResult> ToggleWatchlist([FromForm] int? movieId, [FromForm] int? id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return Unauthorized();
-
-           
-            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == id);
-            bool inWatchlist = false;
-
-            if (activity == null)
+            try
             {
-                _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = id, Status = 1, DateAdded = DateTime.Now });
-                inWatchlist = true;
-            }
-            else
-            {
-                if (activity.Status == 1 && activity.Rating == 0) _context.UserActivities.Remove(activity);
-                else { activity.Status = 1; inWatchlist = true; }
-            }
-            await _context.SaveChangesAsync();
-            return Json(new { inWatchlist });
-        }
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
 
-        [HttpPost]
-        public async Task<IActionResult> ToggleWatched(int id)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return Unauthorized();
+                int mid = movieId ?? id ?? 0;
+                if (mid == 0) return BadRequest(new { error = "ID film lipsă." });
 
-           
-            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == id);
-            bool isWatched = false;
+                var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == mid);
+                bool inWatchlist = false;
 
-            if (activity == null)
-            {
-                _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = id, Status = 2, DateAdded = DateTime.Now });
-                isWatched = true;
-            }
-            else
-            {
-                if (activity.Status == 2 && activity.Rating == 0) _context.UserActivities.Remove(activity);
-                else { activity.Status = 2; isWatched = true; }
-            }
-            await _context.SaveChangesAsync();
-            return Json(new { isWatched });
-        }
-
-        // --- FORMS CLASICE pag detalii ---
-        [HttpPost]
-        public async Task<IActionResult> AddToWatchlist(int movieId)
-        {
-            await ToggleWatchlist(movieId);
-            TempData["Success"] = "Statusul Watchlist a fost actualizat!";
-            return RedirectToAction("Details", new { id = movieId });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> MarkAsWatched(int movieId)
-        {
-            await ToggleWatched(movieId);
-            TempData["Success"] = "Statusul Vizionat a fost actualizat!";
-            return RedirectToAction("Details", new { id = movieId });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> SaveRating(int movieId, int rating)
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "Account");
-
-         
-            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
-
-            if (activity == null)
-            {
-                _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = movieId, Rating = rating, Status = 2, DateAdded = DateTime.Now });
-
-            }
-            else
-            {
-                activity.Rating = rating;
-                activity.Status = 2;
-                activity.DateAdded = DateTime.Now;
-            }
-
-            await _context.SaveChangesAsync();
-            TempData["Success"] = $"Ai acordat nota {rating} / 5 acestui film!";
-            return Json(new { success = true, rating = rating, status = 2 });
-        }
-
-        [HttpPost]
-        public async Task<IActionResult> RemoveActivityStatus(int movieId)
-        {
-            var userId= User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId== null) return RedirectToAction("Login", "Account");
-
-            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
-
-            if (activity != null)
-            {
-
-                bool hadRating = activity.Rating > 0;
-                bool hadStatus = activity.Status > 0;
-
-                _context.UserActivities.Remove(activity);
-                await _context.SaveChangesAsync();
-
-
-                if (hadRating && hadStatus)
-                    TempData["Success"] = "Statusul și nota au fost eliminate cu succes!";
-                else if (hadRating)
-                    TempData["Success"] = "Nota a fost eliminată!";
+                if (activity == null)
+                {
+                    _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = mid, Status = 1, DateAdded = DateTime.Now });
+                    inWatchlist = true;
+                }
                 else
-                    TempData["Success"] = "Filmul a fost scos din listă!";
+                {
+                    // Daca e deja in watchlist (Status 1) si n-are nota, il scoatem de tot
+                    if (activity.Status == 1 && activity.Rating == 0) _context.UserActivities.Remove(activity);
+                    else { activity.Status = 1; inWatchlist = true; }
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { inWatchlist });
             }
-
-            return RedirectToAction("Details", new { id = movieId });
+            catch (Exception ex) { return StatusCode(500, new { error = ex.InnerException?.Message ?? ex.Message }); }
         }
 
         [HttpPost]
-        public async Task<IActionResult> RemoveRatingOnly(int movieId)
+        public async Task<IActionResult> ToggleWatched([FromForm] int? movieId, [FromForm] int? id)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "Account");
-
-            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
-            if (activity != null)
+            try
             {
-                activity.Rating = 0;
-                if (activity.Status == 0) _context.UserActivities.Remove(activity);
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
+
+                int mid = movieId ?? id ?? 0;
+                if (mid == 0) return BadRequest(new { error = "ID film lipsă." });
+
+                var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == mid);
+                bool isWatched = false;
+
+                if (activity == null)
+                {
+                    _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = mid, Status = 2, DateAdded = DateTime.Now });
+                    isWatched = true;
+                }
+                else
+                {
+                    if (activity.Status == 2 && activity.Rating == 0) _context.UserActivities.Remove(activity);
+                    else { activity.Status = 2; isWatched = true; }
+                }
                 await _context.SaveChangesAsync();
-                TempData["Success"] = "Nota a fost ștearsă!";
+                return Json(new { isWatched });
             }
-            return Json(new { success = true });
+            catch (Exception ex) { return StatusCode(500, new { error = ex.InnerException?.Message ?? ex.Message }); }
         }
+
+        [HttpPost]
+        public async Task<IActionResult> SaveRating([FromForm] int movieId, [FromForm] int rating)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
+
+                var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
+
+                if (activity == null)
+                {
+                    _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = movieId, Rating = rating, Status = 2, DateAdded = DateTime.Now });
+                }
+                else
+                {
+                    activity.Rating = rating;
+                    activity.Status = 2; // Daca ii da nota, e clar ca l-a vazut
+                    activity.DateAdded = DateTime.Now;
+                }
+                await _context.SaveChangesAsync();
+                return Json(new { success = true, rating, status = 2 });
+            }
+            catch (Exception ex) { return StatusCode(500, new { error = ex.InnerException?.Message ?? ex.Message }); }
+        }
+
+        [HttpPost] public async Task<IActionResult> AddToWatchlist([FromForm] int movieId) => await ToggleWatchlist(movieId, null);
+        [HttpPost] public async Task<IActionResult> MarkAsWatched([FromForm] int movieId) => await ToggleWatched(movieId, null);
 
         #endregion
 
@@ -317,15 +284,15 @@ namespace Licenta_Movie_Recommender.Controllers
 
             if (string.IsNullOrWhiteSpace(name))
             {
-                TempData["Error"] = "Eroare: Numele listei este obligatoriu și nu poate fi gol!";
-                return sourceMovieId.HasValue ? RedirectToAction("Details", new { id = sourceMovieId.Value }) : RedirectToAction("MyProfile");
+                TempData["Error"] = "Eroare: Numele listei este obligatoriu.";
+                return RedirectToAction("Details", new { id = sourceMovieId.Value });
             }
 
             _context.CustomLists.Add(new CustomList { UserId = userId, Name = name, Description = description ?? "", CreatedAt = DateTime.Now });
             await _context.SaveChangesAsync();
 
-            TempData["Success"] = $"Lista '{name}' a fost creată cu succes!";
-            return sourceMovieId.HasValue ? RedirectToAction("Details", new { id = sourceMovieId.Value }) : RedirectToAction("MyProfile");
+            TempData["Success"] = $"Lista a fost creata!";
+            return RedirectToAction("Details", new { id = sourceMovieId.Value });
         }
 
         [HttpGet]
@@ -334,9 +301,7 @@ namespace Licenta_Movie_Recommender.Controllers
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             if (userId == null) return RedirectToAction("Login", "Account");
 
-            var customList = await _context.CustomLists.Include(cl => cl.Movies).ThenInclude(clm => clm.Movie)
-                .FirstOrDefaultAsync(cl => cl.Id == id && cl.UserId == userId);
-
+            var customList = await _context.CustomLists.Include(cl => cl.Movies).ThenInclude(clm => clm.Movie).FirstOrDefaultAsync(cl => cl.Id == id && cl.UserId == userId);
             if (customList == null) return NotFound();
             return View(customList);
         }
@@ -353,7 +318,6 @@ namespace Licenta_Movie_Recommender.Controllers
                 if (listToDelete.Movies.Any()) _context.CustomListMovies.RemoveRange(listToDelete.Movies);
                 _context.CustomLists.Remove(listToDelete);
                 await _context.SaveChangesAsync();
-                TempData["Success"] = $"Lista '{listToDelete.Name}' a fost ștearsă definitiv!";
             }
             return RedirectToAction("MyProfile");
         }
@@ -361,41 +325,43 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> AddMovieToCustomList(int customListId, int movieId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "Account");
-
-            var listExists = await _context.CustomLists.AnyAsync(cl => cl.Id == customListId && cl.UserId == userId);
-            if (!listExists) return Unauthorized();
-
-            var alreadyInList = await _context.CustomListMovies.AnyAsync(clm => clm.CustomListId == customListId && clm.MovieId == movieId);
-            if (!alreadyInList)
+            try
             {
-                _context.CustomListMovies.Add(new CustomListMovie { CustomListId = customListId, MovieId = movieId, AddedAt = DateTime.Now });
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Filmul a fost adăugat în lista ta!";
-            }
-            else TempData["Error"] = "Filmul se află deja în această listă.";
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
 
-            return RedirectToAction("Details", new { id = movieId });
+                var alreadyInList = await _context.CustomListMovies.AnyAsync(clm => clm.CustomListId == customListId && clm.MovieId == movieId);
+                if (!alreadyInList)
+                {
+                    _context.CustomListMovies.Add(new CustomListMovie { CustomListId = customListId, MovieId = movieId, AddedAt = DateTime.Now });
+                    await _context.SaveChangesAsync();
+                }
+                return Json(new { success = true, message = "Adaugat in lista!" });
+            }
+            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
         }
 
         [HttpPost]
         public async Task<IActionResult> RemoveMovieFromCustomList(int customListId, int movieId)
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userId == null) return RedirectToAction("Login", "Account");
-
-            var clm = await _context.CustomListMovies.FirstOrDefaultAsync(x => x.CustomListId == customListId && x.MovieId == movieId && x.CustomList.UserId == userId);
-            if (clm != null)
+            try
             {
-                _context.CustomListMovies.Remove(clm);
-                await _context.SaveChangesAsync();
-                TempData["Success"] = "Filmul a fost șters din listă!";
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
+
+                var clm = await _context.CustomListMovies.FirstOrDefaultAsync(x => x.CustomListId == customListId && x.MovieId == movieId && x.CustomList.UserId == userId);
+                if (clm != null)
+                {
+                    _context.CustomListMovies.Remove(clm);
+                    await _context.SaveChangesAsync();
+                }
+                return Json(new { success = true, message = "Sters din lista!" });
             }
-            return RedirectToAction("Details", new { id = movieId });
+            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
         }
 
         #endregion
+
 
         #region 6. DASHBOARD SI ISTORIC
 

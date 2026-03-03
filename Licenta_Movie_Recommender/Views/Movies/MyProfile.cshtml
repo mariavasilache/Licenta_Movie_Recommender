@@ -78,7 +78,7 @@
         {
             @foreach (var activity in Model.RecentWatched.Take(6))
             {
-                <div class="col-lg-2 col-md-3 col-sm-4 col-4 mb-3 position-relative">
+               
                     
                     <partial name="_MovieCard" model="activity.Movie" view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false } }' />
 
@@ -91,7 +91,7 @@
                     {
                         <span class="position-absolute badge bg-success m-1 shadow-sm" title="Vizionat" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-eye-fill"></i></span>
                     }
-                </div>
+               
             }
         }
     </div>
@@ -106,10 +106,9 @@
         {
             @foreach (var activity in Model.RecentWatchlist.Take(6))
             {
-                <div class="col-lg-2 col-md-3 col-sm-4 col-4 mb-3 position-relative">
                     <partial name="_MovieCard" model="activity.Movie" view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false } }' />
                     <span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" title="În Watchlist" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-bookmark-fill"></i></span>
-                </div>
+                
             }
         }
     </div>

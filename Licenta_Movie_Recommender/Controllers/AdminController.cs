@@ -3,6 +3,7 @@ using Licenta_Movie_Recommender.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
+using System.Security.Claims; // Adăugat pentru a lua ID-ul adminului curent
 
 namespace Licenta_Movie_Recommender.Controllers
 {
@@ -11,7 +12,7 @@ namespace Licenta_Movie_Recommender.Controllers
     {
         private readonly ApplicationDbContext _context = context;
 
-        // pag principala dashboard
+        // dashboard principal 
         public async Task<IActionResult> Index()
         {
             var model = new AdminDashboardViewModel
@@ -26,10 +27,15 @@ namespace Licenta_Movie_Recommender.Controllers
             return View(model);
         }
 
-        //management filme
-        public async Task<IActionResult> ManageMovies(string searchString, int page = 1)
+        public IActionResult ManageMovies()
         {
-            int pageSize = 15;
+            return View();
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetManageMoviesData(int page = 1, string searchString = "")
+        {
+            int pageSize = 18; 
             var query = _context.Movies.AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
@@ -37,21 +43,34 @@ namespace Licenta_Movie_Recommender.Controllers
                 query = query.Where(m => m.Title.Contains(searchString));
             }
 
-            var totalMovies = await query.CountAsync();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
             var movies = await query
                 .OrderByDescending(m => m.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
+                .Select(m => new {
+                    id = m.Id,
+                    title = m.Title,
+                    posterUrl = m.PosterUrl,
+                    genres = m.Genres,
+                    
+                    status = _context.UserActivities
+                                .Where(ua => ua.MovieId == m.Id && ua.UserId == userId)
+                                .Select(ua => ua.Status)
+                                .FirstOrDefault(),
+                    rating = _context.UserActivities
+                                .Where(ua => ua.MovieId == m.Id && ua.UserId == userId)
+                                .Select(ua => ua.Rating)
+                                .FirstOrDefault()
+                })
                 .ToListAsync();
 
-            ViewBag.SearchString = searchString;
-            ViewBag.CurrentPage = page;
-            ViewBag.TotalPages = (int)Math.Ceiling((double)totalMovies / pageSize);
-
-            return View(movies);
+            // returnare lista ca JSON, cum asteapta createMovieCardHtml in site.js
+            return Json(movies);
         }
 
-        // stergere film prin AJAX
+        // stergere film AJAX 
         [HttpPost]
         public async Task<IActionResult> DeleteMovie(int id)
         {

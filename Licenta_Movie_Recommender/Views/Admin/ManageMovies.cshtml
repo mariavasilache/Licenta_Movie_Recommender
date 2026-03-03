@@ -1,115 +1,108 @@
-﻿@model IEnumerable<Licenta_Movie_Recommender.Models.Movie>
-@{
+﻿@{
     ViewData["Title"] = "Gestionare Filme";
 }
 
-<div class="container-fluid mt-4">
+<div class="container-fluid mt-4 mb-5">
+    @* --- HEADER CU BUTON DE INAPOI --- *@
     <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="h3 text-gray-800">Gestionare Bază de Date Filme</h1>
+        <div class="d-flex align-items-center gap-3">
+            <a href="/Admin" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;" title="Înapoi la Dashboard">
+                <i class="bi bi-arrow-left fs-5"></i>
+            </a>
+            <h1 class="h3 text-white fw-bold mb-0">Gestionare Bază de Date</h1>
+        </div>
+
         <a href="/Admin/Import" class="btn btn-success shadow-sm">
             <i class="bi bi-cloud-download me-1"></i> Importă filme noi
         </a>
     </div>
 
     @* --- BARA DE CAUTARE --- *@
-    <div class="card shadow mb-4">
+    <div class="card bg-dark border-secondary shadow mb-4">
         <div class="card-body">
-            <form method="get" class="row g-3">
+            <form id="adminSearchForm" class="row g-3">
                 <div class="col-md-10">
-                    <input type="text" name="searchString" class="form-control"
-                           placeholder="Caută după titlu..." value="@ViewBag.SearchString">
+                    <input type="text" id="adminSearchInput" class="form-control bg-dark text-white border-secondary" placeholder="Caută după titlu...">
                 </div>
                 <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">Caută</button>
+                    <button type="submit" class="btn btn-primary w-100">
+                        <i class="bi bi-search"></i> Caută
+                    </button>
                 </div>
             </form>
         </div>
     </div>
 
-    @* --- TABEL FILME --- *@
-    <div class="card shadow mb-4">
-        <div class="card-body">
-            <div class="table-responsive">
-                <table class="table table-hover align-middle">
-                    <thead class="table-dark">
-                        <tr>
-                            <th style="width: 50px;">ID</th>
-                            <th style="width: 80px;">Poster</th>
-                            <th>Titlu</th>
-                            <th>Genuri</th>
-                            <th class="text-center">Acțiuni</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @foreach (var item in Model)
-                        {
-                            <tr id="movie-row-@item.Id">
-                                <td>@item.Id</td>
-                                <td>
-                                    <img src="@item.PosterUrl" style="width: 50px; border-radius: 4px;"
-                                         onerror="this.src='https://placehold.co/50x75?text=N/A'" />
-                                </td>
-                                <td class="fw-bold">@item.Title</td>
-                                <td>
-                                    @foreach (var gen in (item.Genres ?? "").Split('|'))
-                                    {
-                                        <span class="badge bg-light text-dark border me-1">@gen</span>
-                                    }
-                                </td>
-                                <td class="text-center">
-                                    <div class="btn-group">
-                                        <a href="/Movies/Details/@item.Id" class="btn btn-sm btn-outline-info" title="Vezi pagina">
-                                            <i class="bi bi-eye"></i>
-                                        </a>
-                                        <button class="btn btn-sm btn-outline-danger"
-                                                onclick="deleteMovie(@item.Id, '@item.Title')" title="Șterge film">
-                                            <i class="bi bi-trash"></i>
-                                        </button>
-                                    </div>
-                                </td>
-                            </tr>
-                        }
-                    </tbody>
-                </table>
-            </div>
+    @* --- GRID FILME --- *@
+    <div id="adminMovieGrid" class="row g-2"></div>
 
-            @* --- PAGINATIE --- *@
-            <nav class="mt-4">
-                <ul class="pagination justify-content-center">
-                    @for (int i = 1; i <= ViewBag.TotalPages; i++)
-                    {
-                        <li class="page-item @(i == ViewBag.CurrentPage ? "active" : "")">
-                            <a class="page-link" href="@Url.Action("ManageMovies", new { page = i, searchString = ViewBag.SearchString })">@i</a>
-                        </li>
-                    }
-                </ul>
-            </nav>
-        </div>
+    @* --- LOADER --- *@
+    <div id="adminLoader" class="text-center my-5" style="display:none;">
+        <div class="spinner-border text-danger shadow-sm" role="status"></div>
     </div>
 </div>
 
 @section Scripts {
     <script>
-        async function deleteMovie(id, title) {
-            if (!confirm(`Sigur vrei să ștergi definitiv filmul "${title}"?`)) return;
+        let page = 1;
+        let isLoading = false;
+        let hasMore = true;
+        let searchString = '';
+
+        async function loadAdminMovies() {
+            if (isLoading || !hasMore) return;
+            isLoading = true;
+
+            const grid = document.getElementById('adminMovieGrid');
+            const loader = document.getElementById('adminLoader');
+
+            loader.style.display = 'block';
 
             try {
-                const response = await fetch(`/Admin/DeleteMovie/${id}`, {
-                    method: 'POST',
-                    headers: { 'X-Requested-With': 'XMLHttpRequest' }
-                });
+                const response = await fetch(`/Admin/GetManageMoviesData?page=${page}&searchString=${encodeURIComponent(searchString)}`);
+                const movies = await response.json();
 
-                if (response.ok) {
-                    const row = document.getElementById(`movie-row-${id}`);
-                    row.style.transition = 'all 0.5s ease';
-                    row.style.opacity = '0';
-                    setTimeout(() => row.remove(), 500);
+                if (page === 1) grid.innerHTML = '';
+
+                if (movies.length === 0) {
+                    hasMore = false;
+                    if (page === 1) grid.innerHTML = '<div class="col-12 text-center text-muted py-5">Niciun film găsit.</div>';
                 } else {
-                    alert("Eroare la ștergere. Posibil să existe restricții în baza de date.");
+                    let html = '';
+                    movies.forEach(movie => {
+                        html += createMovieCardHtml(movie, { isAdmin: true, layout: 'compact' });
+                    });
+
+                    
+                    grid.insertAdjacentHTML('beforeend', html);
+                    page++;
                 }
-            } catch (err) {
-                console.error(err);
+            } catch (error) {
+                console.error("Eroare la încărcare:", error);
+            } finally {
+                isLoading = false;
+                loader.style.display = 'none';
             }
         }
+
+        // Cautare
+        document.getElementById('adminSearchForm').addEventListener('submit', (e) => {
+            e.preventDefault();
+            searchString = document.getElementById('adminSearchInput').value.trim();
+            page = 1;
+            hasMore = true;
+            
+            loadAdminMovies();
+        });
+
+        // scroll Infinit
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+                loadAdminMovies();
+            }
+        });
+
+        
+        document.addEventListener('DOMContentLoaded', loadAdminMovies);
     </script>
 }

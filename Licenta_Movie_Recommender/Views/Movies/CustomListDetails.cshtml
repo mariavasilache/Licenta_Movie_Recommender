@@ -42,7 +42,6 @@
         <div class="row">
             @foreach (var item in Model.Movies.OrderByDescending(m => m.AddedAt))
             {
-                <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
 
                     <partial name="_MovieCard" model="item.Movie" view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false } }' />
 
@@ -51,7 +50,6 @@
                         <small class="text-muted" style="font-size: 0.75rem;"><i class="bi bi-clock-history"></i> Adăugat: @item.AddedAt.ToString("dd MMM")</small>
                     </div>
 
-                </div>
             }
         </div>
     }

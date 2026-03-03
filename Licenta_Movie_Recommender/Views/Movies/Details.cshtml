@@ -16,7 +16,7 @@
 </div>
 
 <style>
-    /* design sistem rating cu stelute  */
+    /* design sistem rating cu stelute */
     .star-rating {
         display: flex;
         flex-direction: row-reverse;
@@ -45,7 +45,7 @@
                     color: #ffc107;
                 }
 
-    /* Containerul principal*/
+    /* container principal */
     .details-card {
         background-color: #1f1f1f;
         border: 1px solid rgba(255, 255, 255, 0.05);
@@ -58,17 +58,13 @@
 </style>
 
 <div class="container mt-4 mb-5" id="main-details-container">
-
     @* --- HEADER CU BUTON DE INAPOI --- *@
     <partial name="_PageHeader" model='(string)ViewData["Title"]' />
 
     <div class="row details-card rounded shadow-lg p-4 g-4">
-
         @* --- POSTER --- *@
         <div class="col-md-4 text-center">
-            <img src="@Model.PosterUrl"
-                 class="img-fluid rounded shadow-lg border border-secondary"
-                 alt="@Model.Title"
+            <img src="@Model.PosterUrl" class="img-fluid rounded shadow-lg border border-secondary" alt="@Model.Title"
                  style="max-height: 550px; width: 100%; object-fit: cover; border-color: rgba(255,255,255,0.1) !important;"
                  onerror="this.src='https://placehold.co/400x600/2b2b2b/ffffff?text=@Uri.EscapeDataString(Model.Title)'" />
         </div>
@@ -93,28 +89,26 @@
             </div>
 
             <h4 class="fw-bold text-warning border-bottom border-secondary pb-2 mb-3">Sinopsis</h4>
-            <p class="lead text-light opacity-75" style="line-height: 1.8;">
-                @ViewBag.Overview
-            </p>
+            <p class="lead text-light opacity-75" style="line-height: 1.8;">@ViewBag.Overview</p>
 
             @* --- ZONA ACTIUNI USER --- *@
             <div class="card action-card shadow-sm mt-5">
                 <div class="card-body p-4">
-                    @if (User.Identity.IsAuthenticated)
+                    @if (User.Identity.IsAuthenticated && User.Identity != null)
                     {
-                        var rating = ViewBag.UserRating != null ? (int)ViewBag.UserRating : 0;
-                        var status = ViewBag.UserStatus != null ? (int)ViewBag.UserStatus : 0;
+                        int rating = ViewBag.UserRating as int? ?? 0;
+                        int status = ViewBag.UserStatus as int? ?? 0;
                         var listsContainingMovie = ViewBag.ListsContainingMovie as List<int> ?? new List<int>();
                         var userLists = ViewBag.UserLists as List<Licenta_Movie_Recommender.Models.CustomList> ?? new List<Licenta_Movie_Recommender.Models.CustomList>();
 
-                        @* RATING  *@
+                        @* RATING *@
                         <div class="d-flex align-items-center justify-content-between mb-4 border-bottom border-secondary pb-3">
-                            <form asp-action="SaveRating" method="post" class="m-0 d-flex align-items-center">
+                            <form asp-action="SaveRating" method="post" class="m-0 d-flex align-items-center details-ajax-status-form">
                                 <input type="hidden" name="movieId" value="@Model.Id" />
                                 <div class="star-rating me-3">
                                     @for (int i = 5; i >= 1; i--)
                                     {
-                                        <input type="radio" id="star_@i" name="rating" value="@i" @(rating == i ? "checked" : "") class="ajax-rating" />
+                                        <input type="radio" id="star_@i" name="rating" value="@i" @(rating == i ? "checked" : "") class="details-ajax-rating" />
                                         <label for="star_@i" title="@i stele"><i class="bi bi-star-fill"></i></label>
                                     }
                                 </div>
@@ -128,7 +122,7 @@
 
                             @* buton stergere rating *@
                             <div id="remove-rating-container" class="@(rating > 0 ? "" : "d-none")">
-                                <form asp-action="RemoveRatingOnly" method="post" class="m-0 ajax-remove-rating">
+                                <form asp-action="RemoveRatingOnly" method="post" class="m-0 details-ajax-status-form">
                                     <input type="hidden" name="movieId" value="@Model.Id" />
                                     <button type="submit" class="btn btn-sm btn-outline-danger border-0" title="Sterge nota">
                                         <i class="bi bi-trash3 fs-5"></i>
@@ -137,7 +131,7 @@
                             </div>
                         </div>
 
-                        @* BUTTONS  *@
+                        @* BUTTONS *@
                         <div class="d-flex flex-wrap gap-3" id="action-buttons-container">
 
                             @* Vizionat *@
@@ -152,7 +146,7 @@
                                     }
                                     else
                                     {
-                                        <form asp-action="RemoveActivityStatus" method="post" class="m-0 ajax-status-form">
+                                        <form asp-action="RemoveActivityStatus" method="post" class="m-0 details-ajax-status-form">
                                             <input type="hidden" name="movieId" value="@Model.Id" />
                                             <button type="submit" class="btn btn-success px-4 fw-bold shadow">
                                                 <i class="bi bi-check-circle-fill me-2"></i> Vizionat
@@ -162,9 +156,9 @@
                                 }
                                 else
                                 {
-                                    <form asp-action="MarkAsWatched" method="post" class="m-0 ajax-status-form">
+                                    <form asp-action="MarkAsWatched" method="post" class="m-0 details-ajax-status-form">
                                         <input type="hidden" name="movieId" value="@Model.Id" />
-                                        <button type="submit" class="btn btn-outline-success px-4 fw-bold"><i class="bi bi-eye me-2"></i> Marchează ca văzut</button>
+                                        <button type="submit" class="btn btn-outline-success px-4 fw-bold"><i class="bi bi-eye me-2"></i> Marcheaza ca vazut</button>
                                     </form>
                                 }
                             </div>
@@ -173,16 +167,16 @@
                             <div id="watchlist-btn-area" class="@(status == 2 || rating > 0 ? "d-none" : "")">
                                 @if (status == 1)
                                 {
-                                    <form asp-action="RemoveActivityStatus" method="post" class="m-0 ajax-status-form">
+                                    <form asp-action="RemoveActivityStatus" method="post" class="m-0 details-ajax-status-form">
                                         <input type="hidden" name="movieId" value="@Model.Id" />
                                         <button type="submit" class="btn btn-warning px-4 text-dark fw-bold shadow">
-                                            <i class="bi bi-bookmark-check-fill me-2"></i> În Watchlist
+                                            <i class="bi bi-bookmark-check-fill me-2"></i> In Watchlist
                                         </button>
                                     </form>
                                 }
                                 else if (status != 2 && rating == 0)
                                 {
-                                    <form asp-action="AddToWatchlist" method="post" class="m-0 ajax-status-form">
+                                    <form asp-action="AddToWatchlist" method="post" class="m-0 details-ajax-status-form">
                                         <input type="hidden" name="movieId" value="@Model.Id" />
                                         <button type="submit" class="btn btn-outline-warning px-4 fw-bold"><i class="bi bi-bookmark-plus me-2"></i> Watchlist</button>
                                     </form>
@@ -192,12 +186,12 @@
                             @* Dropdown Liste *@
                             <div class="dropdown">
                                 <button class="btn btn-outline-info px-4 fw-bold dropdown-toggle" type="button" data-bs-toggle="dropdown">
-                                    <i class="bi bi-folder-plus me-2"></i> Adaugă în listă
+                                    <i class="bi bi-folder-plus me-2"></i> Adauga in lista
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-secondary" style="min-width: 280px;">
                                     <li>
                                         <button type="button" class="dropdown-item fw-bold text-info py-2" data-bs-toggle="modal" data-bs-target="#createListFromDetailsModal">
-                                            <i class="bi bi-plus-circle-dotted me-2"></i> Creează listă nouă
+                                            <i class="bi bi-plus-circle-dotted me-2"></i> Creeaza lista noua
                                         </button>
                                     </li>
                                     @if (userLists.Any())
@@ -211,20 +205,20 @@
                                                     <span class="text-truncate" style="max-width: 180px;">
                                                         @if (isInList)
                                                         {
-                                                            <i class="bi bi-check2 text-success me-1"></i>
+                                                            <i class="bi bi-check2 text-success me-1 list-check-icon"></i>
                                                         }
                                                         @list.Name
                                                     </span>
                                                     @if (isInList)
                                                     {
-                                                        <form asp-action="RemoveMovieFromCustomList" method="post" class="m-0">
+                                                        <form asp-action="RemoveMovieFromCustomList" method="post" class="m-0 custom-list-ajax-form">
                                                             <input type="hidden" name="customListId" value="@list.Id" /><input type="hidden" name="movieId" value="@Model.Id" />
                                                             <button type="submit" class="btn btn-link text-danger p-0"><i class="bi bi-dash-circle"></i></button>
                                                         </form>
                                                     }
                                                     else
                                                     {
-                                                        <form asp-action="AddMovieToCustomList" method="post" class="m-0">
+                                                        <form asp-action="AddMovieToCustomList" method="post" class="m-0 custom-list-ajax-form">
                                                             <input type="hidden" name="customListId" value="@list.Id" /><input type="hidden" name="movieId" value="@Model.Id" />
                                                             <button type="submit" class="btn btn-link text-success p-0"><i class="bi bi-plus-circle"></i></button>
                                                         </form>
@@ -240,8 +234,8 @@
                     else
                     {
                         <div class="text-center py-3">
-                            <p class="text-muted mb-3 fs-5">Vrei să salvezi filmul sau să îi dai o notă?</p>
-                            <a asp-controller="Account" asp-action="Login" class="btn btn-warning px-5 fw-bold text-dark">Autentifică-te acum</a>
+                            <p class="text-muted mb-3 fs-5">Vrei sa salvezi filmul sau sa ii dai o nota?</p>
+                            <a asp-controller="Account" asp-action="Login" class="btn btn-warning px-5 fw-bold text-dark">Autentifica-te acum</a>
                         </div>
                     }
                 </div>
@@ -254,24 +248,24 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark border-secondary shadow-lg">
             <div class="modal-header border-secondary">
-                <h5 class="modal-title fw-bold text-info">Listă nouă</h5>
+                <h5 class="modal-title fw-bold text-info">Lista noua</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <form asp-action="CreateCustomList" method="post">
                 <input type="hidden" name="sourceMovieId" value="@Model.Id" />
                 <div class="modal-body">
                     <div class="mb-3">
-                        <label class="form-label text-muted small fw-bold">NUME LISTĂ</label>
+                        <label class="form-label text-muted small fw-bold">NUME LISTA</label>
                         <input type="text" class="form-control bg-dark text-white border-secondary" name="name" required maxlength="100" placeholder="Ex: Favorite 2024">
                     </div>
                     <div class="mb-3">
-                        <label class="form-label text-muted small fw-bold">DESCRIERE (OPȚIONAL)</label>
+                        <label class="form-label text-muted small fw-bold">DESCRIERE (OPTIONAL)</label>
                         <textarea class="form-control bg-dark text-white border-secondary" name="description" rows="2" maxlength="500"></textarea>
                     </div>
                 </div>
                 <div class="modal-footer border-secondary">
-                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anulează</button>
-                    <button type="submit" class="btn btn-info px-4 fw-bold">Creează și adaugă</button>
+                    <button type="button" class="btn btn-outline-secondary" data-bs-dismiss="modal">Anuleaza</button>
+                    <button type="submit" class="btn btn-info px-4 fw-bold">Creeaza si adauga</button>
                 </div>
             </form>
         </div>
@@ -282,19 +276,19 @@
     <div class="modal-dialog modal-dialog-centered">
         <div class="modal-content bg-dark border-danger shadow-lg">
             <div class="modal-header bg-danger text-white border-0">
-                <h5 class="modal-title fw-bold">Atenție!</h5>
+                <h5 class="modal-title fw-bold">Atentie!</h5>
                 <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal"></button>
             </div>
             <div class="modal-body py-4 text-center">
                 <i class="bi bi-exclamation-octagon text-danger display-4 mb-3 d-block"></i>
-                <p class="fs-5 mb-0 text-light">Dacă anulezi vizionarea, <strong>nota acordată va fi ștearsă</strong>.</p>
-                <p class="text-muted">Sigur vrei să continui?</p>
+                <p class="fs-5 mb-0 text-light">Daca anulezi vizionarea, <strong>nota acordata va fi stearsa</strong>.</p>
+                <p class="text-muted">Sigur vrei sa continui?</p>
             </div>
             <div class="modal-footer border-0 justify-content-center pb-4">
-                <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">Nu, lasă așa</button>
-                <form asp-action="RemoveActivityStatus" method="post" class="m-0 ajax-status-form">
+                <button type="button" class="btn btn-outline-light px-4" data-bs-dismiss="modal">Nu, lasa asa</button>
+                <form asp-action="RemoveActivityStatus" method="post" class="m-0 details-ajax-status-form">
                     <input type="hidden" name="movieId" value="@Model.Id" />
-                    <button type="submit" class="btn btn-danger px-4 fw-bold">Da, șterge tot</button>
+                    <button type="submit" class="btn btn-danger px-4 fw-bold">Da, sterge tot</button>
                 </form>
             </div>
         </div>
@@ -303,141 +297,195 @@
 
 @section Scripts {
     <script>
-        document.addEventListener('submit', async function(e) {
-            const form = e.target;
-
-            // Tratare formulare de status si stergere rating
-            if (form.classList.contains('ajax-status-form') || form.classList.contains('ajax-remove-rating')) {
-                e.preventDefault();
-
-                const btn = form.querySelector('button[type="submit"]');
-                const originalHtml = btn ? btn.innerHTML : '';
-                if (btn) {
-                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
-                    btn.disabled = true;
-                }
-
-                try {
-                    const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-                    if (response.ok) {
-                        const movieId = form.querySelector('input[name="movieId"]').value;
-
-                        // 1. Daca se sterge doar nota 
-                        if (form.classList.contains('ajax-remove-rating')) {
-                            document.getElementById('rating-badge-container').innerHTML = '';
-                            document.getElementById('remove-rating-container').classList.add('d-none');
-                            document.querySelectorAll('.ajax-rating').forEach(r => r.checked = false);
-
-                            const watchedArea = document.getElementById('watched-btn-area');
-                            if (watchedArea && watchedArea.innerHTML.includes('btn-success')) {
-                                watchedArea.innerHTML = `
-                                    <form action="/Movies/RemoveActivityStatus" method="post" class="m-0 ajax-status-form">
-                                        <input type="hidden" name="movieId" value="${movieId}" />
-                                        <button type="submit" class="btn btn-success px-4 fw-bold shadow">
-                                            <i class="bi bi-check-circle-fill me-2"></i> Vizionat
-                                        </button>
-                                    </form>`;
-                            }
-                            showToast('Nota a fost ștearsă!', 'success');
-                        }
-                        // 2. Daca adaugam in Watchlist
-                        else if (form.action.includes('AddToWatchlist')) {
-                            document.getElementById('watchlist-btn-area').innerHTML = `
-                                <form action="/Movies/RemoveActivityStatus" method="post" class="m-0 ajax-status-form">
-                                    <input type="hidden" name="movieId" value="${movieId}" />
-                                    <button type="submit" class="btn btn-warning px-4 text-dark fw-bold shadow">
-                                        <i class="bi bi-bookmark-check-fill me-2"></i> În Watchlist
-                                    </button>
-                                </form>`;
-                        }
-                        // 3. Daca marcam ca Vazut direct
-                        else if (form.action.includes('MarkAsWatched')) {
-                            document.getElementById('watched-btn-area').innerHTML = `
-                                <form action="/Movies/RemoveActivityStatus" method="post" class="m-0 ajax-status-form">
-                                    <input type="hidden" name="movieId" value="${movieId}" />
-                                    <button type="submit" class="btn btn-success px-4 fw-bold shadow">
-                                        <i class="bi bi-check-circle-fill me-2"></i> Vizionat
-                                    </button>
-                                </form>`;
-                            document.getElementById('watchlist-btn-area').classList.add('d-none');
-                        }
-                        // 4. Daca anulam complet starea de Vazut sau Watchlist
-                        else if (form.action.includes('RemoveActivityStatus')) {
-                            const modalEl = document.getElementById('removeWatchedModal');
-                            if (modalEl && modalEl.classList.contains('show')) {
-                                if (typeof bootstrap !== 'undefined') {
-                                    const modalInstance = bootstrap.Modal.getInstance(modalEl);
-                                    if (modalInstance) modalInstance.hide();
-                                }
-                                modalEl.classList.remove('show');
-                                modalEl.style.display = 'none';
-                                document.querySelectorAll('.modal-backdrop').forEach(b => b.remove());
-                                document.body.classList.remove('modal-open');
-                                document.body.style.overflow = '';
-                                document.body.style.paddingRight = '';
-                            }
-
-                            document.getElementById('watched-btn-area').innerHTML = `
-                                <form action="/Movies/MarkAsWatched" method="post" class="m-0 ajax-status-form">
-                                    <input type="hidden" name="movieId" value="${movieId}" />
-                                    <button type="submit" class="btn btn-outline-success px-4 fw-bold"><i class="bi bi-eye me-2"></i> Marchează ca văzut</button>
-                                </form>`;
-
-                            document.getElementById('watchlist-btn-area').innerHTML = `
-                                <form action="/Movies/AddToWatchlist" method="post" class="m-0 ajax-status-form">
-                                    <input type="hidden" name="movieId" value="${movieId}" />
-                                    <button type="submit" class="btn btn-outline-warning px-4 fw-bold"><i class="bi bi-bookmark-plus me-2"></i> Watchlist</button>
-                                </form>`;
-                            document.getElementById('watchlist-btn-area').classList.remove('d-none');
-
-                            document.getElementById('rating-badge-container').innerHTML = '';
-                            document.getElementById('remove-rating-container').classList.add('d-none');
-                            document.querySelectorAll('.ajax-rating').forEach(r => r.checked = false);
-                        }
-                    }
-                } catch (err) {
-                    console.error("Eroare AJAX:", err);
-                    
-                } finally{
-                    if (btn) { btn.innerHTML = originalHtml; 
-                        btn.disabled = false; }
-                }
-            }
-        });
-
-        // tratare click pe stelute pt adaugare nota
-        document.addEventListener('change', async function(e) {
-            if (e.target.classList.contains('ajax-rating')) {
-                const form = e.target.closest('form');
-                const selectedRating = e.target.value;
-                try {
-                    const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
-                    if (response.ok) {
-                        document.getElementById('rating-badge-container').innerHTML = `<span class="badge bg-warning text-dark fs-6 shadow-sm">Nota ta: ${selectedRating}</span>`;
-                        document.getElementById('remove-rating-container').classList.remove('d-none');
-
-                        const movieId = form.querySelector('input[name="movieId"]').value;
-                        document.getElementById('watchlist-btn-area').classList.add('d-none');
-                        document.getElementById('watched-btn-area').innerHTML = `
-                            <button type="button" class="btn btn-success px-4 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#removeWatchedModal">
-                                <i class="bi bi-check-circle-fill me-2"></i> Vizionat
-                            </button>`;
-
-                        showToast(`Ai acordat nota ${selectedRating}!`, 'success');
-                    }
-                } catch (err) {}
-            }
-        });
-
-        function showToast(message, type) {
+        // toast vizual
+        function showDetailsToast(message, type) {
             const toastHtml = `
                 <div class="alert alert-${type} position-fixed top-0 start-50 translate-middle-x mt-4 shadow-lg border-0"
                      style="z-index: 9999; min-width: 250px; background-color: #198754; color: white;">
                     <i class="bi bi-check-circle-fill me-2"></i> ${message}
                 </div>`;
             document.body.insertAdjacentHTML('afterbegin', toastHtml);
-            const alert = document.querySelector('.alert');
+            const alert = document.querySelector('.alert.position-fixed');
             setTimeout(() => alert?.remove(), 2500);
         }
+
+        // tratare click pe toate formularele (watchlist, watched, rating, liste)
+        document.addEventListener('submit', async function(e) {
+            const form = e.target;
+
+
+
+            // --- FORMULARE STATUS (WATCHLIST / VAZUT / STERGERE RATING) ---
+            if (form.classList.contains('details-ajax-status-form')) {
+                e.preventDefault();
+                const btn = form.querySelector('button[type="submit"]');
+                const originalHtml = btn ? btn.innerHTML : '';
+
+                if (btn) {
+                    btn.innerHTML = '<span class="spinner-border spinner-border-sm"></span>';
+                    btn.disabled = true;
+                }
+
+                try {
+                    const url = form.getAttribute('action') || form.action;
+                    const response = await fetch(url, { method: 'POST', body: new FormData(form) });
+
+                    if (response.ok) {
+                        const movieIdInput = form.querySelector('input[name="movieId"]');
+                        const movieId = movieIdInput ? movieIdInput.value : '';
+
+                        if (url.includes('RemoveRatingOnly')) {
+                            document.getElementById('rating-badge-container').innerHTML = '';
+                            document.getElementById('remove-rating-container').classList.add('d-none');
+                            document.querySelectorAll('.details-ajax-rating').forEach(r => r.checked = false);
+
+                            const watchedArea = document.getElementById('watched-btn-area');
+                            if (watchedArea && watchedArea.innerHTML.includes('btn-success')) {
+                                watchedArea.innerHTML = `
+                                    <form action="/Movies/RemoveActivityStatus" method="post" class="m-0 details-ajax-status-form">
+                                        <input type="hidden" name="movieId" value="${movieId}" />
+                                        <button type="submit" class="btn btn-success px-4 fw-bold shadow">
+                                            <i class="bi bi-check-circle-fill me-2"></i> Vizionat
+                                        </button>
+                                    </form>`;
+                            }
+                            showDetailsToast('Nota a fost stearsa!', 'success');
+                        }
+                        else if (url.includes('AddToWatchlist')) {
+                            document.getElementById('watchlist-btn-area').innerHTML = `
+                                <form action="/Movies/RemoveActivityStatus" method="post" class="m-0 details-ajax-status-form">
+                                    <input type="hidden" name="movieId" value="${movieId}" />
+                                    <button type="submit" class="btn btn-warning px-4 text-dark fw-bold shadow">
+                                        <i class="bi bi-bookmark-check-fill me-2"></i> In Watchlist
+                                    </button>
+                                </form>`;
+                            showDetailsToast('Adaugat in Watchlist!', 'success');
+                        }
+                        else if (url.includes('MarkAsWatched')) {
+                            document.getElementById('watched-btn-area').innerHTML = `
+                                <form action="/Movies/RemoveActivityStatus" method="post" class="m-0 details-ajax-status-form">
+                                    <input type="hidden" name="movieId" value="${movieId}" />
+                                    <button type="submit" class="btn btn-success px-4 fw-bold shadow">
+                                        <i class="bi bi-check-circle-fill me-2"></i> Vizionat
+                                    </button>
+                                </form>`;
+                            document.getElementById('watchlist-btn-area').classList.add('d-none');
+                            showDetailsToast('Marcat ca vizionat!', 'success');
+                        }
+                        else if (url.includes('RemoveActivityStatus')) {
+                            const modalEl = document.getElementById('removeWatchedModal');
+                            if (modalEl && modalEl.classList.contains('show') && typeof bootstrap !== 'undefined') {
+                                const modalInstance = bootstrap.Modal.getInstance(modalEl);
+                                if (modalInstance) modalInstance.hide();
+                            }
+
+                            document.getElementById('watched-btn-area').innerHTML = `
+                                <form action="/Movies/MarkAsWatched" method="post" class="m-0 details-ajax-status-form">
+                                    <input type="hidden" name="movieId" value="${movieId}" />
+                                    <button type="submit" class="btn btn-outline-success px-4 fw-bold"><i class="bi bi-eye me-2"></i> Marcheaza ca vazut</button>
+                                </form>`;
+
+                            const watchlistArea = document.getElementById('watchlist-btn-area');
+                            watchlistArea.innerHTML = `
+                                <form action="/Movies/AddToWatchlist" method="post" class="m-0 details-ajax-status-form">
+                                    <input type="hidden" name="movieId" value="${movieId}" />
+                                    <button type="submit" class="btn btn-outline-warning px-4 fw-bold"><i class="bi bi-bookmark-plus me-2"></i> Watchlist</button>
+                                </form>`;
+                            watchlistArea.classList.remove('d-none');
+
+                            document.getElementById('rating-badge-container').innerHTML = '';
+                            document.getElementById('remove-rating-container').classList.add('d-none');
+                            document.querySelectorAll('.details-ajax-rating').forEach(r => r.checked = false);
+
+                            showDetailsToast('Status sters complet!', 'success');
+                        }
+                    }
+                } catch (err) {
+                    console.error('Eroare retea:', err);
+                } finally {
+                    if (btn) {
+                        btn.innerHTML = originalHtml;
+                        btn.disabled = false;
+                    }
+                }
+            }
+
+            // --- FORMULARE LISTE CUSTOM ---
+            if (form.classList.contains('custom-list-ajax-form')) {
+                e.preventDefault();
+                const btn = form.querySelector('button[type="submit"]');
+                const icon = btn.querySelector('i');
+                const originalClass = icon.className;
+
+                icon.className = 'spinner-border spinner-border-sm';
+                btn.disabled = true;
+
+                try {
+                    const response = await fetch(form.action, { method: 'POST', body: new FormData(form) });
+                    if (response.ok) {
+                        const result = await response.json();
+                        showDetailsToast(result.message, 'success');
+
+                        if (form.action.includes('AddMovie')) {
+                            form.action = '/Movies/RemoveMovieFromCustomList';
+                            btn.classList.replace('text-success', 'text-danger');
+                            icon.className = 'bi bi-dash-circle';
+                            form.closest('.dropdown-item').querySelector('span').insertAdjacentHTML('afterbegin', '<i class="bi bi-check2 text-success me-1 list-check-icon"></i>');
+                        } else {
+                            form.action = '/Movies/AddMovieToCustomList';
+                            btn.classList.replace('text-danger', 'text-success');
+                            icon.className = 'bi bi-plus-circle';
+                            const checkIcon = form.closest('.dropdown-item').querySelector('.list-check-icon');
+                            if(checkIcon) checkIcon.remove();
+                        }
+                    } else {
+                        const errorData = await response.json();
+                        console.error("Eroare BD:", errorData.error);
+                        showDetailsToast('Eroare la salvare', 'danger');
+                        icon.className = originalClass;
+                    }
+                } catch (err) {
+                    console.error("Eroare retea:", err);
+                    icon.className = originalClass;
+                } finally {
+                    btn.disabled = false;
+                }
+            }
+        });
+
+        // TRATARE CLICK STELE (RATING) ---
+        document.addEventListener('change', async function(e) {
+            if (e.target.classList.contains('details-ajax-rating')) {
+                const form = e.target.closest('form');
+                const selectedRating = e.target.value;
+                const url = form.getAttribute('action') || form.action;
+
+                try {
+                    const response = await fetch(url, { method: 'POST', body: new FormData(form) });
+                   if (response.ok) {
+                        document.getElementById('rating-badge-container').innerHTML = `<span class="badge bg-warning text-dark fs-6 shadow-sm">Nota ta: ${selectedRating}</span>`;
+                        document.getElementById('remove-rating-container').classList.remove('d-none');
+
+                        document.getElementById('watchlist-btn-area').classList.add('d-none');
+                        const watchedArea = document.getElementById('watched-btn-area');
+                        if (watchedArea) {
+                            watchedArea.innerHTML = `
+                                <button type="button" class="btn btn-success px-4 fw-bold shadow" data-bs-toggle="modal" data-bs-target="#removeWatchedModal">
+                                    <i class="bi bi-check-circle-fill me-2"></i> Vizionat
+                                </button>`;
+                        }
+
+                        showDetailsToast(`Ai acordat nota ${selectedRating}!`, 'success');
+                    } else {
+                       
+                        const errorData = await response.json();
+                        alert("Eroare de la server: " + (errorData.error || "Necunoscuta"));
+                    }
+                } catch (err) {
+                    console.error('Eroare la rating:', err);
+                }
+            }
+        });
     </script>
+}
 }

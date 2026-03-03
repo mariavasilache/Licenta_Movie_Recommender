@@ -1,36 +1,85 @@
 ﻿@model Licenta_Movie_Recommender.Models.Movie
 @{
+    bool isAdmin = ViewData["IsAdminArea"] as bool? ?? false;
     bool inWatchlist = ViewData["InWatchlist"] as bool? ?? false;
     bool isWatched = ViewData["IsWatched"] as bool? ?? false;
+    string layoutStyle = ViewData["Layout"] as string ?? "grid";
 }
 
+@if (layoutStyle == "compact")
+{
+    @* --- MODUL COMPACT (ADMIN DASHBOARD) --- *@
+    <div class="col-12 mb-2 movie-container">
+        <div class="card bg-dark border-secondary d-flex flex-row align-items-center p-2 shadow-sm" style="border-color: rgba(255,255,255,0.05) !important;">
 
-<div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
+            @* poster mic *@
+            <img src="@Model.PosterUrl" class="rounded shadow-sm" style="width: 45px; height: 65px; object-fit: cover;" onerror="this.src='https://placehold.co/45x65/2b2b2b/ffffff?text=?'">
 
-    <div class="movie-actions position-absolute top-0 end-0 p-2 d-flex flex-column gap-2" style="z-index: 10;">
-        <button type="button" class="btn btn-sm @(inWatchlist ? "btn-warning" : "btn-outline-light") btn-watchlist-toggle" data-movie-id="@Model.Id">
-            <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
-        </button>
+            @* detalii *@
+            <div class="ms-3 flex-grow-1 text-start overflow-hidden">
+                <a href="/Movies/Details/@Model.Id" class="text-white text-decoration-none fw-bold text-truncate d-block">@Model.Title</a>
+                <div class="text-muted small text-truncate">@(string.IsNullOrEmpty(Model.Genres) ? "Fara gen" : Model.Genres.Split('|')[0])</div>
+            </div>
 
-        <button type="button" class="btn btn-sm @(isWatched ? "btn-success" : "btn-outline-light") btn-watched-toggle" data-movie-id="@Model.Id">
-            <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
-        </button>
+            @* butoane *@
+            <div class="d-flex gap-2 pe-2">
+                @if (isAdmin)
+                {
+                    <button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm" data-movie-id="@Model.Id" data-movie-title="@Model.Title" title="Sterge">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                }
+                else
+                {
+                    <button type="button" class="btn btn-sm @(inWatchlist ? "btn-warning text-dark" : "btn-outline-light") btn-watchlist-toggle shadow-sm" data-movie-id="@Model.Id" title="Watchlist">
+                        <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+                    </button>
+                    <button type="button" class="btn btn-sm @(isWatched ? "btn-success" : "btn-outline-light") btn-watched-toggle shadow-sm" data-movie-id="@Model.Id" title="Vizionat">
+                        <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
+                    </button>
+                }
+            </div>
+        </div>
     </div>
+}
+else
+{
+    @* --- MODUL GRID NORMAL (CATALOG SI HOME) --- *@
+    <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4 movie-container">
+        <div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
 
-    <a href="/Movies/Details/@Model.Id" class="text-decoration-none d-flex align-items-center justify-content-center position-relative bg-dark rounded shadow skeleton-poster text-center p-3" style="aspect-ratio: 2/3; overflow: hidden;">
+            @* butoane actiune *@
+            <div class="movie-actions position-absolute top-0 end-0 p-2 d-flex flex-column gap-2" style="z-index: 10;">
+                <button type="button" class="btn btn-sm @(inWatchlist ? "btn-active-watchlist" : "btn-outline-light") btn-watchlist-toggle" data-movie-id="@Model.Id">
+                    <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+                </button>
+                <button type="button" class="btn btn-sm @(isWatched ? "btn-active-watched" : "btn-outline-light") btn-watched-toggle" data-movie-id="@Model.Id">
+                    <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
+                </button>
+                @if (isAdmin)
+                {
+                    <button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm mt-1" data-movie-id="@Model.Id" data-movie-title="@Model.Title">
+                        <i class="bi bi-trash"></i>
+                    </button>
+                }
+            </div>
 
-        <span class="text-secondary fw-bold" style="z-index: 1; font-size: 0.95rem;">@Model.Title</span>
+            @* poster *@
+            <a href="/Movies/Details/@Model.Id" class="text-decoration-none d-flex align-items-center justify-content-center position-relative bg-dark rounded shadow skeleton-poster text-center p-3" style="aspect-ratio: 2/3; overflow: hidden;">
+                <span class="text-secondary fw-bold" style="z-index: 1; font-size: 0.85rem;">@Model.Title</span>
+                <img src="@Model.PosterUrl" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
+                     onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
+                     onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton-poster');">
+            </a>
 
-        <img src="@Model.PosterUrl" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
-             onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
-             onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton-poster');">
-    </a>
-
-    <div class="card-body px-1 py-2 text-center" style="min-height: 65px;">
-        <h6 class="card-title text-light text-truncate mb-0" style="font-size: 0.92rem;">@Model.Title</h6>
-        @if (!string.IsNullOrEmpty(Model.Genres))
-        {
-            <small class="text-muted d-block text-truncate mt-1" style="font-size: 0.75rem; opacity: 0.7;">@Model.Genres.Split('|')[0]</small>
-        }
+            @* titlu *@
+            <div class="card-body px-1 py-2 text-center" style="min-height: 65px;">
+                <h6 class="card-title text-light text-truncate mb-0" style="font-size: 0.92rem;">@Model.Title</h6>
+                @if (!string.IsNullOrEmpty(Model.Genres))
+                {
+                    <small class="text-muted d-block text-truncate mt-1" style="font-size: 0.75rem; opacity: 0.7;">@Model.Genres.Split('|')[0]</small>
+                }
+            </div>
+        </div>
     </div>
-</div>
+}

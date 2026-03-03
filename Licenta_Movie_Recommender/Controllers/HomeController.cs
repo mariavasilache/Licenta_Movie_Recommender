@@ -76,11 +76,10 @@ namespace Licenta_Movie_Recommender.Controllers
         {
             List<Movie> discoverMovies = new List<Movie>();
             List<int> excludedIds = new List<int>();
-            string userId = null; // Changed from int to string to match Identity GUID
+            string userId = null; 
 
             if (User.Identity.IsAuthenticated)
             {
-                // Identity IDs are strings/GUIDs
                 userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
                 var activities = await _context.UserActivities
@@ -115,7 +114,6 @@ namespace Licenta_Movie_Recommender.Controllers
             // Logica recomandari pentru user logat
             if (!string.IsNullOrEmpty(userId))
             {
-                // Make sure RecommendationService also accepts string as userId
                 var pool = await _recService.GetRecommendationsAsync(userId, 20);
                 return View(pool.Take(6).ToList());
             }

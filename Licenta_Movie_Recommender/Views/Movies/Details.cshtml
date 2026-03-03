@@ -322,7 +322,7 @@
                     if (response.ok) {
                         const movieId = form.querySelector('input[name="movieId"]').value;
 
-                        // 1. Daca stergem doar nota 
+                        // 1. Daca se sterge doar nota 
                         if (form.classList.contains('ajax-remove-rating')) {
                             document.getElementById('rating-badge-container').innerHTML = '';
                             document.getElementById('remove-rating-container').classList.add('d-none');

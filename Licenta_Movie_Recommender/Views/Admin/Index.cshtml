@@ -1,0 +1,111 @@
+﻿@model AdminDashboardViewModel
+@{
+    ViewData["Title"] = "Admin Dashboard";
+}
+
+<div class="container-fluid mt-4">
+    <h1 class="h3 mb-4 text-white">Panou de Control Administrare</h1>
+
+    @* --- CARDURI STATISTICI --- *@
+    <div class="row">
+        @* Total Filme *@
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-secondary text-white shadow h-100 py-2 border-0 border-left-primary">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-info text-uppercase mb-1">Total Filme</div>
+                            <div class="h5 mb-0 font-weight-bold">@Model.TotalMovies</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-film fs-2 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Total utilizatori *@
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-secondary text-white shadow h-100 py-2 border-0 border-left-success">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-success text-uppercase mb-1">Utilizatori</div>
+                            <div class="h5 mb-0 font-weight-bold">@Model.TotalUsers</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-people fs-2 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        @* Recenzii Totale *@
+        <div class="col-xl-3 col-md-6 mb-4">
+            <div class="card bg-secondary text-white shadow h-100 py-2 border-0 border-left-warning">
+                <div class="card-body">
+                    <div class="row no-gutters align-items-center">
+                        <div class="col mr-2">
+                            <div class="text-xs font-weight-bold text-warning text-uppercase mb-1">Recenzii Date</div>
+                            <div class="h5 mb-0 font-weight-bold">@Model.TotalRatings</div>
+                        </div>
+                        <div class="col-auto">
+                            <i class="bi bi-star-fill fs-2 opacity-50"></i>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    @* --- TABEL FILME RECENTE (Dark Theme) --- *@
+    <div class="card bg-dark border-secondary shadow mb-4">
+        <div class="card-header bg-secondary py-3 d-flex justify-content-between align-items-center border-secondary">
+            <h6 class="m-0 font-weight-bold text-white">Ultimele filme adaugate</h6>
+            <a href="/Admin/ManageMovies" class="btn btn-sm btn-outline-info shadow-sm">Vezi toate filmele</a>
+        </div>
+        <div class="card-body text-white">
+            <div class="table-responsive">
+                <table class="table table-dark table-hover mb-0" width="100%" cellspacing="0">
+                    <thead>
+                        <tr class="text-info">
+                            <th>ID</th>
+                            <th>Titlu</th>
+                            <th>Genuri</th>
+                            <th>Actiuni</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        @foreach (var movie in Model.RecentMovies)
+                        {
+                            <tr>
+                                <td>@movie.Id</td>
+                                <td class="fw-bold text-light">@movie.Title</td>
+                                <td><span class="badge bg-outline-info border border-info text-info">@movie.Genres</span></td>
+                                <td>
+                                    <a asp-controller="Movies" asp-action="Details" asp-route-id="@movie.Id" class="btn btn-outline-light btn-sm">Detalii</a>
+                                </td>
+                            </tr>
+                        }
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .border-left-primary {
+        border-left: 0.25rem solid #0d6efd !important;
+    }
+
+    .border-left-success {
+        border-left: 0.25rem solid #198754 !important;
+    }
+
+    .border-left-warning {
+        border-left: 0.25rem solid #ffc107 !important;
+    }
+</style>

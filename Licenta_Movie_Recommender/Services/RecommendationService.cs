@@ -22,7 +22,7 @@ namespace Licenta_Movie_Recommender.Services
             _context = context;
         }
 
-        public async Task<List<Movie>> GetRecommendationsAsync(int userId, int count = 6)
+        public async Task<List<Movie>> GetRecommendationsAsync(string userId, int count = 6)
         {
             // activitat user curent
             var currentUserActivities = await _context.UserActivities

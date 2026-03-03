@@ -94,10 +94,9 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public async Task<IActionResult> Recommendations()
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
-            var userId = int.Parse(userIdString);
 
             ViewBag.UserActivities = await _context.UserActivities
                 .AsNoTracking()
@@ -111,10 +110,9 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> Ignore(int id)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return Unauthorized();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
 
-            var userId = int.Parse(userIdString);
             var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == id);
 
             if (activity == null)
@@ -147,10 +145,9 @@ namespace Licenta_Movie_Recommender.Controllers
 
             if (User.Identity.IsAuthenticated)
             {
-                var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userIdString != null)
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId != null)
                 {
-                    var userId = int.Parse(userIdString);
                     ViewBag.UserLists = await _context.CustomLists.Where(cl => cl.UserId == userId).ToListAsync();
                     ViewBag.ListsContainingMovie = await _context.CustomListMovies
                         .Where(clm => clm.MovieId == id && clm.CustomList.UserId == userId)
@@ -174,10 +171,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> ToggleWatchlist(int id)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return Unauthorized();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
 
-            var userId = int.Parse(userIdString);
+           
             var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == id);
             bool inWatchlist = false;
 
@@ -198,10 +195,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> ToggleWatched(int id)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return Unauthorized();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
 
-            var userId = int.Parse(userIdString);
+           
             var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == id);
             bool isWatched = false;
 
@@ -239,10 +236,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> SaveRating(int movieId, int rating)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
-            var userId = int.Parse(userIdString);
+         
             var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
 
             if (activity == null)
@@ -265,10 +262,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveActivityStatus(int movieId)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId= User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId== null) return RedirectToAction("Login", "Account");
 
-            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == int.Parse(userIdString) && ua.MovieId == movieId);
+            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
 
             if (activity != null)
             {
@@ -294,10 +291,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveRatingOnly(int movieId)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
-            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == int.Parse(userIdString) && ua.MovieId == movieId);
+            var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
             if (activity != null)
             {
                 activity.Rating = 0;
@@ -315,8 +312,8 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> CreateCustomList(string name, string description, int? sourceMovieId = null)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
             if (string.IsNullOrWhiteSpace(name))
             {
@@ -324,7 +321,7 @@ namespace Licenta_Movie_Recommender.Controllers
                 return sourceMovieId.HasValue ? RedirectToAction("Details", new { id = sourceMovieId.Value }) : RedirectToAction("MyProfile");
             }
 
-            _context.CustomLists.Add(new CustomList { UserId = int.Parse(userIdString), Name = name, Description = description ?? "", CreatedAt = DateTime.Now });
+            _context.CustomLists.Add(new CustomList { UserId = userId, Name = name, Description = description ?? "", CreatedAt = DateTime.Now });
             await _context.SaveChangesAsync();
 
             TempData["Success"] = $"Lista '{name}' a fost creată cu succes!";
@@ -334,11 +331,11 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public async Task<IActionResult> CustomListDetails(int id)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
             var customList = await _context.CustomLists.Include(cl => cl.Movies).ThenInclude(clm => clm.Movie)
-                .FirstOrDefaultAsync(cl => cl.Id == id && cl.UserId == int.Parse(userIdString));
+                .FirstOrDefaultAsync(cl => cl.Id == id && cl.UserId == userId);
 
             if (customList == null) return NotFound();
             return View(customList);
@@ -347,10 +344,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> DeleteCustomList(int id)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
-            var listToDelete = await _context.CustomLists.Include(cl => cl.Movies).FirstOrDefaultAsync(cl => cl.Id == id && cl.UserId == int.Parse(userIdString));
+            var listToDelete = await _context.CustomLists.Include(cl => cl.Movies).FirstOrDefaultAsync(cl => cl.Id == id && cl.UserId == userId);
             if (listToDelete != null)
             {
                 if (listToDelete.Movies.Any()) _context.CustomListMovies.RemoveRange(listToDelete.Movies);
@@ -364,10 +361,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> AddMovieToCustomList(int customListId, int movieId)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
-            var listExists = await _context.CustomLists.AnyAsync(cl => cl.Id == customListId && cl.UserId == int.Parse(userIdString));
+            var listExists = await _context.CustomLists.AnyAsync(cl => cl.Id == customListId && cl.UserId == userId);
             if (!listExists) return Unauthorized();
 
             var alreadyInList = await _context.CustomListMovies.AnyAsync(clm => clm.CustomListId == customListId && clm.MovieId == movieId);
@@ -385,10 +382,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> RemoveMovieFromCustomList(int customListId, int movieId)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
-            var clm = await _context.CustomListMovies.FirstOrDefaultAsync(x => x.CustomListId == customListId && x.MovieId == movieId && x.CustomList.UserId == int.Parse(userIdString));
+            var clm = await _context.CustomListMovies.FirstOrDefaultAsync(x => x.CustomListId == customListId && x.MovieId == movieId && x.CustomList.UserId == userId);
             if (clm != null)
             {
                 _context.CustomListMovies.Remove(clm);
@@ -405,10 +402,9 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public async Task<IActionResult> MyProfile()
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return RedirectToAction("Login", "Account");
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return RedirectToAction("Login", "Account");
 
-            var userId = int.Parse(userIdString);
             var allActivities = await _context.UserActivities.Include(ua => ua.Movie).Where(ua => ua.UserId == userId).OrderByDescending(ua => ua.DateAdded).ToListAsync();
 
             var watchedMovies = allActivities.Where(a => a.Status == 2 || a.Rating > 0).ToList();
@@ -442,10 +438,10 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public async Task<IActionResult> GetHistoryData(int tab = 1, int page = 1)
         {
-            var userIdString = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            if (userIdString == null) return Unauthorized();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            if (userId == null) return Unauthorized();
 
-            var query = _context.UserActivities.Include(ua => ua.Movie).Where(ua => ua.UserId == int.Parse(userIdString));
+            var query = _context.UserActivities.Include(ua => ua.Movie).Where(ua => ua.UserId == userId);
 
             if (tab == 1) query = query.Where(a => a.Status == 2 || a.Rating > 0);
             else if (tab == 2) query = query.Where(a => a.Status == 1 && a.Rating == 0);

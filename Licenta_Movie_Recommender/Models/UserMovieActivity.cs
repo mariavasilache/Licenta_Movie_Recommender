@@ -7,7 +7,7 @@ namespace Licenta_Movie_Recommender.Models
         public int Id { get; set; }
 
         //cine face actiunea
-        public int UserId { get; set; }
+        public string UserId { get; set; }
         public User User { get; set; }
 
         //la ce film se refera

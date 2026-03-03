@@ -3,7 +3,7 @@
     //date 
     public class MovieRatingData
     {
-        public float UserId { get; set; }
+        public string UserId { get; set; }
         public float MovieId { get; set; }
         public float Label { get; set; } //nota
     }

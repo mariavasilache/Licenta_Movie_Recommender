@@ -19,7 +19,7 @@ namespace Licenta_Movie_Recommender.Controllers
             _recService = recService;
         }
 
-        //metoda fetch
+        // Metoda fetch movies for discover section
         private async Task<List<Movie>> FetchAndStoreDiscoverMoviesAsync(List<int> excludedIds)
         {
             int maxId = await _context.Movies.MaxAsync(m => (int?)m.Id) ?? 5000;
@@ -46,7 +46,7 @@ namespace Licenta_Movie_Recommender.Controllers
                  .Take(12)
                  .ToListAsync();
 
-            //daca nu avem destule filme
+            // Daca nu avem destule filme in baza
             if (discoverMovies.Count < 12)
             {
                 var currentIds = discoverMovies.Select(dm => dm.Id).ToList();
@@ -61,7 +61,7 @@ namespace Licenta_Movie_Recommender.Controllers
                 discoverMovies.AddRange(extra);
             }
 
-            //actualizare cookies
+            // Actualizare cookies discover
             var newIds = string.Join(",", discoverMovies.Select(m => m.Id));
             Response.Cookies.Append("DiscoverMovies", newIds, new CookieOptions
             {
@@ -76,30 +76,35 @@ namespace Licenta_Movie_Recommender.Controllers
         {
             List<Movie> discoverMovies = new List<Movie>();
             List<int> excludedIds = new List<int>();
-            int userId = 0;
+            string userId = null; // Changed from int to string to match Identity GUID
 
             if (User.Identity.IsAuthenticated)
             {
-                userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-                var activities = await _context.UserActivities.Where(ua => ua.UserId == userId).ToListAsync();
+                // Identity IDs are strings/GUIDs
+                userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+                var activities = await _context.UserActivities
+                    .Where(ua => ua.UserId == userId)
+                    .ToListAsync();
+
                 ViewBag.UserActivities = activities;
                 excludedIds = activities.Select(ua => ua.MovieId).ToList();
             }
 
-            
+            // Incarcare filme din cookie daca exista
             if (!refreshDiscover && Request.Cookies.TryGetValue("DiscoverMovies", out string cookieValue))
             {
                 var movieIds = cookieValue.Split(',', StringSplitOptions.RemoveEmptyEntries)
                                           .Select(id => int.TryParse(id, out var i) ? i : 0)
                                           .Where(i => i != 0 && !excludedIds.Contains(i)).ToList();
 
-                if (movieIds.Any())
+                if (movieIds.Count != 0)
                 {
                     discoverMovies = await _context.Movies.Where(m => movieIds.Contains(m.Id)).ToListAsync();
                 }
             }
 
-            
+            // Daca e refresh sau lista e goala
             if (refreshDiscover || discoverMovies.Count < 12)
             {
                 discoverMovies = await FetchAndStoreDiscoverMoviesAsync(excludedIds);
@@ -107,8 +112,10 @@ namespace Licenta_Movie_Recommender.Controllers
 
             ViewBag.DiscoverMovies = discoverMovies;
 
-            if (userId > 0)
+            // Logica recomandari pentru user logat
+            if (!string.IsNullOrEmpty(userId))
             {
+                // Make sure RecommendationService also accepts string as userId
                 var pool = await _recService.GetRecommendationsAsync(userId, 20);
                 return View(pool.Take(6).ToList());
             }
@@ -119,19 +126,20 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public async Task<IActionResult> GetDiscoverMovies()
         {
-            List<int> excludedIds = new List<int>();
+            List<int> excludedIds = [];
 
             if (User.Identity.IsAuthenticated)
             {
-                var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier));
-                var activities = await _context.UserActivities.AsNoTracking().Where(ua => ua.UserId == userId).ToListAsync();
-                ViewBag.UserActivities = activities;
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                var activities = await _context.UserActivities
+                    .AsNoTracking()
+                    .Where(ua => ua.UserId == userId)
+                    .ToListAsync();
+
                 excludedIds = activities.Select(ua => ua.MovieId).ToList();
             }
 
-           
             var discoverMovies = await FetchAndStoreDiscoverMoviesAsync(excludedIds);
-
             return PartialView("_DiscoverMovies", discoverMovies);
         }
 

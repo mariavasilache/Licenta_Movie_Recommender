@@ -1,4 +1,7 @@
-﻿<!DOCTYPE html>
+﻿@using Microsoft.AspNetCore.Identity
+@* No diacritics in code *@
+
+<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="utf-8" />
@@ -25,7 +28,7 @@
                 <div class="navbar-collapse collapse d-sm-inline-flex justify-content-between">
                     <ul class="navbar-nav flex-grow-1">
                         <li class="nav-item fw-bold">
-                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Acasă</a>
+                            <a class="nav-link" asp-area="" asp-controller="Home" asp-action="Index">Acasa</a>
                         </li>
                         <li class="nav-item">
                             <a class="nav-link" asp-area="" asp-controller="Movies" asp-action="Index">Catalog Filme</a>
@@ -34,7 +37,7 @@
 
                     @* --- FORMULAR SEARCH LIVE --- *@
                     <form class="d-flex position-relative ms-auto" asp-controller="Movies" asp-action="Index" method="get" id="searchForm">
-                        <input class="form-control me-2 bg-dark text-light border-secondary" type="search" placeholder="Caută filme..." aria-label="Search" name="searchString" id="searchInput" value="@ViewData["CurrentFilter"]" autocomplete="off">
+                        <input class="form-control me-2 bg-dark text-light border-secondary" type="search" placeholder="Cauta filme..." aria-label="Search" name="searchString" id="searchInput" value="@ViewData["CurrentFilter"]" autocomplete="off">
                         <button class="btn btn-outline-danger" type="submit"><i class="bi bi-search"></i></button>
 
                         <div id="searchPreviewDropdown" class="dropdown-menu w-100 shadow-lg p-0" style="position: absolute; top: 110%; left: 0; display: none; background-color: #1f1f1f; border: 1px solid rgba(255,255,255,0.1); border-radius: 0.5rem; overflow: hidden; z-index: 1050;">
@@ -54,6 +57,17 @@
                                     <li><h6 class="dropdown-header text-danger">Salut, @User.Identity.Name!</h6></li>
                                     <li><hr class="dropdown-divider border-secondary"></li>
 
+                                    @* --- LINK ADMIN --- *@
+                                    @if (User.IsInRole("Admin"))
+                                    {
+                                        <li>
+                                            <a class="dropdown-item text-warning py-2 custom-dropdown-item fw-bold" asp-controller="Admin" asp-action="Index">
+                                                <i class="bi bi-shield-lock me-2"></i> Panou Admin
+                                            </a>
+                                        </li>
+                                        <li><hr class="dropdown-divider border-secondary"></li>
+                                    }
+
                                     <li><a class="dropdown-item text-light py-2 custom-dropdown-item" asp-controller="Movies" asp-action="MyProfile"><i class="bi bi-person-badge me-2 text-muted"></i> Profilul Meu</a></li>
                                     <li><hr class="dropdown-divider border-secondary"></li>
                                     <li><a class="dropdown-item text-danger py-2 custom-dropdown-item fw-bold" asp-controller="Account" asp-action="Logout"><i class="bi bi-box-arrow-right me-2"></i> Deconectare</a></li>
@@ -63,7 +77,7 @@
                         else
                         {
                             <li class="nav-item">
-                                <a class="nav-link text-light" asp-controller="Account" asp-action="Login">Intră în cont</a>
+                                <a class="nav-link text-light" asp-controller="Account" asp-action="Login">Intra in cont</a>
                             </li>
                             <li class="nav-item ms-2">
                                 <a class="btn btn-sm btn-danger fw-bold shadow-sm" asp-controller="Account" asp-action="Register">Cont Nou</a>

@@ -1,81 +1,55 @@
-﻿using Microsoft.AspNetCore.Authentication;
-using Microsoft.AspNetCore.Authentication.Cookies;
+﻿using Microsoft.AspNetCore.Identity;
 using Microsoft.AspNetCore.Mvc;
-using Licenta_Movie_Recommender.Data;
-using Licenta_Movie_Recommender.Models;
-
-using System.Security.Claims;
 
 namespace Licenta_Movie_Recommender.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly ApplicationDbContext _context;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
 
-        public AccountController(ApplicationDbContext context)
+        public AccountController(UserManager<IdentityUser> userManager, SignInManager<IdentityUser> signInManager)
         {
-            _context = context;
+            _userManager = userManager;
+            _signInManager = signInManager;
         }
 
-        // afiseaza pagina de inregistrare
-        [HttpGet]
-        public IActionResult Register() => View();
+        [HttpGet] public IActionResult Register() => View();
 
-        // cand apasa butonul de creare cont
         [HttpPost]
-        public async Task<IActionResult> Register(string username, string email)
+        public async Task<IActionResult> Register(string username, string email, string password)
         {
-            if (_context.Users.Any(u => u.Username == username))
+            var user = new IdentityUser { UserName = username, Email = email };
+            var result = await _userManager.CreateAsync(user, password);
+
+            if (result.Succeeded)
             {
-                ViewBag.Error = "Numele este deja folosit!";
-                return View();
+                await _signInManager.SignInAsync(user, isPersistent: false);
+                return RedirectToAction("Index", "Home");
             }
 
-            var user = new User { Username = username, Email = email };
-            _context.Users.Add(user);
-            await _context.SaveChangesAsync();
-
-            await SignInUser(user);
-            return RedirectToAction("Index", "Home");
+            ViewBag.Error = result.Errors.FirstOrDefault()?.Description;
+            return View();
         }
 
-        // afiseaza pagina de login
-        [HttpGet]
-        public IActionResult Login() => View();
+        [HttpGet] public IActionResult Login() => View();
 
-        // cand apasa butonul de logare
         [HttpPost]
-        public async Task<IActionResult> Login(string username)
+        public async Task<IActionResult> Login(string username, string password)
         {
-            var user = _context.Users.FirstOrDefault(u => u.Username == username);
-            if (user == null)
-            {
-                ViewBag.Error = "Utilizatorul nu exista!";
-                return View();
-            }
+            // Login works with username or email as the first parameter here
+            var result = await _signInManager.PasswordSignInAsync(username, password, isPersistent: true, lockoutOnFailure: false);
 
-            await SignInUser(user);
-            return RedirectToAction("Index", "Movies");
+            if (result.Succeeded) return RedirectToAction("Index", "Home");
+
+            ViewBag.Error = "Credentiale invalide!";
+            return View();
         }
 
-        // cand apasa pe delogare
         public async Task<IActionResult> Logout()
         {
-            await HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+            await _signInManager.SignOutAsync();
             return RedirectToAction("Index", "Home");
-        }
-
-        // functia care seteaza  cookie ul in browser
-        private async Task SignInUser(User user)
-        {
-            var claims = new List<Claim>
-            {
-                new Claim(ClaimTypes.Name, user.Username),
-                new Claim(ClaimTypes.NameIdentifier, user.Id.ToString())
-            };
-
-            var identity = new ClaimsIdentity(claims, CookieAuthenticationDefaults.AuthenticationScheme);
-            await HttpContext.SignInAsync(CookieAuthenticationDefaults.AuthenticationScheme, new ClaimsPrincipal(identity));
         }
     }
 }

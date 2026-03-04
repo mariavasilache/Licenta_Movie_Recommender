@@ -1,0 +1,60 @@
+﻿@model Licenta_Movie_Recommender.Models.Movie
+@{
+    ViewData["Title"] = "Editează Film";
+    ViewData["IsAdminArea"] = true;
+}
+
+<div class="container mt-4 mb-5">
+    @* --- HEADER CU BUTON INAPOI --- *@
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <div class="d-flex align-items-center gap-3">
+            <a href="/Admin/ManageMovies" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;" title="Înapoi la Gestionare">
+                <i class="bi bi-arrow-left fs-5"></i>
+            </a>
+            <h1 class="h3 text-white fw-bold mb-0">Editează Filmul</h1>
+        </div>
+    </div>
+
+    @* --- FORMULAR EDITARE --- *@
+    <div class="card bg-dark border-secondary shadow">
+        <div class="card-body p-4">
+            <form asp-action="EditMovie" method="post">
+                <input type="hidden" asp-for="Id" /> 
+
+                <div class="row">
+                    @* coloana stanga: poster preview *@
+                    <div class="col-md-4 mb-4 text-center">
+                        <img src="@Model.PosterUrl" class="img-fluid rounded shadow mb-3 border border-secondary" id="posterPreview" style="max-height: 450px; object-fit: cover;" onerror="this.src='https://placehold.co/300x450/2b2b2b/ffffff?text=Fara+Poster'">
+                        <small class="text-muted d-block">Preview Poster</small>
+                    </div>
+
+                    @* coloana dreapta: input uri *@
+                    <div class="col-md-8">
+                        <div class="mb-3">
+                            <label asp-for="Title" class="form-label text-light fw-bold">Titlu Film</label>
+                            <input asp-for="Title" class="form-control bg-dark text-white border-secondary" required />
+                            <span asp-validation-for="Title" class="text-danger"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="PosterUrl" class="form-label text-light fw-bold">Link Poster (URL)</label>
+                            <input asp-for="PosterUrl" class="form-control bg-dark text-white border-secondary" id="posterInput" oninput="document.getElementById('posterPreview').src = this.value" />
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="Genres" class="form-label text-light fw-bold">Genuri (separate prin |)</label>
+                            <input asp-for="Genres" class="form-control bg-dark text-white border-secondary" placeholder="Actiune|Drama|SF" />
+                        </div>
+
+                        <div class="d-flex gap-2">
+                            <button type="submit" class="btn btn-success px-4 fw-bold shadow-sm">
+                                <i class="bi bi-save me-1"></i> Salvează Modificările
+                            </button>
+                            <a href="/Admin/ManageMovies" class="btn btn-outline-light">Anulează</a>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>

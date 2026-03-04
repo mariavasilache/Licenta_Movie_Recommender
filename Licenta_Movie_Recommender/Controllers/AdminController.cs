@@ -35,8 +35,8 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpGet]
         public async Task<IActionResult> GetManageMoviesData(int page = 1, string searchString = "", string filter = "all")
         {
-            int pageSize = 18; 
-            var query = _context.Movies.AsQueryable();
+            int pageSize = 18;
+            var query = _context.Movies.IgnoreQueryFilters().AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
             {
@@ -77,6 +77,47 @@ namespace Licenta_Movie_Recommender.Controllers
             return Json(movies);
         }
 
+        //pagina editare
+        [HttpGet]
+        public async Task<IActionResult> EditMovie(int id)
+        {
+            var movie = await _context.Movies.FindAsync(id);
+            if (movie == null) return NotFound();
+
+            return View(movie); 
+        }
+
+        //salvare modificari
+        [HttpPost]
+        [ValidateAntiForgeryToken] // Protectie impotriva atacurilor de tip CSRF
+        public async Task<IActionResult> EditMovie(int id, Movie model)
+        {
+            if (id != model.Id) return BadRequest();
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    var existingMovie = await _context.Movies.FindAsync(id);
+                    if (existingMovie == null) return NotFound();
+
+                    existingMovie.Title = model.Title;
+                    existingMovie.PosterUrl = model.PosterUrl;
+                    existingMovie.Genres = model.Genres;
+                    
+
+                    await _context.SaveChangesAsync();
+
+                    TempData["SuccessToast"] = "Modificările au fost salvate cu succes!";
+                    return RedirectToAction(nameof(ManageMovies));
+                }
+                catch (Exception ex)
+                {
+                    ModelState.AddModelError("", "Eroare la salvare: " + ex.Message);
+                }
+            }
+            return View(model);
+        }
 
         // --- STERGERE (SOFT DELETE) ---
         [HttpPost]

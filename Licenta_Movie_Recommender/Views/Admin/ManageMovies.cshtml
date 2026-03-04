@@ -9,7 +9,7 @@
             <a href="/Admin" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;" title="Înapoi la Dashboard">
                 <i class="bi bi-arrow-left fs-5"></i>
             </a>
-            <h1 class="h3 text-white fw-bold mb-0">Gestionare Bază de Date</h1>
+            <h1 class="h3 text-white fw-bold mb-0">Gestionare Filme</h1>
         </div>
 
         <a href="/Admin/Import" class="btn btn-success shadow-sm">
@@ -32,6 +32,29 @@
             </form>
         </div>
     </div>
+
+    @* --- TOAST NOTIFICATION --- *@
+    @if (TempData["SuccessToast"] != null)
+    {
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
+            <div id="adminToast" class="toast align-items-center text-white bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body fw-bold">
+                        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessToast"]
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+            document.addEventListener("DOMContentLoaded", function () {
+                var toastEl = document.getElementById('adminToast');
+                var toast = new bootstrap.Toast(toastEl, { delay: 4000 });
+                toast.show();
+            });
+        </script>
+    }
 
     @* --- TABURI FILTRARE --- *@
     <ul class="nav nav-pills nav-fill mb-4 bg-dark border border-secondary rounded shadow-sm p-1" id="adminTabs" role="tablist">
@@ -117,7 +140,7 @@
             }
         }
 
-        // --- EVENIMENT CLICK PE TAB-URI ---
+        // --- click tab uri ---
         document.querySelectorAll('.admin-tab-btn').forEach(btn => {
             btn.addEventListener('click', (e) => {
 
@@ -135,14 +158,20 @@
         });
 
         // Cautare
-        document.getElementById('adminSearchForm').addEventListener('submit', (e) => {
-            e.preventDefault();
-            searchString = document.getElementById('adminSearchInput').value.trim();
-            page = 1;
-            hasMore = true;
-            
-            loadAdminMovies();
+        let debounceTimerAdmin;
+        document.getElementById('adminSearchInput').addEventListener('input', (e) => {
+            clearTimeout(debounceTimerAdmin); 
+
+            debounceTimerAdmin = setTimeout(() => {
+                searchString = e.target.value.trim();
+                page = 1;
+                hasMore = true;
+                loadAdminMovies(); 
+            }, 400);
         });
+
+        document.getElementById('adminSearchForm').addEventListener('submit', (e) => e.preventDefault());
+
 
         // scroll Infinit
         window.addEventListener('scroll', () => {

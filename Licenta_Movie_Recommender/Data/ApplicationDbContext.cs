@@ -23,8 +23,8 @@ namespace Licenta_Movie_Recommender.Data
         {
             
             base.OnModelCreating(builder);
+            builder.Entity<Movie>().HasQueryFilter(m => !m.IsDeleted);
 
-            
         }
     }
 }

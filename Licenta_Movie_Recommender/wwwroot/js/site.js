@@ -1,5 +1,39 @@
-﻿//1. FUNCȚII DE RANDARE UI(SKELETONS & CARDS)
+﻿
+// --- FUNCTIE UNIVERSALA TOAST URI AJAX ---
+function showDynamicToast(message, type = 'success') {
+    const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
+    const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
 
+    const toastHtml = `
+        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1055;">
+            <div class="toast align-items-center text-white ${bgClass} border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
+                <div class="d-flex">
+                    <div class="toast-body fw-bold">
+                        <i class="bi ${iconClass} me-2"></i> ${message}
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
+                </div>
+            </div>
+        </div>
+    `;
+
+    const container = document.createElement('div');
+    container.innerHTML = toastHtml;
+    document.body.appendChild(container);
+
+    const toastElement = container.querySelector('.toast');
+    const toast = new bootstrap.Toast(toastElement, { delay: 3000 });
+    toast.show();
+
+    toastElement.addEventListener('hidden.bs.toast', () => {
+        container.remove();
+    });
+}
+
+
+
+
+//1. FUNCȚII DE RANDARE UI(SKELETONS & CARDS)
 function getSkeletonsHtml(count = 12) {
     const skeleton = `
         <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
@@ -140,7 +174,10 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnWatchlist || btnWatched) {
             e.preventDefault();
             const btn = btnWatchlist || btnWatched;
-            const container = btn.closest('.movie-container');
+
+            const container = btn.closest('.card') || btn.closest('.movie-container') || btn.closest('.d-flex');
+            if (!container) return;
+
             const movieId = btn.getAttribute('data-movie-id');
             const isWatchlistAction = !!btnWatchlist;
             const url = isWatchlistAction ? '/Movies/ToggleWatchlist' : '/Movies/ToggleWatched';
@@ -153,6 +190,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 const response = await fetch(url, { method: 'POST', body: fd });
                 if (response.ok) {
                     const result = await response.json();
+
                     const icon = btn.querySelector('i');
 
                     //celalat buton de pe card
@@ -224,18 +262,43 @@ document.addEventListener('DOMContentLoaded', () => {
             } catch (err) { console.error(err); }
         }
 
-        // 3. Logica Admin Delete
-        if (btnDelete) {
-            e.preventDefault();
-            const movieId = btnDelete.getAttribute('data-movie-id');
-            const container = btnDelete.closest('.movie-container') || btnDelete.closest('tr');
+        //admin
 
-            if (confirm("Stergi definitiv filmul?")) {
+        // 3. delete
+        const btnDeleteMovie = e.target.closest('.btn-delete-movie');
+        if (btnDeleteMovie) {
+            e.preventDefault();
+            const movieId = btnDeleteMovie.getAttribute('data-movie-id');
+            const container = btnDeleteMovie.closest('.movie-container') || btnDeleteMovie.closest('tr');
+
+            if (confirm("Stergi filmul?")) {
                 const fd = new FormData();
                 fd.append('id', movieId);
                 try {
                     const response = await fetch(`/Admin/DeleteMovie`, { method: 'POST', body: fd });
+
                     if (response.ok && container) container.remove();
+
+                    showDynamicToast('Filmul a fost mutat în coșul de gunoi.');
+
+                } catch (err) { console.error(err); }
+            }
+        }
+
+        //4. restore
+        const btnRestore = e.target.closest('.btn-restore-movie');
+        if (btnRestore) {
+            e.preventDefault();
+            const movieId = btnRestore.getAttribute('data-movie-id');
+            const container = btnRestore.closest('.movie-container') || btnRestore.closest('tr');
+
+            if (confirm("Vrei să restaurezi acest film și să-l faci vizibil din nou?")) {
+                const fd = new FormData();
+                fd.append('id', movieId);
+                try {
+                    const response = await fetch(`/Admin/RestoreMovie`, { method: 'POST', body: fd });
+                    if (response.ok && container) container.remove(); 
+                    showDynamicToast('Filmul a fost restaurat cu succes!');
                 } catch (err) { console.error(err); }
             }
         }

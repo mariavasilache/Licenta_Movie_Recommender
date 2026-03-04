@@ -19,5 +19,7 @@ namespace Licenta_Movie_Recommender.Models
 
    
         public string PosterUrl { get; set; }
+
+        public bool IsDeleted { get; set; } = false; //soft delete
     }
 }

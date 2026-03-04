@@ -3,7 +3,7 @@ using Licenta_Movie_Recommender.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims; // Adăugat pentru a lua ID-ul adminului curent
+using System.Security.Claims; 
 
 namespace Licenta_Movie_Recommender.Controllers
 {
@@ -54,7 +54,9 @@ namespace Licenta_Movie_Recommender.Controllers
                     title = m.Title,
                     posterUrl = m.PosterUrl,
                     genres = m.Genres,
-                    
+                    isDeleted = m.IsDeleted,
+
+
                     status = _context.UserActivities
                                 .Where(ua => ua.MovieId == m.Id && ua.UserId == userId)
                                 .Select(ua => ua.Status)
@@ -66,21 +68,32 @@ namespace Licenta_Movie_Recommender.Controllers
                 })
                 .ToListAsync();
 
-            // returnare lista ca JSON, cum asteapta createMovieCardHtml in site.js
+            
             return Json(movies);
         }
 
-        // stergere film AJAX 
+
+        // --- STERGERE (SOFT DELETE) ---
         [HttpPost]
         public async Task<IActionResult> DeleteMovie(int id)
         {
             var movie = await _context.Movies.FindAsync(id);
             if (movie == null) return NotFound();
 
-            var activities = _context.UserActivities.Where(ua => ua.MovieId == id);
-            _context.UserActivities.RemoveRange(activities);
+            movie.IsDeleted = true; //ascundem film, nu se sterge din bd
+            await _context.SaveChangesAsync();
 
-            _context.Movies.Remove(movie);
+            return Json(new { success = true });
+        }
+
+        // --- UNDO (RESTORE) ---
+        [HttpPost]
+        public async Task<IActionResult> RestoreMovie(int id)
+        {
+            var movie = await _context.Movies.FindAsync(id);
+            if (movie == null) return NotFound();
+
+            movie.IsDeleted = false;
             await _context.SaveChangesAsync();
 
             return Json(new { success = true });

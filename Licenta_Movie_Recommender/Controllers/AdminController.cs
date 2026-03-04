@@ -33,7 +33,7 @@ namespace Licenta_Movie_Recommender.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetManageMoviesData(int page = 1, string searchString = "")
+        public async Task<IActionResult> GetManageMoviesData(int page = 1, string searchString = "", string filter = "all")
         {
             int pageSize = 18; 
             var query = _context.Movies.AsQueryable();
@@ -43,8 +43,13 @@ namespace Licenta_Movie_Recommender.Controllers
                 query = query.Where(m => m.Title.Contains(searchString));
             }
 
+            //filtrare pe tab-rui
+            if (filter == "active") query = query.Where(m => !m.IsDeleted);
+            else if (filter == "deleted") query = query.Where(m => m.IsDeleted);
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
+            //selectare date
             var movies = await query
                 .OrderByDescending(m => m.Id)
                 .Skip((page - 1) * pageSize)

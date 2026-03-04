@@ -114,11 +114,10 @@
                     document.getElementById('grid-' + tab).insertAdjacentHTML('beforeend', html);
                     pages[tab]++;
                 
-                
-                    } catch (e) {
+                   }
+            } catch (e) {
                 console.error("Eroare la incarcarea filmelor: ", e);
-                     }
-
+            }
             document.getElementById('loader-' + tab).style.display = 'none';
             isLoading = false;
         }

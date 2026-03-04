@@ -40,7 +40,19 @@ function createMovieCardHtml(movie, customOptions = {}) {
 
     let buttonsHtml = '';
     if (options.isAdmin) {
-        buttonsHtml = `<button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm" data-movie-id="${id}" data-movie-title="${title}" title="Șterge definitiv"><i class="bi bi-trash"></i></button>`;
+        //buton editare
+        const editBtn = `<a href="/Admin/EditMovie/${id}" class="btn btn-sm btn-primary shadow-sm" title="Editează datele"><i class="bi bi-pencil"></i></a>`;
+
+        //undo / delete
+        let actionBtn = '';
+        if (movie.isDeleted) {
+            actionBtn = `<button type="button" class="btn btn-sm btn-success btn-restore-movie shadow-sm" data-movie-id="${id}" title="Restaurează filmul"><i class="bi bi-arrow-counterclockwise"></i></button>`;
+        } else {
+            actionBtn = `<button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm" data-movie-id="${id}" title="Șterge (Soft Delete)"><i class="bi bi-trash"></i></button>`;
+        }
+
+        buttonsHtml = `${editBtn} ${actionBtn}`;
+
     } else {
         const watchlistClass = movie.status === 1 ? 'btn-active-watchlist' : 'btn-outline-light';
         const watchlistIcon = movie.status === 1 ? 'bi-bookmark-fill' : 'bi-bookmark';
@@ -55,7 +67,7 @@ function createMovieCardHtml(movie, customOptions = {}) {
     if (options.layout === 'compact') {
         return `
         <div class="col-12 mb-2 movie-container">
-            <div class="card bg-dark border-secondary d-flex flex-row align-items-center p-2 shadow-sm" style="border-color: rgba(255,255,255,0.05) !important;">
+            <div class="card bg-dark border-secondary d-flex flex-row align-items-center p-2 shadow-sm" style="border-color: rgba(255,255,255,0.05) !important;${movie.isDeleted ? 'opacity: 0.5; filter: grayscale(100%);' : ''}">
                 <img src="${posterUrl}" class="rounded shadow-sm" style="width: 45px; height: 65px; object-fit: cover;" onerror="this.src='https://placehold.co/45x65/2b2b2b/ffffff?text=?'">
                 <div class="ms-3 flex-grow-1 text-start overflow-hidden">
                     <a href="/Movies/Details/${id}" class="text-white text-decoration-none fw-bold text-truncate d-block">${title}</a>

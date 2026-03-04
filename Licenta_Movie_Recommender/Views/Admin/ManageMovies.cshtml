@@ -33,6 +33,33 @@
         </div>
     </div>
 
+    @* --- TABURI FILTRARE --- *@
+    <ul class="nav nav-pills nav-fill mb-4 bg-dark border border-secondary rounded shadow-sm p-1" id="adminTabs" role="tablist">
+        <li class="nav-item" role="presentation">
+            <button class="nav-link active fw-bold text-light admin-tab-btn" data-filter="all" type="button">
+                <i class="bi bi-collection-play-fill"></i> Toate
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-light admin-tab-btn" data-filter="active" type="button">
+                <i class="bi bi-check-circle-fill text-success"></i> Active
+            </button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link fw-bold text-light admin-tab-btn" data-filter="deleted" type="button">
+                <i class="bi bi-trash-fill text-danger"></i> Șterse
+            </button>
+        </li>
+    </ul>
+
+    <style>
+       
+        #adminTabs .nav-link.active {
+            background-color: #dc3545 !important;
+            color: white !important;
+        }
+    </style>
+
     @* --- GRID FILME --- *@
     <div id="adminMovieGrid" class="row g-2"></div>
 
@@ -48,6 +75,7 @@
         let isLoading = false;
         let hasMore = true;
         let searchString = '';
+        let currentFilter = 'all';
 
         async function loadAdminMovies() {
             if (isLoading || !hasMore) return;
@@ -59,14 +87,18 @@
             loader.style.display = 'block';
 
             try {
-                const response = await fetch(`/Admin/GetManageMoviesData?page=${page}&searchString=${encodeURIComponent(searchString)}`);
+                const response = await fetch(`/Admin/GetManageMoviesData?page=${page}&searchString=${encodeURIComponent(searchString)}&filter=${currentFilter}`);
                 const movies = await response.json();
 
                 if (page === 1) grid.innerHTML = '';
 
                 if (movies.length === 0) {
                     hasMore = false;
-                    if (page === 1) grid.innerHTML = '<div class="col-12 text-center text-muted py-5">Niciun film găsit.</div>';
+                    if (page === 1) grid.innerHTML = `
+                            <div class="col-12 text-center text-muted py-5 border border-secondary rounded-3 bg-transparent">
+                                <i class="bi bi-camera-reels display-6 d-block mb-3 opacity-50"></i>
+                                Nu am găsit niciun film.
+                            </div>`;
                 } else {
                     let html = '';
                     movies.forEach(movie => {
@@ -84,6 +116,23 @@
                 loader.style.display = 'none';
             }
         }
+
+        // --- EVENIMENT CLICK PE TAB-URI ---
+        document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+
+                document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+
+                const clickedBtn = e.currentTarget;
+                clickedBtn.classList.add('active');
+
+                currentFilter = clickedBtn.getAttribute('data-filter');
+
+                page = 1;
+                hasMore = true;
+                loadAdminMovies();
+            });
+        });
 
         // Cautare
         document.getElementById('adminSearchForm').addEventListener('submit', (e) => {

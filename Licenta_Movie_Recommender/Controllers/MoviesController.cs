@@ -272,6 +272,43 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost] public async Task<IActionResult> AddToWatchlist([FromForm] int movieId) => await ToggleWatchlist(movieId, null);
         [HttpPost] public async Task<IActionResult> MarkAsWatched([FromForm] int movieId) => await ToggleWatched(movieId, null);
 
+        [HttpPost]
+        public async Task<IActionResult> RemoveRatingOnly([FromForm] int movieId)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
+
+                var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
+                if (activity != null)
+                {
+                    activity.Rating = 0; 
+                    await _context.SaveChangesAsync();
+                }
+                return Json(new { success = true });
+            }
+            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
+        }
+
+        [HttpPost]
+        public async Task<IActionResult> RemoveActivityStatus([FromForm] int movieId)
+        {
+            try
+            {
+                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+                if (userId == null) return Unauthorized();
+
+                var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
+                if (activity != null)
+                {
+                    _context.UserActivities.Remove(activity); 
+                    await _context.SaveChangesAsync();
+                }
+                return Json(new { success = true });
+            }
+            catch (Exception ex) { return StatusCode(500, new { error = ex.Message }); }
+        }
         #endregion
 
         #region 5. LISTE CUSTOM (COLECTII)

@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Licenta_Movie_Recommender.Models
 {
@@ -8,7 +9,8 @@ namespace Licenta_Movie_Recommender.Models
 
         //cine face actiunea
         public string UserId { get; set; }
-        public User User { get; set; }
+        public IdentityUser User { get; set; }
+       
 
         //la ce film se refera
         public int MovieId { get; set; }

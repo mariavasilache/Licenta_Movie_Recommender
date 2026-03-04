@@ -1,4 +1,4 @@
-﻿// #region 1. FUNCȚII DE RANDARE UI (SKELETONS & CARDS)
+﻿//1. FUNCȚII DE RANDARE UI(SKELETONS & CARDS)
 
 function getSkeletonsHtml(count = 12) {
     const skeleton = `
@@ -85,13 +85,12 @@ function createMovieCardHtml(movie, customOptions = {}) {
     </div>`;
 }
 
-// #endregion
 
-// #region 2. INITIALIZARE SI EVENIMENTE GLOBALE
+//2. INITIALIZARE SI EVENIMENTE GLOBALE
 
 document.addEventListener('DOMContentLoaded', () => {
 
-    // #region A. REFRESH DISCOVER (HOME PAGE)
+    //REFRESH DISCOVER (HOME PAGE)
     const btnRefresh = document.getElementById('btnRefreshDiscover');
     const discoverGrid = document.getElementById('discoverGrid');
 
@@ -116,9 +115,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-    // #endregion
 
-    // #region B. CLICK UNIVERSAL (WATCHLIST, WATCHED, IGNORE, DELETE)
+
+    // CLICK UNIVERSAL (WATCHLIST, WATCHED, IGNORE, DELETE)
     document.addEventListener('click', async function (e) {
         const btnWatchlist = e.target.closest('.btn-watchlist-toggle');
         const btnWatched = e.target.closest('.btn-watched-toggle');
@@ -129,6 +128,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnWatchlist || btnWatched) {
             e.preventDefault();
             const btn = btnWatchlist || btnWatched;
+            const container = btn.closest('.movie-container');
             const movieId = btn.getAttribute('data-movie-id');
             const isWatchlistAction = !!btnWatchlist;
             const url = isWatchlistAction ? '/Movies/ToggleWatchlist' : '/Movies/ToggleWatched';
@@ -143,31 +143,54 @@ document.addEventListener('DOMContentLoaded', () => {
                     const result = await response.json();
                     const icon = btn.querySelector('i');
 
-                    // Schimbam clasele vizual fara sa reincarcam pagina
+                    //celalat buton de pe card
+                    const otherBtnW = container.querySelector('.btn-watchlist-toggle');
+                    const otherBtnV = container.querySelector('.btn-watched-toggle');
+
+                    // Schimb clase vizual fara reincarcare pag
                     if (isWatchlistAction) {
                         if (result.inWatchlist) {
-                            btn.classList.replace('btn-outline-light', 'btn-active-watchlist');
+                            btn.classList.remove('btn-outline-light');
+                            btn.classList.add('btn-active-watchlist');
                             icon.className = 'bi bi-bookmark-fill';
+
+                            if (otherBtnV) {
+                                otherBtnV.classList.remove('btn-active-watched');
+                                otherBtnV.classList.add('btn-outline-light');
+                                otherBtnV.querySelector('i').className = 'bi bi-check-circle';
+                            }
+
                         } else {
-                            btn.classList.replace('btn-active-watchlist', 'btn-outline-light');
+                            btn.classList.remove('btn-active-watchlist');
+                            btn.classList.add('btn-outline-light');
                             icon.className = 'bi bi-bookmark';
                         }
                     } else {
                         if (result.isWatched) {
-                            btn.classList.replace('btn-outline-light', 'btn-active-watched');
+                            btn.classList.remove('btn-outline-light');
+                            btn.classList.add('btn-active-watched');
                             icon.className = 'bi bi-check-circle-fill';
+
+                            if (otherBtnW) {
+                                otherBtnW.classList.remove('btn-active-watchlist');
+                                otherBtnW.classList.add('btn-outline-light');
+                                otherBtnW.querySelector('i').className = 'bi bi-bookmark';
+                            }
                         } else {
-                            btn.classList.replace('btn-active-watched', 'btn-outline-light');
+                            btn.classList.remove('btn-active-watched');
+                            btn.classList.add('btn-outline-light');
                             icon.className = 'bi bi-check-circle';
                         }
                     }
+                
                 } else {
-                    const err = await response.json();
-                    alert("Eroare: " + err.error);
-                }
-            } catch (err) { console.error(err); }
-            finally { btn.disabled = false; }
-        }
+                     const err = await response.json();
+                     alert("Eroare: " + err.error);
+                 }
+        } catch (err) { console.error(err); }
+        finally { btn.disabled = false; }
+    }
+        
 
         // 2. Logica Ignora
         if (btnIgnore) {
@@ -205,9 +228,9 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         }
     });
-    // #endregion
+    
 
-    // #region C. SEARCH PREVIEW
+    //SEARCH PREVIEW
     const searchInput = document.getElementById('searchInput');
     const searchDropdown = document.getElementById('searchPreviewDropdown');
     const searchResultsList = document.getElementById('searchResultsList');
@@ -240,6 +263,5 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 300);
         });
     }
-    // #endregion
+    
 });
-// #endregion

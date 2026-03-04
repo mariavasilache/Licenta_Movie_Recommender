@@ -31,10 +31,10 @@
                 }
                 else
                 {
-                    <button type="button" class="btn btn-sm @(inWatchlist ? "btn-warning text-dark" : "btn-outline-light") btn-watchlist-toggle shadow-sm" data-movie-id="@Model.Id" title="Watchlist">
+                    <button type="button" class="btn btn-sm @(inWatchlist ? "btn-active-watchlist" : "btn-outline-light") btn-watchlist-toggle shadow-sm" data-movie-id="@Model.Id" title="Watchlist">
                         <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
                     </button>
-                    <button type="button" class="btn btn-sm @(isWatched ? "btn-success" : "btn-outline-light") btn-watched-toggle shadow-sm" data-movie-id="@Model.Id" title="Vizionat">
+                    <button type="button" class="btn btn-sm @(isWatched ? "btn-active-watched" : "btn-outline-light") btn-watched-toggle shadow-sm" data-movie-id="@Model.Id" title="Vizionat">
                         <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
                     </button>
                 }

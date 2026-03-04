@@ -1,4 +1,5 @@
-﻿using System.ComponentModel.DataAnnotations;
+﻿using Microsoft.AspNetCore.Identity;
+using System.ComponentModel.DataAnnotations;
 
 namespace Licenta_Movie_Recommender.Models
 {
@@ -8,7 +9,7 @@ namespace Licenta_Movie_Recommender.Models
         public int Id { get; set; }
 
         public string UserId { get; set; }
-        public User User { get; set; } // legatura cu userul
+        public IdentityUser User { get; set; } // legatura cu userul
 
         public int MovieId { get; set; }
         public Movie Movie { get; set; } // legatura cu filmul

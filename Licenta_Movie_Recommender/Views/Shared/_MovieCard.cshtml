@@ -22,7 +22,7 @@
             </div>
 
             @* butoane *@
-            <div class="d-flex gap-2 pe-2">
+         @* <div class="d-flex gap-2 pe-2">
                 @if (isAdmin)
                 {
                     <button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm" data-movie-id="@Model.Id" data-movie-title="@Model.Title" title="Sterge">
@@ -38,7 +38,7 @@
                         <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
                     </button>
                 }
-            </div>
+            </div>*@
         </div>
     </div>
 }

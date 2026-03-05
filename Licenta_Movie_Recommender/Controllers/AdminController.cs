@@ -21,7 +21,8 @@ namespace Licenta_Movie_Recommender.Controllers
                 TotalUsers = await _context.Users.CountAsync(),
                 TotalRatings = await _context.UserActivities.CountAsync(ua => ua.Rating > 0),
                 TotalWatchlist = await _context.UserActivities.CountAsync(ua => ua.Status == 1),
-                RecentMovies = await _context.Movies.OrderByDescending(m => m.Id).Take(5).ToListAsync()
+                RecentMovies = await _context.Movies.OrderByDescending(m => m.Id).Take(5).ToListAsync(),
+                RecentUsers = await _context.Users.Take(5).ToListAsync()
             };
 
             return View(model);
@@ -136,7 +137,8 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> RestoreMovie(int id)
         {
-            var movie = await _context.Movies.FindAsync(id);
+            var movie = await _context.Movies.IgnoreQueryFilters()
+        .FirstOrDefaultAsync(m => m.Id == id);
             if (movie == null) return NotFound();
 
             movie.IsDeleted = false;

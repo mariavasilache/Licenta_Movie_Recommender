@@ -13,6 +13,7 @@ namespace Licenta_Movie_Recommender.Data
             context.Database.Migrate();
 
             var filmeStricate = context.Movies
+                .IgnoreQueryFilters()
                 .Where(m => m.TmdbId == 0 || string.IsNullOrEmpty(m.PosterUrl))
                 .ToList();
 
@@ -23,8 +24,7 @@ namespace Licenta_Movie_Recommender.Data
             }
 
             // 1. aflam ce filme avem deja in baza pt a nu le dubla
-            var filmeExistente = context.Movies.Select(m => m.MovieLensId).ToHashSet();
-
+            var filmeExistente = context.Movies.IgnoreQueryFilters().Select(m => m.MovieLensId).ToHashSet();
             var datasetPath = Path.Combine(Directory.GetCurrentDirectory(), "Dataset");
 
             // 2. citim links.csv
@@ -83,8 +83,7 @@ namespace Licenta_Movie_Recommender.Data
 
                   
 
-                    context.Movies.Add(movie);
-                    countFilmeNoi++;
+                 
 
                     
                     if (countFilmeNoi % 100 == 0)

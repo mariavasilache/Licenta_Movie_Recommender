@@ -22,6 +22,7 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
 // CUSTOM SERVICES
+builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<TmdbService>();
 builder.Services.AddScoped<RecommendationService>();
 builder.Services.AddControllersWithViews();

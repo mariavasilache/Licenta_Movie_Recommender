@@ -30,6 +30,33 @@ function showDynamicToast(message, type = 'success') {
     });
 }
 
+//modale confirmari
+function showConfirmModal(message, onConfirm, title = 'Confirmare') {
+    document.getElementById('confirmModalTitle').textContent = title;
+    document.getElementById('confirmModalBody').textContent = message;
+
+    const modal = new bootstrap.Modal(document.getElementById('confirmModal'));
+    modal.show();
+
+    const oldBtn = document.getElementById('confirmModalOkBtn');
+    const newBtn = oldBtn.cloneNode(true);
+    oldBtn.parentNode.replaceChild(newBtn, oldBtn);
+
+    newBtn.addEventListener('click', function () {
+        modal.hide();
+        onConfirm();
+    });
+}
+
+//scroll efect glow
+window.addEventListener('scroll', () => {
+    const navbar = document.querySelector('.navbar');
+    if (window.scrollY > 50) {
+        navbar.style.boxShadow = '0 4px 30px rgba(229, 9, 20, 0.15)';
+    } else {
+        navbar.style.boxShadow = 'none';
+    }
+});
 
 
 
@@ -135,6 +162,19 @@ function createMovieCardHtml(movie, customOptions = {}) {
 //2. INITIALIZARE SI EVENIMENTE GLOBALE
 
 document.addEventListener('DOMContentLoaded', () => {
+    // --- HERO PARALLAX LA SCROLL ---
+    const heroSection = document.querySelector('.hero-section');
+    if (heroSection) {
+        window.addEventListener('scroll', () => {
+            const scrollY = window.scrollY;
+            const heroContent = heroSection.querySelector('.hero-content');
+            if (heroContent) {
+                
+                heroContent.style.transform = `translateY(${scrollY * 0.4}px)`;
+                heroContent.style.opacity = 1 - scrollY / 400;
+            }
+        });
+    }
 
     //REFRESH DISCOVER (HOME PAGE)
     const btnRefresh = document.getElementById('btnRefreshDiscover');
@@ -168,7 +208,8 @@ document.addEventListener('DOMContentLoaded', () => {
         const btnWatchlist = e.target.closest('.btn-watchlist-toggle');
         const btnWatched = e.target.closest('.btn-watched-toggle');
         const btnIgnore = e.target.closest('.btn-ignore-rec');
-        const btnDelete = e.target.closest('.btn-delete-movie');
+        const btnDeleteMovie = e.target.closest('.btn-delete-movie');
+        const btnRestore = e.target.closest('.btn-restore-movie');
 
         // 1. Logica Watchlist / Vizionat 
         if (btnWatchlist || btnWatched) {
@@ -199,7 +240,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                     // Schimb clase vizual fara reincarcare pag
                     if (isWatchlistAction) {
-                        if (result.inWatchlist) {
+                        if (result.isActive) {
                             btn.classList.remove('btn-outline-light');
                             btn.classList.add('btn-active-watchlist');
                             icon.className = 'bi bi-bookmark-fill';
@@ -216,7 +257,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             icon.className = 'bi bi-bookmark';
                         }
                     } else {
-                        if (result.isWatched) {
+                        if (result.isActive) {
                             btn.classList.remove('btn-outline-light');
                             btn.classList.add('btn-active-watched');
                             icon.className = 'bi bi-check-circle-fill';
@@ -263,44 +304,36 @@ document.addEventListener('DOMContentLoaded', () => {
         }
 
         //admin
+        async function performAdminAction(url, movieId, container, successMessage) {
+            const fd = new FormData();
+            fd.append('id', movieId);
+            try {
+                const response = await fetch(url, { method: 'POST', body: fd });
+                if (response.ok && container) container.remove();
+                showDynamicToast(successMessage);
+            } catch (err) { console.error(err); }
+        }
 
         // 3. delete
-        const btnDeleteMovie = e.target.closest('.btn-delete-movie');
         if (btnDeleteMovie) {
             e.preventDefault();
             const movieId = btnDeleteMovie.getAttribute('data-movie-id');
             const container = btnDeleteMovie.closest('.movie-container') || btnDeleteMovie.closest('tr');
 
-            if (confirm("Stergi filmul?")) {
-                const fd = new FormData();
-                fd.append('id', movieId);
-                try {
-                    const response = await fetch(`/Admin/DeleteMovie`, { method: 'POST', body: fd });
-
-                    if (response.ok && container) container.remove();
-
-                    showDynamicToast('Filmul a fost mutat în coșul de gunoi.');
-
-                } catch (err) { console.error(err); }
-            }
+            showConfirmModal('Ești sigur că vrei să ștergi acest film?', () => {
+                performAdminAction('/Admin/DeleteMovie', movieId, container, 'Filmul a fost mutat în coșul de gunoi.');
+            }, 'Șterge film');
         }
 
         //4. restore
-        const btnRestore = e.target.closest('.btn-restore-movie');
         if (btnRestore) {
             e.preventDefault();
             const movieId = btnRestore.getAttribute('data-movie-id');
             const container = btnRestore.closest('.movie-container') || btnRestore.closest('tr');
 
-            if (confirm("Vrei să restaurezi acest film și să-l faci vizibil din nou?")) {
-                const fd = new FormData();
-                fd.append('id', movieId);
-                try {
-                    const response = await fetch(`/Admin/RestoreMovie`, { method: 'POST', body: fd });
-                    if (response.ok && container) container.remove(); 
-                    showDynamicToast('Filmul a fost restaurat cu succes!');
-                } catch (err) { console.error(err); }
-            }
+            showConfirmModal('Vrei să restaurezi acest film?', () => {
+                performAdminAction('/Admin/RestoreMovie', movieId, container, 'Filmul a fost restaurat cu succes!');
+            }, 'Restaurează film');
         }
     });
     
@@ -339,4 +372,51 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
     
+});
+
+// --- LOADER ---
+window.addEventListener('load', function () {
+    setTimeout(function () {
+        const loader = document.getElementById('page-loader');
+        if (loader) loader.classList.add('hidden');
+    }, 2000);
+});
+
+// --- PARTICLES ---
+particlesJS('particles-js', {
+    particles: {
+        number: { value: 200, density: { enable: true, value_area: 1000 } },
+        color: { value: ['#ffffff', '#7eb8ff', '#aad4ff', '#e50914', '#ffaaaa'] },
+        shape: { type: 'circle' },
+        opacity: {
+            value: 0.6,
+            random: true,
+            anim: { enable: true, speed: 0.4, opacity_min: 0.05, sync: false }
+        },
+        size: {
+            value: 2,
+            random: true,
+            anim: { enable: true, speed: 1, size_min: 0.2, sync: false }
+        },
+        line_linked: { enable: false },
+        move: {
+            enable: true,
+            speed: 0.12,
+            direction: 'none',
+            random: true,
+            straight: false,
+            out_mode: 'out'
+        }
+    },
+    interactivity: {
+        detect_on: 'canvas',
+        events: {
+            onhover: { enable: true, mode: 'repulse' },
+            onclick: { enable: true, mode: 'bubble' }
+        },
+        modes: {
+            repulse: { distance: 70, duration: 2 },
+            bubble: { distance: 180, size: 5, duration: 2, opacity: 1 }
+        }
+    }
 });

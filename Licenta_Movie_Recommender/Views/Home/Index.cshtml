@@ -5,26 +5,27 @@
     var discoverMovies = ViewBag.DiscoverMovies as List<Licenta_Movie_Recommender.Models.Movie> ?? new List<Licenta_Movie_Recommender.Models.Movie>();
 }
 
-@if (TempData["Success"] != null)
-{
-    <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm container" role="alert">
-        <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
-        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
-    </div>
-}
 
-<div class="text-center mt-5 mb-5">
-    <h1 class="display-4 fw-bold text-primary mb-3">Movie Recommender</h1>
-    <p class="lead text-muted">Descoperă următoarele tale filme preferate.</p>
+
+<div class="hero-section">
+    <div class="hero-content">
+        <h1 class="hero-title">LUMINARY</h1>
+        <p class="hero-subtitle"><i class="bi bi-suit-diamond-fill me-2"></i>Descoperă următoarele tale filme preferate</p>
+        <div class="hero-scroll-hint">
+            <span>Scroll</span>
+            <i class="bi bi-chevron-down"></i>
+        </div>
+    </div>
 </div>
 
 @* --- SECTIUNEA 1: RECOMANDARI --- *@
+<div class="container">
 @if (User.Identity.IsAuthenticated)
 {
     <div class="container mb-5">
         <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-            <h3 class="fw-bold mb-0 text-light"><i class="bi bi-stars text-warning me-2"></i> Top Alegeri Pentru Tine</h3>
-            @if (Model.Any())
+                <h3 class="fw-bold mb-0 text-light"><i class="bi bi-star me-2"></i> Recomandat pentru tine</h3>
+                @if (Model.Any())
             {
                 <a asp-action="Recommendations" asp-controller="Movies" class="btn btn-sm btn-outline-danger">Vezi mai multe &raquo;</a>
             }
@@ -67,8 +68,8 @@ else
 @* --- SECTIUNEA 2: DESCOPERA  --- *@
 <div class="container mb-5">
     <div class="d-flex justify-content-between align-items-center mb-4 border-bottom pb-2">
-        <h3 class="fw-bold mb-0 text-light"><i class="bi bi-dice-5 me-2 text-primary"></i> Descoperă </h3>
-        <div class="d-flex gap-2">
+            <h3 class="fw-bold mb-0 text-light"><i class="bi bi-compass me-2"></i> Descoperă</h3>
+            <div class="d-flex gap-2">
             <button type="button" id="btnRefreshDiscover" class="btn btn-sm btn-outline-secondary text-light" title="Aduce alte filme aleatorii">
                 <i class="bi bi-arrow-clockwise"></i> Refresh
             </button>
@@ -94,5 +95,6 @@ else
             
         }
     </div>
+</div>
 </div>
 

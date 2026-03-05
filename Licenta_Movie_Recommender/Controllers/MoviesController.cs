@@ -182,66 +182,54 @@ namespace Licenta_Movie_Recommender.Controllers
 
         #region 4. ACTIVITATI UTILIZATOR (AJAX & FORMS)
 
-        [HttpPost]
-        public async Task<IActionResult> ToggleWatchlist([FromForm] int? movieId, [FromForm] int? id)
+        private async Task<IActionResult> ToggleActivity(int movieId, int targetStatus)
         {
             try
             {
                 var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
                 if (userId == null) return Unauthorized();
+                if (movieId == 0) return BadRequest(new { error = "ID film lipsă." });
 
-                int mid = movieId ?? id ?? 0;
-                if (mid == 0) return BadRequest(new { error = "ID film lipsă." });
+                var activity = await _context.UserActivities
+                    .FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == movieId);
 
-                var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == mid);
-                bool inWatchlist = false;
+                bool isActive = false;
 
                 if (activity == null)
                 {
-                    _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = mid, Status = 1, DateAdded = DateTime.Now });
-                    inWatchlist = true;
+                    _context.UserActivities.Add(new UserMovieActivity
+                    {
+                        UserId = userId,
+                        MovieId = movieId,
+                        Status = targetStatus,
+                        DateAdded = DateTime.Now
+                    });
+                    isActive = true;
                 }
                 else
                 {
-                    // Daca e deja in watchlist (Status 1) si n-are nota, il scoatem de tot
-                    if (activity.Status == 1 && activity.Rating == 0) _context.UserActivities.Remove(activity);
-                    else { activity.Status = 1; inWatchlist = true; }
+                    if (activity.Status == targetStatus && activity.Rating == 0)
+                        _context.UserActivities.Remove(activity);
+                    else
+                    {
+                        activity.Status = targetStatus;
+                        isActive = true;
+                    }
                 }
+
                 await _context.SaveChangesAsync();
-                return Json(new { inWatchlist });
+                return Json(new { isActive, status = targetStatus });
             }
             catch (Exception ex) { return StatusCode(500, new { error = ex.InnerException?.Message ?? ex.Message }); }
         }
 
         [HttpPost]
-        public async Task<IActionResult> ToggleWatched([FromForm] int? movieId, [FromForm] int? id)
-        {
-            try
-            {
-                var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-                if (userId == null) return Unauthorized();
+        public Task<IActionResult> ToggleWatchlist([FromForm] int? movieId, [FromForm] int? id)
+            => ToggleActivity(movieId ?? id ?? 0, 1);
 
-                int mid = movieId ?? id ?? 0;
-                if (mid == 0) return BadRequest(new { error = "ID film lipsă." });
-
-                var activity = await _context.UserActivities.FirstOrDefaultAsync(ua => ua.UserId == userId && ua.MovieId == mid);
-                bool isWatched = false;
-
-                if (activity == null)
-                {
-                    _context.UserActivities.Add(new UserMovieActivity { UserId = userId, MovieId = mid, Status = 2, DateAdded = DateTime.Now });
-                    isWatched = true;
-                }
-                else
-                {
-                    if (activity.Status == 2 && activity.Rating == 0) _context.UserActivities.Remove(activity);
-                    else { activity.Status = 2; isWatched = true; }
-                }
-                await _context.SaveChangesAsync();
-                return Json(new { isWatched });
-            }
-            catch (Exception ex) { return StatusCode(500, new { error = ex.InnerException?.Message ?? ex.Message }); }
-        }
+        [HttpPost]
+        public Task<IActionResult> ToggleWatched([FromForm] int? movieId, [FromForm] int? id)
+            => ToggleActivity(movieId ?? id ?? 0, 2);
 
         [HttpPost]
         public async Task<IActionResult> SaveRating([FromForm] int movieId, [FromForm] int rating)

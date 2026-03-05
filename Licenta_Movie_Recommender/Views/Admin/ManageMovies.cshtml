@@ -33,28 +33,7 @@
         </div>
     </div>
 
-    @* --- TOAST NOTIFICATION --- *@
-    @if (TempData["SuccessToast"] != null)
-    {
-        <div class="position-fixed bottom-0 end-0 p-3" style="z-index: 1050">
-            <div id="adminToast" class="toast align-items-center text-white bg-success border-0 shadow-lg" role="alert" aria-live="assertive" aria-atomic="true">
-                <div class="d-flex">
-                    <div class="toast-body fw-bold">
-                        <i class="bi bi-check-circle-fill me-2"></i> @TempData["SuccessToast"]
-                    </div>
-                    <button type="button" class="btn-close btn-close-white me-2 m-auto" data-bs-dismiss="toast" aria-label="Close"></button>
-                </div>
-            </div>
-        </div>
-
-        <script>
-            document.addEventListener("DOMContentLoaded", function () {
-                var toastEl = document.getElementById('adminToast');
-                var toast = new bootstrap.Toast(toastEl, { delay: 4000 });
-                toast.show();
-            });
-        </script>
-    }
+   
 
     @* --- TABURI FILTRARE --- *@
     <ul class="nav nav-pills nav-fill mb-4 bg-dark border border-secondary rounded shadow-sm p-1" id="adminTabs" role="tablist">

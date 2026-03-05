@@ -4,16 +4,6 @@
     ViewData["Title"] = Model.Title;
 }
 
-@* --- MESAJE DE SUCCES / EROARE --- *@
-<div id="alert-container">
-    @if (TempData["Success"] != null)
-    {
-        <div class="alert alert-success alert-dismissible fade show mt-3 shadow-sm border-0" role="alert" style="background-color: rgba(25, 135, 84, 0.2); color: #75b798;">
-            <i class="bi bi-check-circle-fill me-2"></i> @TempData["Success"]
-            <button type="button" class="btn-close btn-close-white" data-bs-dismiss="alert" aria-label="Close"></button>
-        </div>
-    }
-</div>
 
 <style>
     /* design sistem rating cu stelute */

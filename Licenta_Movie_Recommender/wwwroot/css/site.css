@@ -1,7 +1,34 @@
-/* --- IMPORT FONT --- */
+/* ============================================================
+   Organizare:
+   1. Font
+   2. Baza (html, body)
+   3. Fundal particles
+   4. Navbar
+   5. Hero Section
+   6. Movie Cards
+   7. Butoane & Badges
+   8. Liste & Alte elemente
+   9. Skeleton Loaders
+   10. Animatii
+   ============================================================ */
+
+
+/* ?? 1. FONT ??????????????????????????????????????????????? */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
-/* --- BAZA --- */
+i.bi {
+    font-family: "bootstrap-icons" !important;
+}
+
+    i.bi::before {
+        font-family: "bootstrap-icons" !important;
+        font-style: normal;
+        font-variant: normal;
+        text-transform: none;
+        -webkit-font-smoothing: antialiased;
+    }
+
+/* ?? 2. BAZA ??????????????????????????????????????????????? */
 html {
     font-size: 14px;
     position: relative;
@@ -16,42 +43,14 @@ html {
 
 body {
     margin-bottom: 60px;
-    background-color: #141414; /* dark mode */
+    background-color: #030308;
     color: #e5e5e5;
     font-family: 'Poppins', sans-serif;
     -webkit-font-smoothing: antialiased;
+    position: relative;
+    isolation: isolate;
 }
 
-/* --- FOCUS --- */
-.btn:focus, .btn:active:focus, .btn-link.nav-link:focus, .form-control:focus, .form-check-input:focus {
-    box-shadow: 0 0 0 0.1rem #141414, 0 0 0 0.25rem #e50914;
-}
-
-/* --- MENIU (NAVBAR) --- */
-.navbar {
-    background-color: rgba(20, 20, 20, 0.85) !important;
-    backdrop-filter: blur(12px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.05);
-    padding: 15px 0;
-}
-
-.navbar-brand {
-    font-weight: 700;
-    color: #e50914 !important;
-    letter-spacing: 1px;
-}
-
-.nav-link {
-    color: #b3b3b3 !important;
-    font-weight: 500;
-    transition: color 0.3s ease;
-}
-
-    .nav-link:hover {
-        color: #ffffff !important;
-    }
-
-/* --- TITLURI SI TEXTE --- */
 h1, h2, h3, h4, h5, h6 {
     color: #ffffff;
     font-weight: 600;
@@ -61,22 +60,214 @@ h1, h2, h3, h4, h5, h6 {
     color: #a3a3a3 !important;
 }
 
-
 .text-dark:not(.badge):not(.btn) {
     color: #e5e5e5 !important;
 }
 
-/* --- BORDURI SI FUNDALURI --- */
-.card {
-    background-color: #1f1f1f;
-    border: 1px solid rgba(255, 255, 255, 0.05);
+/* asigura ca tot continutul e deasupra particulelor */
+.container, header, footer, main {
+    position: relative;
+    z-index: 1;
 }
 
-.border-bottom {
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1) !important;
+
+/* ?? 3. FUNDAL PARTICLES ??????????????????????????????????? */
+#particles-js {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: -1;
+    pointer-events: none;
+    background: radial-gradient(ellipse at 15% 50%, rgba(180, 0, 255, 0.07) 0%, transparent 55%), radial-gradient(ellipse at 85% 30%, rgba(0, 207, 255, 0.06) 0%, transparent 55%), radial-gradient(ellipse at 50% 90%, rgba(199, 125, 255, 0.04) 0%, transparent 50%), #030308;
 }
 
-/* --- MOVIE CARD SI HOVER --- */
+
+/* ?? 4. NAVBAR ????????????????????????????????????????????? */
+.navbar {
+    background: linear-gradient(180deg, rgba(10,0,20,0.97) 0%, rgba(5,0,15,0.92) 100%) !important;
+    backdrop-filter: blur(20px);
+    border-bottom: 1px solid rgba(180, 0, 255, 0.2) !important;
+    box-shadow: 0 0 30px rgba(180, 0, 255, 0.08);
+    padding: 12px 0;
+}
+
+.navbar-brand {
+    font-weight: 700;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    font-size: 1rem;
+    background: linear-gradient(90deg, #c77dff, #00cfff, #c77dff);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    animation: shimmer 4s linear infinite;
+    filter: drop-shadow(0 0 8px rgba(180, 0, 255, 0.5));
+}
+
+.nav-link {
+    color: rgba(200, 180, 255, 0.7) !important;
+    font-weight: 500;
+    font-size: 0.9rem;
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+    position: relative;
+}
+
+    .nav-link::after {
+        content: '';
+        position: absolute;
+        bottom: -2px;
+        left: 50%;
+        transform: translateX(-50%);
+        width: 0;
+        height: 1px;
+        background: linear-gradient(90deg, #c77dff, #00cfff);
+        transition: width 0.3s ease;
+        box-shadow: 0 0 6px rgba(0, 207, 255, 0.6);
+    }
+
+    .nav-link:hover {
+        color: #ffffff !important;
+    }
+
+        .nav-link:hover::after {
+            width: 80%;
+        }
+
+/* buton Cont Nou */
+.btn-danger.fw-bold {
+    background: linear-gradient(135deg, #cc00ff, #7b00d4) !important;
+    border: none !important;
+    box-shadow: 0 0 15px rgba(180, 0, 255, 0.4);
+    letter-spacing: 1px;
+    transition: all 0.3s ease;
+}
+
+    .btn-danger.fw-bold:hover {
+        box-shadow: 0 0 25px rgba(180, 0, 255, 0.7);
+        transform: translateY(-1px);
+    }
+
+/* buton search */
+.btn-outline-danger {
+    border-color: rgba(180, 0, 255, 0.4) !important;
+    color: rgba(200, 180, 255, 0.8) !important;
+    transition: all 0.3s ease;
+}
+
+    .btn-outline-danger:hover {
+        background: rgba(180, 0, 255, 0.15) !important;
+        border-color: #c77dff !important;
+        color: #ffffff !important;
+        box-shadow: 0 0 12px rgba(180, 0, 255, 0.3);
+    }
+
+/* input search */
+.form-control.border-secondary {
+    background: rgba(255,255,255,0.04) !important;
+    border-color: rgba(180, 0, 255, 0.2) !important;
+    color: #e0d0ff !important;
+    transition: all 0.3s ease;
+}
+
+    .form-control.border-secondary:focus {
+        background: rgba(255,255,255,0.07) !important;
+        border-color: rgba(180, 0, 255, 0.5) !important;
+        box-shadow: 0 0 15px rgba(180, 0, 255, 0.15) !important;
+    }
+
+/* focus general */
+.btn:focus, .btn:active:focus, .btn-link.nav-link:focus,
+.form-control:focus, .form-check-input:focus {
+    box-shadow: 0 0 0 0.1rem #030308, 0 0 0 0.25rem #cc00ff !important;
+}
+
+
+/* ?? 5. HERO SECTION ??????????????????????????????????????? */
+.hero-section {
+    height: 80vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    text-align: center;
+    position: relative;
+}
+
+    /* gradient care face trecerea lina spre continut */
+    .hero-section::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        width: 100%;
+        height: 220px;
+        background: linear-gradient(to bottom, transparent, #030308);
+        pointer-events: none;
+    }
+
+.hero-content {
+    position: relative;
+    z-index: 2;
+}
+
+.hero-eyebrow {
+    font-size: 0.78rem;
+    letter-spacing: 4px;
+    text-transform: uppercase;
+    color: rgba(0, 207, 255, 0.7);
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    animation: fadeInUp 0.7s ease 0.3s forwards;
+    text-shadow: 0 0 10px rgba(0, 207, 255, 0.4);
+}
+
+.hero-title {
+    font-size: clamp(3rem, 8vw, 6rem);
+    font-weight: 700;
+    line-height: 1.1;
+    margin-bottom: 1.5rem;
+    opacity: 0;
+    background: linear-gradient(135deg, #e0aaff 0%, #c77dff 25%, #00cfff 50%, #c77dff 75%, #e0aaff 100%);
+    background-size: 200% auto;
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+    filter: drop-shadow(0 0 30px rgba(180, 0, 255, 0.35)) drop-shadow(0 0 60px rgba(0, 200, 255, 0.2));
+    animation: fadeInUp 0.8s ease 0.6s forwards, shimmer 6s linear 1.4s infinite;
+}
+
+.hero-subtitle {
+    font-size: clamp(0.95rem, 2vw, 1.15rem);
+    color: rgba(200, 180, 255, 0.7);
+    letter-spacing: 2px;
+    max-width: 480px;
+    margin: 0 auto 2.5rem;
+    opacity: 0;
+    animation: fadeInUp 0.8s ease 0.9s forwards;
+}
+
+.hero-scroll-hint {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 6px;
+    color: rgba(200, 180, 255, 0.3);
+    font-size: 0.72rem;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    opacity: 0;
+    animation: fadeInUp 0.8s ease 1.3s forwards;
+}
+
+    .hero-scroll-hint i {
+        animation: bounce 2s ease infinite;
+    }
+
+
+/* ?? 6. MOVIE CARDS ???????????????????????????????????????? */
 .movie-card {
     transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     cursor: pointer;
@@ -84,8 +275,8 @@ h1, h2, h3, h4, h5, h6 {
 }
 
     .movie-card:hover {
-        transform: scale(1.05);
-        box-shadow: 0 15px 30px rgba(229, 9, 20, 0.15), 0 10px 10px rgba(0,0,0,0.5) !important;
+        transform: scale(1.06) translateY(-4px);
+        box-shadow: 0 0 0 1px rgba(0, 207, 255, 0.2), 0 20px 40px rgba(180, 0, 255, 0.2), 0 10px 10px rgba(0,0,0,0.7) !important;
         z-index: 10;
     }
 
@@ -100,7 +291,6 @@ h1, h2, h3, h4, h5, h6 {
         pointer-events: auto;
     }
 
-/* --- BUTOANE ACTIUNE  --- */
 .movie-actions .btn {
     width: 32px;
     height: 32px;
@@ -118,7 +308,46 @@ h1, h2, h3, h4, h5, h6 {
         transform: scale(1.15);
     }
 
-/* --- EFECTE GLOW PENTRU BUTOANE SI BADGE-URI ACTIVE --- */
+/* animatie intrare carduri */
+.movie-container {
+    animation: fadeInUp 0.4s ease both;
+}
+
+    .movie-container:nth-child(1) {
+        animation-delay: 0.05s;
+    }
+
+    .movie-container:nth-child(2) {
+        animation-delay: 0.10s;
+    }
+
+    .movie-container:nth-child(3) {
+        animation-delay: 0.15s;
+    }
+
+    .movie-container:nth-child(4) {
+        animation-delay: 0.20s;
+    }
+
+    .movie-container:nth-child(5) {
+        animation-delay: 0.25s;
+    }
+
+    .movie-container:nth-child(6) {
+        animation-delay: 0.30s;
+    }
+
+.card {
+    background-color: #0d0d1a;
+    border: 1px solid rgba(180, 0, 255, 0.08);
+}
+
+.border-bottom {
+    border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
+}
+
+
+/* ?? 7. BUTOANE & BADGES ??????????????????????????????????? */
 .btn-active-watchlist {
     background-color: #ffc107 !important;
     color: #000 !important;
@@ -147,7 +376,6 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 0 10px rgba(40, 167, 69, 0.6);
 }
 
-/* --- ALTE BUTOANE --- */
 .btn-ignore-rec {
     border: 1px solid rgba(255,255,255,0.1) !important;
     color: #a3a3a3 !important;
@@ -155,12 +383,13 @@ h1, h2, h3, h4, h5, h6 {
 }
 
     .btn-ignore-rec:hover {
-        background-color: rgba(229, 9, 20, 0.1) !important;
-        color: #ff4444 !important;
-        border-color: #e50914 !important;
+        background-color: rgba(180, 0, 255, 0.1) !important;
+        color: #c77dff !important;
+        border-color: #c77dff !important;
     }
 
-.btn-outline-warning, .btn-outline-success, .btn-outline-secondary, .btn-outline-danger {
+.btn-outline-warning, .btn-outline-success,
+.btn-outline-secondary, .btn-outline-danger {
     color: #f8f9fa !important;
 }
 
@@ -174,24 +403,26 @@ h1, h2, h3, h4, h5, h6 {
         background-color: #198754;
     }
 
-    /* stil buton inapoi */
+    /* buton inapoi rotund */
     .btn-outline-secondary.rounded-circle {
         background-color: rgba(255, 255, 255, 0.03);
         transition: all 0.2s ease;
     }
 
         .btn-outline-secondary.rounded-circle:hover {
-            background-color: #e50914;
-            border-color: #e50914;
+            background-color: rgba(180, 0, 255, 0.2);
+            border-color: #c77dff;
             color: white;
             transform: translateX(-3px);
+            box-shadow: 0 0 12px rgba(180, 0, 255, 0.3);
         }
 
-/* --- LISTE SI BREADCRUMBS --- */
+
+/* ?? 8. LISTE & ALTE ELEMENTE ?????????????????????????????? */
 .list-group-item {
-    background-color: #1f1f1f !important;
+    background-color: #0d0d1a !important;
     color: #e5e5e5 !important;
-    border-color: rgba(255, 255, 255, 0.05) !important;
+    border-color: rgba(180, 0, 255, 0.08) !important;
 }
 
 .breadcrumb-item + .breadcrumb-item::before {
@@ -199,20 +430,55 @@ h1, h2, h3, h4, h5, h6 {
     content: "/";
 }
 
-/* --- SKELETON LOADERS --- */
+
+/* ?? 9. SKELETON LOADERS ??????????????????????????????????? */
 .skeleton-poster {
     aspect-ratio: 2/3;
-    background: linear-gradient(90deg, #1f1f1f 25%, #2b2b2b 50%, #1f1f1f 75%);
+    background: linear-gradient(90deg, #0d0d1a 25%, #1a0a2e 50%, #0d0d1a 75%);
     background-size: 200% 100%;
     animation: skeleton-loading 1.5s infinite;
 }
 
 .skeleton-text {
     height: 12px;
-    background: linear-gradient(90deg, #1f1f1f 25%, #2b2b2b 50%, #1f1f1f 75%);
+    background: linear-gradient(90deg, #0d0d1a 25%, #1a0a2e 50%, #0d0d1a 75%);
     background-size: 200% 100%;
     animation: skeleton-loading 1.5s infinite;
     border-radius: 4px;
+}
+
+
+/* ?? 10. ANIMATII ?????????????????????????????????????????? */
+@keyframes shimmer {
+    from {
+        background-position: 0% center;
+    }
+
+    to {
+        background-position: 200% center;
+    }
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+@keyframes bounce {
+    0%, 100% {
+        transform: translateY(0);
+    }
+
+    50% {
+        transform: translateY(6px);
+    }
 }
 
 @keyframes skeleton-loading {

@@ -10,12 +10,19 @@ namespace Licenta_Movie_Recommender.Services
     {
         private readonly ApplicationDbContext _context;
 
-        // --- ZONA CACHE STATIC (Memorie comuna server) ---
+        // --- CACHE STATIC (model comun pentru toti userii) ---
         private static MLContext _mlContext = new MLContext();
         private static ITransformer? _trainedModel = null;
         private static PredictionEngine<MovieRatingData, MovieRatingPrediction>? _predictionEngine = null;
         private static DateTime _lastTrainingTime = DateTime.MinValue;
         private static readonly object _lock = new object();
+
+        // --- PONDERI ALGORITM HIBRID ---
+        private const float W_ML = 0.40f; // scor matrix factorization
+        private const float W_GENRE = 0.25f; // bonus pt genurile preferate
+        private const float W_RECENCY = 0.15f; // genuri vizionate recent 
+        private const float W_POPULARITY = 0.10f; 
+        private const float W_DIVERSITY = 0.10f; // penalizare pentru prea multa similaritate
 
         public RecommendationService(ApplicationDbContext context)
         {
@@ -24,85 +31,203 @@ namespace Licenta_Movie_Recommender.Services
 
         public async Task<List<Movie>> GetRecommendationsAsync(string userId, int count = 6)
         {
-            // activitat user curent
             var currentUserActivities = await _context.UserActivities
                 .Include(ua => ua.Movie)
                 .Where(ua => ua.UserId == userId)
                 .ToListAsync();
 
-            if (currentUserActivities.Count(ua => ua.Rating > 0) < 3)
-            {
-                return new List<Movie>(); // cold start: nu are destule note
-            }
+            var ratedActivities = currentUserActivities.Where(ua => ua.Rating > 0).ToList();
 
-            // LOGICA CACHE: reantrenam doar daca nu avem model sau daca a expirat (20 min)
+            // cold start: nu avem suficiente date pentru ML
+            if (ratedActivities.Count < 3)
+                return new List<Movie>();
+
+            // reantrenam modelul daca e necesar
             if (_predictionEngine == null || DateTime.Now.Subtract(_lastTrainingTime).TotalMinutes > 20)
-            {
                 await TrainModelAsync();
-            }
 
-            // calcul genuri preferate  (bonus scor)
-            var favoriteGenres = currentUserActivities
-                 .Where(ua => ua.Rating >= 4 || ua.Status == 1)
-                 .Where(ua => ua.Movie != null && !string.IsNullOrEmpty(ua.Movie.Genres))
-                 .SelectMany(ua => ua.Movie.Genres.Split('|'))
-                 .GroupBy(g => g)
-                 .OrderByDescending(g => g.Count())
-                 .Take(3)
-                 .Select(g => g.Key)
-                 .ToList();
+            // ── DATE DESPRE USER ─────────────────────────────────────────
 
-            var excludedMovieIds = currentUserActivities.Select(ua => ua.MovieId).ToHashSet();
+            // genurile preferate (din filmele notate cu 4-5)
+            var genreScores = BuildGenreMap(currentUserActivities);
 
-            
+            // genurile vizionate in ultimele 14 zile 
+            var recentGenres = BuildRecencyMap(currentUserActivities, dayWindow: 14);
+
+            // filmele deja vazute sunt excluse din recomandari
+            var excludedIds = currentUserActivities.Select(ua => ua.MovieId).ToHashSet();
+
+            // ── POPULARITATE GLOBALA ─────────────────────────────────────
+            // cate activitati are fiecare film in baza de date 
+            var popularityMap = await _context.UserActivities
+                .Where(ua => ua.Rating > 0)
+                .GroupBy(ua => ua.MovieId)
+                .Select(g => new { MovieId = g.Key, Count = g.Count() })
+                .ToDictionaryAsync(x => x.MovieId, x => x.Count);
+
+            int maxPopularity = popularityMap.Values.Any() ? popularityMap.Values.Max() : 1;
+
+            // ── FILME CANDIDATE ──────────────────────────────────────────
             var candidateMovies = await _context.Movies
                 .AsNoTracking()
-                .Where(m => !excludedMovieIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl))
+                .Where(m => !excludedIds.Contains(m.Id) && !string.IsNullOrEmpty(m.PosterUrl))
                 .ToListAsync();
 
+            // ── CALCUL SCOR HIBRID ───────────────────────────────────────
             var predictions = new List<(Movie Movie, float FinalScore)>();
 
             foreach (var movie in candidateMovies)
             {
-                float aiScore = 0;
+                //pastram genurile pt fiecare film
+                var movieGenres = string.IsNullOrEmpty(movie.Genres)
+                    ? new string[0]
+                    : movie.Genres.Split('|');
 
-                // folosire motor predictie din cache (fara reantrenare)
+                // W1: scor ML matrix factorization
+                float mlScore = 0f;
                 if (_predictionEngine != null)
                 {
-                    var prediction = _predictionEngine.Predict(new MovieRatingData { UserId = userId, MovieId = movie.Id });
-                    aiScore = float.IsNaN(prediction.Score) ? 0 : prediction.Score;
+                    var prediction = _predictionEngine.Predict(
+                        new MovieRatingData { UserId = userId, MovieId = movie.Id });
+                    mlScore = float.IsNaN(prediction.Score) ? 0f : Math.Clamp(prediction.Score / 5f, 0f, 1f);
                 }
 
-                float genreBonus = 0f;
-                if (!string.IsNullOrEmpty(movie.Genres) && favoriteGenres.Any())
+                // W2: scor gen
+                // proportional cu cat de mult ii plac genurile filmului
+                float genreScore = 0f;
+                if (movieGenres.Any() && genreScores.Any())
                 {
-                    var movieGenres = movie.Genres.Split('|');
-                    genreBonus = movieGenres.Count(g => favoriteGenres.Contains(g)) * 2.0f;
+                    float totalGenre = movieGenres
+                        .Where(g => genreScores.ContainsKey(g))
+                        .Sum(g => genreScores[g]);
+                    float maxGenre = genreScores.Values.Any() ? genreScores.Values.Max() * movieGenres.Length : 1f;
+                    genreScore = maxGenre > 0 ? Math.Clamp(totalGenre / maxGenre, 0f, 1f) : 0f;
                 }
 
-                predictions.Add((movie, aiScore + genreBonus));
+                // W3: scor activitate recenta
+                // daca userul a vazut multe filme din genul asta in ultimele 2 saptamani
+                float recentScore = 0f;
+                if (movieGenres.Any() && recentGenres.Any())
+                {
+                    float totalRecent = movieGenres
+                        .Where(g => recentGenres.ContainsKey(g))
+                        .Sum(g => recentGenres[g]);
+                    float maxRecent = recentGenres.Values.Any() ? recentGenres.Values.Max() * movieGenres.Length : 1f;
+                    recentScore = maxRecent > 0 ? Math.Clamp(totalRecent / maxRecent, 0f, 1f) : 0f;
+                }
+
+                // W4: scor popularitate
+                // filmele complet nevazute primesc un mic boost 
+                float popularityScore = 0f;
+                if (popularityMap.TryGetValue(movie.Id, out int popCount))
+                    popularityScore = (float)popCount / maxPopularity;
+                else
+                    popularityScore = 0.1f; // boost mic pentru filme nedescoperite
+
+                // W5: scor diversitate (penalizare similaritate)
+                // scazut daca filmul seamana prea mult cu ce a vazut deja
+                float diversityPenalty = 0f;
+                if (movieGenres.Any() && genreScores.Any())
+                {
+                    // daca toate genurile filmului sunt deja "saturate" in istoricul userului
+                    int saturatedGenres = movieGenres.Count(g => genreScores.ContainsKey(g) && genreScores[g] > 0.7f);
+                    diversityPenalty = movieGenres.Length > 0
+                        ? (float)saturatedGenres / movieGenres.Length
+                        : 0f;
+                }
+
+                // scor final ponderat
+                float finalScore =
+                    (W_ML * mlScore) +
+                    (W_GENRE * genreScore) +
+                    (W_RECENCY * recentScore) +
+                    (W_POPULARITY * popularityScore) -
+                    (W_DIVERSITY * diversityPenalty); 
+
+                predictions.Add((movie, finalScore));
             }
 
             return predictions
-    .OrderByDescending(p => p.FinalScore)
-    .ThenBy(p => p.Movie.Id)
-    .Take(count)
-    .Select(p => p.Movie)
-    .ToList();
+                .OrderByDescending(p => p.FinalScore)
+                .ThenBy(p => p.Movie.Id)
+                .Take(count)
+                .Select(p => p.Movie)
+                .ToList();
         }
 
 
 
+       
+        //harta gen->scor bazata pe rating-uri
+        private Dictionary<string, float> BuildGenreMap(List<UserMovieActivity> activities)
+        {
+            var map = new Dictionary<string, float>();
+
+            foreach (var activity in activities.Where(ua => ua.Rating > 0 && ua.Movie != null))
+            {
+                if (string.IsNullOrEmpty(activity.Movie.Genres)) continue;
+
+                // normalizam rating ul intre -1 si +1
+                // 1 stea = -1.0, 3 stele = 0.0, 5 stele = +1.0
+                float normalizedRating = (activity.Rating - 3f) / 2f;
+
+                foreach (var genre in activity.Movie.Genres.Split('|'))
+                {
+                    if (!map.ContainsKey(genre)) map[genre] = 0f;
+                    map[genre] += normalizedRating;
+                }
+            }
+
+            // adaugam si filmele ignorate ca negative reinforcement
+            foreach (var activity in activities.Where(ua => ua.Status == 3 && ua.Movie != null))
+            {
+                if (string.IsNullOrEmpty(activity.Movie?.Genres)) continue;
+                foreach (var genre in activity.Movie.Genres.Split('|'))
+                {
+                    if (!map.ContainsKey(genre)) map[genre] = 0f;
+                    map[genre] -= 0.5f; // penalizare moderata pentru ignore
+                }
+            }
+
+            return map;
+        }
+
+        
+        private Dictionary<string, float> BuildRecencyMap(List<UserMovieActivity> activities, int dayWindow)
+        {
+            var map = new Dictionary<string, float>();
+            var cutoff = DateTime.Now.AddDays(-dayWindow);
+
+            var recentActivities = activities
+                .Where(ua => ua.DateAdded >= cutoff && ua.Movie != null)
+                .ToList();
+
+            foreach (var activity in recentActivities)
+            {
+                if (string.IsNullOrEmpty(activity.Movie?.Genres)) continue;
+
+                // filmele vizionate recent conteaza mai mult decat cele mai vechi
+                float recencyWeight = 1f - (float)(DateTime.Now - activity.DateAdded).TotalDays / dayWindow;
+
+                foreach (var genre in activity.Movie.Genres.Split('|'))
+                {
+                    if (!map.ContainsKey(genre)) map[genre] = 0f;
+                    map[genre] += recencyWeight;
+                }
+            }
+
+            return map;
+        }
+
+
+        // ── ANTRENARE MODEL ML
         private async Task TrainModelAsync()
         {
-            // lock pentru prevenire antrenare simultana de 2 useri
             lock (_lock)
             {
-                // double check locking
                 if (_predictionEngine != null && DateTime.Now.Subtract(_lastTrainingTime).TotalMinutes <= 20)
                     return;
 
-                //negative reinforcement
                 var allRatings = _context.UserActivities
                     .Where(ua => ua.Rating > 0 || ua.Status == 3)
                     .Select(ua => new MovieRatingData
@@ -125,7 +250,8 @@ namespace Licenta_Movie_Recommender.Services
                     ApproximationRank = 64
                 };
 
-                var pipeline = _mlContext.Transforms.Conversion.MapValueToKey("UserIdEncoded", "UserId")
+                var pipeline = _mlContext.Transforms.Conversion
+                    .MapValueToKey("UserIdEncoded", "UserId")
                     .Append(_mlContext.Transforms.Conversion.MapValueToKey("MovieIdEncoded", "MovieId"))
                     .Append(_mlContext.Recommendation().Trainers.MatrixFactorization(options));
 
@@ -133,6 +259,7 @@ namespace Licenta_Movie_Recommender.Services
                 _predictionEngine = _mlContext.Model.CreatePredictionEngine<MovieRatingData, MovieRatingPrediction>(_trainedModel);
                 _lastTrainingTime = DateTime.Now;
             }
+
             await Task.CompletedTask;
         }
     }

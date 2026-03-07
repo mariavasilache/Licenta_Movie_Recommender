@@ -81,7 +81,7 @@ namespace Licenta_Movie_Recommender.Migrations
                     b.ToTable("CustomListMovies");
                 });
 
-            modelBuilder.Entity("Licenta_Movie_Recommender.Models.Movie", b =>
+            modelBuilder.Entity("Licenta_Movie_Recommender.Models.RecommendedMovie", b =>
                 {
                     b.Property<int>("Id")
                         .ValueGeneratedOnAdd()
@@ -386,7 +386,7 @@ namespace Licenta_Movie_Recommender.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.HasOne("Licenta_Movie_Recommender.Models.Movie", "Movie")
+                    b.HasOne("Licenta_Movie_Recommender.Models.RecommendedMovie", "RecommendedMovie")
                         .WithMany()
                         .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -394,12 +394,12 @@ namespace Licenta_Movie_Recommender.Migrations
 
                     b.Navigation("CustomList");
 
-                    b.Navigation("Movie");
+                    b.Navigation("RecommendedMovie");
                 });
 
             modelBuilder.Entity("Licenta_Movie_Recommender.Models.Rating", b =>
                 {
-                    b.HasOne("Licenta_Movie_Recommender.Models.Movie", "Movie")
+                    b.HasOne("Licenta_Movie_Recommender.Models.RecommendedMovie", "RecommendedMovie")
                         .WithMany()
                         .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -411,14 +411,14 @@ namespace Licenta_Movie_Recommender.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Movie");
+                    b.Navigation("RecommendedMovie");
 
                     b.Navigation("User");
                 });
 
             modelBuilder.Entity("Licenta_Movie_Recommender.Models.UserMovieActivity", b =>
                 {
-                    b.HasOne("Licenta_Movie_Recommender.Models.Movie", "Movie")
+                    b.HasOne("Licenta_Movie_Recommender.Models.RecommendedMovie", "RecommendedMovie")
                         .WithMany()
                         .HasForeignKey("MovieId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -430,7 +430,7 @@ namespace Licenta_Movie_Recommender.Migrations
                         .OnDelete(DeleteBehavior.Cascade)
                         .IsRequired();
 
-                    b.Navigation("Movie");
+                    b.Navigation("RecommendedMovie");
 
                     b.Navigation("User");
                 });

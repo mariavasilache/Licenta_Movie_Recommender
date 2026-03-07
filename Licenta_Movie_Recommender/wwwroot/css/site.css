@@ -13,7 +13,7 @@
    ============================================================ */
 
 
-/* ?? 1. FONT ??????????????????????????????????????????????? */
+/*  1. FONT  */
 @import url('https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap');
 
 i.bi {
@@ -28,7 +28,7 @@ i.bi {
         -webkit-font-smoothing: antialiased;
     }
 
-/* ?? 2. BAZA ??????????????????????????????????????????????? */
+/*  2. BAZA */
 html {
     font-size: 14px;
     position: relative;
@@ -48,7 +48,6 @@ body {
     font-family: 'Poppins', sans-serif;
     -webkit-font-smoothing: antialiased;
     position: relative;
-    isolation: isolate;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -65,13 +64,17 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* asigura ca tot continutul e deasupra particulelor */
-.container, header, footer, main {
-    position: relative;
+.container, footer, main {
+    position: relative !important;
     z-index: 1;
+}
+header {
+    position: relative;
+    z-index: 1000;
 }
 
 
-/* ?? 3. FUNDAL PARTICLES ??????????????????????????????????? */
+/*  3. FUNDAL PARTICLES  */
 #particles-js {
     position: fixed;
     top: 0;
@@ -84,7 +87,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
-/* ?? 4. NAVBAR ????????????????????????????????????????????? */
+/*  4. NAVBAR  */
 .navbar {
     background: linear-gradient(180deg, rgba(10,0,20,0.97) 0%, rgba(5,0,15,0.92) 100%) !important;
     backdrop-filter: blur(20px);
@@ -137,7 +140,7 @@ h1, h2, h3, h4, h5, h6 {
             width: 80%;
         }
 
-/* buton Cont Nou */
+/* buton cont nou */
 .btn-danger.fw-bold {
     background: linear-gradient(135deg, #cc00ff, #7b00d4) !important;
     border: none !important;
@@ -185,8 +188,13 @@ h1, h2, h3, h4, h5, h6 {
     box-shadow: 0 0 0 0.1rem #030308, 0 0 0 0.25rem #cc00ff !important;
 }
 
+.filter-section {
+    transition: transform 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    background: rgba(10, 0, 20, 0.92) !important;
+    backdrop-filter: blur(16px);
+}
 
-/* ?? 5. HERO SECTION ??????????????????????????????????????? */
+/*  5. HERO SECTION  */
 .hero-section {
     height: 80vh;
     display: flex;
@@ -267,7 +275,8 @@ h1, h2, h3, h4, h5, h6 {
     }
 
 
-/* ?? 6. MOVIE CARDS ???????????????????????????????????????? */
+/* 6. MOVIE CARDS  */
+
 .movie-card {
     transition: transform 0.3s ease-in-out, box-shadow 0.3s ease-in-out;
     cursor: pointer;
@@ -338,7 +347,8 @@ h1, h2, h3, h4, h5, h6 {
     }
 
 .card {
-    background-color: #0d0d1a;
+    background-color: rgba(13, 13, 26, 0.6) !important;
+    backdrop-filter: blur(8px);
     border: 1px solid rgba(180, 0, 255, 0.08);
 }
 
@@ -346,8 +356,30 @@ h1, h2, h3, h4, h5, h6 {
     border-bottom: 1px solid rgba(255, 255, 255, 0.08) !important;
 }
 
+.movie-card .skeleton-poster {
+    background-color: rgba(13, 13, 26, 0.6) !important;
+}
 
-/* ?? 7. BUTOANE & BADGES ??????????????????????????????????? */
+
+/*  7. BUTOANE & BADGES  */
+.explanation-badge {
+    display: inline-block;
+    font-size: 0.65rem;
+    font-weight: 600;
+    color: #c77dff;
+    background: rgba(180, 0, 255, 0.12);
+    border: 1px solid rgba(180, 0, 255, 0.25);
+    border-radius: 20px;
+    padding: 2px 8px;
+    white-space: normal;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    max-width: 100%;
+    display: block;
+}
+word-break: break-word;
+
+
 .btn-active-watchlist {
     background-color: #ffc107 !important;
     color: #000 !important;
@@ -418,7 +450,7 @@ h1, h2, h3, h4, h5, h6 {
         }
 
 
-/* ?? 8. LISTE & ALTE ELEMENTE ?????????????????????????????? */
+/*  8. LISTE & ALTE ELEMENTE  */
 .list-group-item {
     background-color: #0d0d1a !important;
     color: #e5e5e5 !important;
@@ -431,7 +463,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
-/* ?? 9. SKELETON LOADERS ??????????????????????????????????? */
+/*  9. SKELETON LOADERS  */
 .skeleton-poster {
     aspect-ratio: 2/3;
     background: linear-gradient(90deg, #0d0d1a 25%, #1a0a2e 50%, #0d0d1a 75%);
@@ -448,7 +480,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 
-/* ?? 10. ANIMATII ?????????????????????????????????????????? */
+/*  10. ANIMATII  */
 @keyframes shimmer {
     from {
         background-position: 0% center;

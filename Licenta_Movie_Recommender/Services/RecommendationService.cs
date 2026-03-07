@@ -17,30 +17,35 @@ namespace Licenta_Movie_Recommender.Services
         private static DateTime _lastTrainingTime = DateTime.MinValue;
         private static readonly object _lock = new object();
 
-        // --- PONDERI ALGORITM HIBRID ---
-        private const float W_ML = 0.40f; // scor matrix factorization
-        private const float W_GENRE = 0.25f; // bonus pt genurile preferate
-        private const float W_RECENCY = 0.15f; // genuri vizionate recent 
-        private const float W_POPULARITY = 0.10f; 
-        private const float W_DIVERSITY = 0.10f; // penalizare pentru prea multa similaritate
+        
 
         public RecommendationService(ApplicationDbContext context)
         {
             _context = context;
         }
 
-        public async Task<List<Movie>> GetRecommendationsAsync(string userId, int count = 6)
+        public async Task<List<RecommendedMovie>> GetRecommendationsAsync(string userId, int count = 6)
         {
-            var currentUserActivities = await _context.UserActivities
+            
+
+          var currentUserActivities = await _context.UserActivities
                 .Include(ua => ua.Movie)
                 .Where(ua => ua.UserId == userId)
                 .ToListAsync();
 
             var ratedActivities = currentUserActivities.Where(ua => ua.Rating > 0).ToList();
 
+            // --- PONDERI DINAMICE ALGORITM HIBRID ---
+            int scoreCount = ratedActivities.Count;
+            float W_ML = scoreCount >= 10 ? 0.40f : 0.15f; // scor matrix factorization
+            float W_GENRE = scoreCount >= 10 ? 0.25f : 0.50f; // bonus pt genurile preferate
+            float W_RECENCY = 0.15f; // genuri vizionate recent 
+            float W_POPULARITY = 0.10f;
+            float W_DIVERSITY = 0.10f; // penalizare pentru prea multa similaritate
+
             // cold start: nu avem suficiente date pentru ML
             if (ratedActivities.Count < 3)
-                return new List<Movie>();
+                return new List<RecommendedMovie>();
 
             // reantrenam modelul daca e necesar
             if (_predictionEngine == null || DateTime.Now.Subtract(_lastTrainingTime).TotalMinutes > 20)
@@ -74,7 +79,7 @@ namespace Licenta_Movie_Recommender.Services
                 .ToListAsync();
 
             // ── CALCUL SCOR HIBRID ───────────────────────────────────────
-            var predictions = new List<(Movie Movie, float FinalScore)>();
+            var predictions = new List<(Movie Movie, float FinalScore, string Explanation)>();
 
             foreach (var movie in candidateMovies)
             {
@@ -142,16 +147,17 @@ namespace Licenta_Movie_Recommender.Services
                     (W_GENRE * genreScore) +
                     (W_RECENCY * recentScore) +
                     (W_POPULARITY * popularityScore) -
-                    (W_DIVERSITY * diversityPenalty); 
+                    (W_DIVERSITY * diversityPenalty);
 
-                predictions.Add((movie, finalScore));
+                string explanation = BuildExplanation(movieGenres, genreScores, recentGenres, mlScore, popularityScore);
+                predictions.Add((movie, finalScore, explanation));
             }
 
             return predictions
                 .OrderByDescending(p => p.FinalScore)
                 .ThenBy(p => p.Movie.Id)
                 .Take(count)
-                .Select(p => p.Movie)
+                .Select(p => new RecommendedMovie { Movie = p.Movie, Explanation = p.Explanation })
                 .ToList();
         }
 
@@ -188,11 +194,44 @@ namespace Licenta_Movie_Recommender.Services
                     map[genre] -= 0.5f; // penalizare moderata pentru ignore
                 }
             }
+            foreach (var key in map.Keys.ToList())
+                map[key] = Math.Max(map[key], -2f);
 
             return map;
         }
 
-        
+        private string BuildExplanation(string[] movieGenres, Dictionary<string, float> genreScores,
+    Dictionary<string, float> recentGenres, float mlScore, float popularityScore)
+        {
+            // genurile filmului care se potrivesc cu preferintele userului
+            var likedGenres = movieGenres
+                .Where(g => genreScores.ContainsKey(g) && genreScores[g] > 0.5f)
+                .OrderByDescending(g => genreScores[g])
+                .Take(2)
+                .ToList();
+
+            // genurile vizionate recent care se potrivesc
+            var recentMatch = movieGenres
+                .Where(g => recentGenres.ContainsKey(g) && recentGenres[g] > 0.3f)
+                .FirstOrDefault();
+
+            // construim explicatia
+            if (likedGenres.Any() && recentMatch != null && likedGenres.Contains(recentMatch))
+                return $"Pentru ca iti place si ai vizionat recent {string.Join(" și ", likedGenres)}";
+
+            if (likedGenres.Any())
+                return $"Pentru ca iti place {string.Join(" și ", likedGenres)}";
+
+            if (recentMatch != null)
+                return $"Pentru ca ai vizionat recent ({recentMatch})";
+
+            
+            if (popularityScore > 0.7f)
+                return "Popular";
+
+            return null;
+        }
+
         private Dictionary<string, float> BuildRecencyMap(List<UserMovieActivity> activities, int dayWindow)
         {
             var map = new Dictionary<string, float>();

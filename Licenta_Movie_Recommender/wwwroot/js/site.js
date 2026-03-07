@@ -58,6 +58,28 @@ window.addEventListener('scroll', () => {
     }
 });
 
+// --- FILTER BAR HIDE/SHOW LA SCROLL ---
+const filterBar = document.querySelector('.filter-section');
+if (filterBar) {
+    let lastScroll = 0;
+    let ticking = false;
+
+    window.addEventListener('scroll', () => {
+        if (!ticking) {
+            requestAnimationFrame(() => {
+                const current = window.scrollY;
+                if (current > lastScroll && current > 150) {
+                    filterBar.style.transform = 'translateY(-120%)';
+                } else {
+                    filterBar.style.transform = 'translateY(0)';
+                }
+                lastScroll = current;
+                ticking = false;
+            });
+            ticking = true;
+        }
+    });
+}
 
 
 //1. FUNCȚII DE RANDARE UI(SKELETONS & CARDS)

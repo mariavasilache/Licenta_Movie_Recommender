@@ -18,7 +18,7 @@ namespace Licenta_Movie_Recommender.Services
 
         public async Task<string> GetPosterUrlAsync(int tmdbId)
         {
-            if (tmdbId == 0) return "https://via.placeholder.com/500x750?text=Fara+Poza";
+            if (tmdbId == 0) return "";
 
             // cerem datele filmului de la TMDB
             var response = await _httpClient.GetAsync($"https://api.themoviedb.org/3/movie/{tmdbId}?api_key={_apiKey}");
@@ -34,7 +34,7 @@ namespace Licenta_Movie_Recommender.Services
                     return $"https://image.tmdb.org/t/p/w500{posterPath.GetString()}";
                 }
             }
-            return "https://via.placeholder.com/500x750?text=Fara+Poza";
+            return "";
         }
 
         public async Task<(string Overview, double Rating, string ReleaseDate)> GetExtraDetailsAsync(int tmdbId)
@@ -70,7 +70,7 @@ namespace Licenta_Movie_Recommender.Services
                         using var docEn = System.Text.Json.JsonDocument.Parse(contentEn);
 
                        
-                        overview = docEn.RootElement.TryGetProperty("overview", out var ovEn) ? ovEn.GetString() : "";
+                        overview = docEn.RootElement.TryGetProperty("overview", out var ovEn) ? ovEn.GetString() ?? "" : "";
                     }
                 }
             var result = (overview, rating, releaseDate);

@@ -1,8 +1,9 @@
-﻿@model List<Licenta_Movie_Recommender.Models.Movie>
+﻿@using Licenta_Movie_Recommender.Models
+@model List<RecommendedMovie>
 @{
     ViewData["Title"] = "Acasă";
-    var userActivities = ViewBag.UserActivities as List<Licenta_Movie_Recommender.Models.UserMovieActivity> ?? new List<Licenta_Movie_Recommender.Models.UserMovieActivity>();
-    var discoverMovies = ViewBag.DiscoverMovies as List<Licenta_Movie_Recommender.Models.Movie> ?? new List<Licenta_Movie_Recommender.Models.Movie>();
+    var userActivities = ViewBag.UserActivities as List<UserMovieActivity> ?? new List<UserMovieActivity>();
+    var discoverMovies = ViewBag.DiscoverMovies as List<Movie> ?? new List<Movie>();
 }
 
 
@@ -40,20 +41,29 @@
             </div>
         }
         else
-        {
-            <div class="row">
-                @foreach (var movie in Model)
-                {
-                    // Preluam starile filmului ca sa le trimitem la card
-                    var activity = userActivities.FirstOrDefault(a => a.MovieId == movie.Id);
-                    var inWatchlist = activity != null && activity.Status == 1 && activity.Rating == 0;
-                    var isWatched = activity != null && (activity.Status == 2 || activity.Rating > 0);
+            {
 
-                  
-                        <partial name="_MovieCard" model="movie" view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", inWatchlist }, { "IsWatched", isWatched } }' />
-                   
-                }
-            </div>
+                <div class="row">
+                    @foreach (var item in Model)
+                    {
+                        var activity = userActivities.FirstOrDefault(a => a.MovieId == item.Movie.Id);
+                        var inWatchlist = activity != null && activity.Status == 1 && activity.Rating == 0;
+                        var isWatched = activity != null && (activity.Status == 2 || activity.Rating > 0);
+
+                        <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4">
+                            <partial name="_MovieCard" model="item.Movie"
+                                     view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", inWatchlist }, { "IsWatched", isWatched }, { "Layout", "grid_nocontainer" }, { "ShowIgnore", true } }' />
+                            @if (!string.IsNullOrEmpty(item.Explanation))
+                            {
+                                <div class="px-1 mt-1">
+                                    <span class="explanation-badge">
+                                        <i class="bi bi-stars me-1"></i>@item.Explanation
+                                    </span>
+                                </div>
+                            }
+                        </div>
+                    }
+                </div>
         }
     </div>
 }

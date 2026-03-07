@@ -118,7 +118,7 @@ namespace Licenta_Movie_Recommender.Controllers
                 return View(pool.Take(6).ToList());
             }
 
-            return View(new List<Movie>());
+            return View(new List<RecommendedMovie>());
         }
 
         [HttpGet]

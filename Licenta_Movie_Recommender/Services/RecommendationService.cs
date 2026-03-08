@@ -37,11 +37,11 @@ namespace Licenta_Movie_Recommender.Services
 
             // --- PONDERI DINAMICE ALGORITM HIBRID ---
             int scoreCount = ratedActivities.Count;
-            float W_ML = scoreCount >= 10 ? 0.40f : 0.15f; // scor matrix factorization
-            float W_GENRE = scoreCount >= 10 ? 0.25f : 0.50f; // bonus pt genurile preferate
+            float W_ML = scoreCount >= 20 ? 0.40f : scoreCount >= 10 ? 0.20f : 0.05f; // scor matrix factorization
+            float W_GENRE = scoreCount >= 20 ? 0.25f : scoreCount >= 10 ? 0.45f : 0.65f; // bonus pt genurile preferate
             float W_RECENCY = 0.15f; // genuri vizionate recent 
-            float W_POPULARITY = 0.10f;
-            float W_DIVERSITY = 0.10f; // penalizare pentru prea multa similaritate
+            float W_POPULARITY = scoreCount >= 10 ? 0.10f : 0.05f;
+            float W_DIVERSITY = scoreCount >= 10 ? 0.10f : 0.05f; ; // penalizare pentru prea multa similaritate
 
             // cold start: nu avem suficiente date pentru ML
             if (ratedActivities.Count < 3)
@@ -149,7 +149,7 @@ namespace Licenta_Movie_Recommender.Services
                     (W_POPULARITY * popularityScore) -
                     (W_DIVERSITY * diversityPenalty);
 
-                string explanation = BuildExplanation(movieGenres, genreScores, recentGenres, mlScore, popularityScore);
+                string explanation = BuildExplanation(movieGenres, genreScores, recentGenres, popularityScore);
                 predictions.Add((movie, finalScore, explanation));
             }
 
@@ -201,33 +201,29 @@ namespace Licenta_Movie_Recommender.Services
         }
 
         private string BuildExplanation(string[] movieGenres, Dictionary<string, float> genreScores,
-    Dictionary<string, float> recentGenres, float mlScore, float popularityScore)
+     Dictionary<string, float> recentGenres, float popularityScore)
         {
-            // genurile filmului care se potrivesc cu preferintele userului
             var likedGenres = movieGenres
                 .Where(g => genreScores.ContainsKey(g) && genreScores[g] > 0.5f)
                 .OrderByDescending(g => genreScores[g])
                 .Take(2)
                 .ToList();
 
-            // genurile vizionate recent care se potrivesc
             var recentMatch = movieGenres
                 .Where(g => recentGenres.ContainsKey(g) && recentGenres[g] > 0.3f)
                 .FirstOrDefault();
 
-            // construim explicatia
             if (likedGenres.Any() && recentMatch != null && likedGenres.Contains(recentMatch))
-                return $"Pentru ca iti place si ai vizionat recent {string.Join(" și ", likedGenres)}";
+                return $"heart|{string.Join(" & ", likedGenres)} • recent";
 
             if (likedGenres.Any())
-                return $"Pentru ca iti place {string.Join(" și ", likedGenres)}";
+                return $"heart|{string.Join(" & ", likedGenres)}";
 
             if (recentMatch != null)
-                return $"Pentru ca ai vizionat recent ({recentMatch})";
+                return $"clock|Recent: {recentMatch}";
 
-            
             if (popularityScore > 0.7f)
-                return "Popular";
+                return "fire|Popular";
 
             return null;
         }

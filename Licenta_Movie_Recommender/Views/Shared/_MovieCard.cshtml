@@ -49,18 +49,32 @@ else
         <div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
 
             @* butoane actiune *@
-            <div class="movie-actions position-absolute top-0 end-0 p-2 d-flex flex-column gap-2" style="z-index: 10;">
-                <button type="button" class="btn btn-sm @(inWatchlist ? "btn-active-watchlist" : "btn-outline-light") btn-watchlist-toggle" data-movie-id="@Model.Id">
-                    <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
-                </button>
-                <button type="button" class="btn btn-sm @(isWatched ? "btn-active-watched" : "btn-outline-light") btn-watched-toggle" data-movie-id="@Model.Id">
-                    <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
-                </button>
-                @if (isAdmin)
-                {
-                    <button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm mt-1" data-movie-id="@Model.Id" data-movie-title="@Model.Title">
-                        <i class="bi bi-trash"></i>
+            <div class="movie-actions" style="z-index: 10;">
+                <div class="position-absolute top-0 end-0 p-2 d-flex flex-column gap-2">
+                    <button type="button" class="btn btn-sm @(inWatchlist ? "btn-active-watchlist" : "btn-outline-light") btn-watchlist-toggle" data-movie-id="@Model.Id">
+                        <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
                     </button>
+                    <button type="button" class="btn btn-sm @(isWatched ? "btn-active-watched" : "btn-outline-light") btn-watched-toggle" data-movie-id="@Model.Id">
+                        <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
+                    </button>
+                    @if (isAdmin)
+                    {
+                        <button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm mt-1" data-movie-id="@Model.Id" data-movie-title="@Model.Title">
+                            <i class="bi bi-trash"></i>
+                        </button>
+                    }
+                </div>
+
+                @if (ViewData["ShowIgnore"] as bool? == true)
+                {
+                    <div class="position-absolute bottom-0 end-0 p-2">
+                        <button type="button"
+                                class="btn btn-sm btn-outline-light btn-ignore-rec"
+                                data-movie-id="@Model.Id"
+                                title="Nu mă interesează">
+                            <i class="bi bi-eye-slash"></i>
+                        </button>
+                    </div>
                 }
             </div>
 
@@ -72,7 +86,7 @@ else
                      onerror="this.remove(); this.parentElement.classList.remove('skeleton-poster');">
             </a>
 
-            @* titlu *@
+           
             @* titlu *@
             <div class="card-body px-1 py-2 text-center" style="min-height: 65px;">
                 <h6 class="card-title text-light text-truncate mb-0" style="font-size: 0.92rem;">@Model.Title</h6>
@@ -80,15 +94,7 @@ else
                 {
                     <small class="text-muted d-block text-truncate mt-1" style="font-size: 0.75rem; opacity: 0.7;">@Model.Genres.Split('|')[0]</small>
                 }
-                @if (ViewData["ShowIgnore"] as bool? == true)
-                {
-                    <button type="button"
-                            class="btn btn-sm btn-outline-secondary w-100 btn-ignore-rec mt-2"
-                            data-movie-id="@Model.Id"
-                            style="font-size: 0.65rem; border-color: rgba(255,255,255,0.1); opacity: 0.7;">
-                        <i class="bi bi-eye-slash"></i> Nu mă interesează
-                    </button>
-                }
+               
             </div>
         </div>
     </div>

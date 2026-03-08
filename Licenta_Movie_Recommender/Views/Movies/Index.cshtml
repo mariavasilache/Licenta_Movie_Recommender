@@ -62,7 +62,7 @@
         const genreFilter = urlParams.get('genreFilter') || "";
         const searchString = urlParams.get('searchString') || "";
 
-        async function loadMovies() {
+                async function loadMovies() {
             if (isLoading || !hasMore) return;
             isLoading = true;
 
@@ -72,11 +72,15 @@
             if (page === 1) grid.innerHTML = getSkeletonsHtml(12);
             if (page > 1 && loader) loader.style.display = 'block';
 
+            const currentSearch = window._catalogSearch !== undefined
+                ? window._catalogSearch
+                : searchString;
+
             try {
-                const response = await fetch(`/Movies/GetCatalogData?page=${page}&sortOrder=${sortOrder}&genreFilter=${genreFilter}&searchString=${searchString}`);
+                const response = await fetch(`/Movies/GetCatalogData?page=${page}&sortOrder=${sortOrder}&genreFilter=${genreFilter}&searchString=${currentSearch}`);
                 const movies = await response.json();
 
-                if (page === 1) grid.innerHTML = ''; 
+                if (page === 1) grid.innerHTML = '';
 
                 if (movies.length === 0) {
                     hasMore = false;
@@ -86,10 +90,8 @@
                 } else {
                     let html = '';
                     movies.forEach(movie => {
-                       
                         html += createMovieCardHtml(movie);
                     });
-
                     grid.insertAdjacentHTML('beforeend', html);
                     page++;
                 }
@@ -108,6 +110,25 @@
             }
         });
 
-        document.addEventListener('DOMContentLoaded', loadMovies);
+        document.addEventListener('DOMContentLoaded', () => {
+             loadMovies();
+
+             // search live in catalog
+             const catalogSearch = document.getElementById('searchInput');
+             if (catalogSearch) {
+                 catalogSearch.value = searchString;
+
+                 let catalogDebounce;
+                 catalogSearch.addEventListener('input', function() {
+                     clearTimeout(catalogDebounce);
+                     catalogDebounce = setTimeout(() => {
+                         page = 1;
+                         hasMore = true;
+                         window._catalogSearch = this.value.trim();
+                         loadMovies();
+                     }, 400);
+                 });
+             }
+         });
     </script>
 }

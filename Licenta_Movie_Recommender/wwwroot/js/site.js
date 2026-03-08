@@ -1,5 +1,4 @@
-﻿
-// --- FUNCTIE UNIVERSALA TOAST URI AJAX ---
+﻿// --- FUNCTIE UNIVERSALA TOAST URI AJAX ---
 function showDynamicToast(message, type = 'success') {
     const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
     const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
@@ -151,7 +150,7 @@ function createMovieCardHtml(movie, customOptions = {}) {
         return `
         <div class="col-12 mb-2 movie-container">
             <div class="card bg-dark border-secondary d-flex flex-row align-items-center p-2 shadow-sm" style="border-color: rgba(255,255,255,0.05) !important;${movie.isDeleted ? 'opacity: 0.5; filter: grayscale(100%);' : ''}">
-                <img src="${posterUrl}" class="rounded shadow-sm" style="width: 45px; height: 65px; object-fit: cover;" onerror="this.src='https://placehold.co/45x65/2b2b2b/ffffff?text=?'">
+                <img src="${posterUrl}" class="rounded shadow-sm" style="width: 45px; height: 65px; object-fit: cover;" onerror="this.style.display='none'">
                 <div class="ms-3 flex-grow-1 text-start overflow-hidden">
                     <a href="/Movies/Details/${id}" class="text-white text-decoration-none fw-bold text-truncate d-block">${title}</a>
                     <div class="text-muted small text-truncate">${genres}</div>
@@ -169,7 +168,7 @@ function createMovieCardHtml(movie, customOptions = {}) {
                 <span class="text-secondary fw-bold" style="z-index: 1; font-size: 0.85rem;">${title}</span>
                 <img src="${posterUrl}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
                      onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
-                     onerror="this.style.display='none'; this.parentElement.classList.remove('skeleton-poster');">
+                    onerror="this.parentElement.classList.remove('skeleton-poster'); this.remove();">
             </a>
             ${badgeHtml}
             <div class="card-body px-1 py-2 text-center d-flex flex-column" style="min-height: 65px;">
@@ -184,6 +183,21 @@ function createMovieCardHtml(movie, customOptions = {}) {
 //2. INITIALIZARE SI EVENIMENTE GLOBALE
 
 document.addEventListener('DOMContentLoaded', () => {
+    // populeaza input search din URL 
+    const urlSearch = new URLSearchParams(window.location.search).get('searchString');
+    if (urlSearch && document.getElementById('searchInput')) {
+        document.getElementById('searchInput').value = urlSearch;
+    }
+
+    // inchide dropdown search la click in afara
+    document.addEventListener('click', function (e) {
+        const dropdown = document.getElementById('searchPreviewDropdown');
+        const form = document.getElementById('searchForm');
+        if (dropdown && form && !form.contains(e.target)) {
+            dropdown.style.display = 'none';
+        }
+    });
+
     // --- HERO PARALLAX LA SCROLL ---
     const heroSection = document.querySelector('.hero-section');
     if (heroSection) {
@@ -191,7 +205,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const scrollY = window.scrollY;
             const heroContent = heroSection.querySelector('.hero-content');
             if (heroContent) {
-                
+
                 heroContent.style.transform = `translateY(${scrollY * 0.4}px)`;
                 heroContent.style.opacity = 1 - scrollY / 400;
             }
@@ -295,29 +309,28 @@ document.addEventListener('DOMContentLoaded', () => {
                             icon.className = 'bi bi-check-circle';
                         }
                     }
-                
+
                 } else {
-                     const err = await response.json();
-                     alert("Eroare: " + err.error);
-                 }
-        } catch (err) { console.error(err); }
-        finally { btn.disabled = false; }
-    }
-        
+                    const err = await response.json();
+                    alert("Eroare: " + err.error);
+                }
+            } catch (err) { console.error(err); }
+            finally { btn.disabled = false; }
+        }
+
 
         // 2. Logica Ignora
         if (btnIgnore) {
             e.preventDefault();
             const movieId = btnIgnore.getAttribute('data-movie-id');
-            const container = btnIgnore.closest('.movie-container');
-            if (container) {
+            const container = btnIgnore.closest('.movie-container') || btnIgnore.closest('.col-lg-2, .col-md-3, .col-sm-4, .col-6'); if (container) {
                 container.style.transition = 'all 0.4s ease';
                 container.style.opacity = '0';
                 container.style.transform = 'scale(0.8)';
             }
 
             const fd = new FormData();
-            fd.append('movieId', movieId);
+            fd.append('id', movieId);
 
             try {
                 const response = await fetch('/Movies/Ignore', { method: 'POST', body: fd });
@@ -358,7 +371,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }, 'Restaurează film');
         }
     });
-    
+
 
     //SEARCH PREVIEW
     const searchInput = document.getElementById('searchInput');
@@ -379,21 +392,33 @@ document.addEventListener('DOMContentLoaded', () => {
                     searchResultsList.innerHTML = '';
 
                     if (data.totalCount === 0) {
-                        searchResultsList.innerHTML = `<div class="p-3 text-muted">Niciun rezultat.</div>`;
+                        searchResultsList.innerHTML = `<div class="p-3 text-muted small">Niciun rezultat.</div>`;
                     } else {
+                        searchResultsList.innerHTML = '';
                         data.movies.forEach(movie => {
                             searchResultsList.innerHTML += `
-                                <a href="/Movies/Details/${movie.id}" class="list-group-item list-group-item-action bg-dark text-white border-secondary">
-                                    <img src="${movie.posterUrl}" width="30" class="me-2 rounded"> ${movie.title}
-                                </a>`;
+            <a href="/Movies/Details/${movie.id}" 
+               class="list-group-item list-group-item-action bg-dark text-white border-secondary d-flex align-items-center gap-2 py-2">
+                <img src="${movie.posterUrl}" width="28" height="40" class="rounded" style="object-fit:cover;" onerror="this.style.display='none'">
+                <span style="font-size:0.88rem;">${movie.title}</span>
+            </a>`;
                         });
+
+                        if (data.totalCount > 5) {
+                            searchResultsList.innerHTML += `
+            <a href="/Movies/Index?searchString=${encodeURIComponent(query)}" 
+               class="list-group-item list-group-item-action text-center py-2"
+               style="color:#c77dff; font-size:0.8rem; background: rgba(180,0,255,0.05);">
+                <i class="bi bi-search me-1"></i> Vezi toate ${data.totalCount} rezultate pentru "<strong>${query}</strong>"
+            </a>`;
+                        }
                     }
                     searchDropdown.style.display = 'block';
                 } catch (e) { console.error(e); }
             }, 300);
         });
     }
-    
+
 });
 
 // --- LOADER ---

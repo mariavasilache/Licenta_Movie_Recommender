@@ -316,6 +316,11 @@ header {
     .movie-actions .btn:hover {
         transform: scale(1.15);
     }
+.movie-actions .btn-outline-light:hover {
+    background-color: rgba(180, 0, 255, 0.3) !important;
+    border-color: rgba(180, 0, 255, 0.6) !important;
+    color: #fff !important;
+}
 
 /* animatie intrare carduri */
 .movie-container {
@@ -376,8 +381,9 @@ header {
     text-overflow: ellipsis;
     max-width: 100%;
     display: block;
+    word-break: break-word;
 }
-word-break: break-word;
+
 
 
 .btn-active-watchlist {

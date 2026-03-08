@@ -45,6 +45,44 @@ namespace Licenta_Movie_Recommender.Controllers
             if (!string.IsNullOrEmpty(genreFilter))
                 moviesQuery = moviesQuery.Where(m => m.Genres != null && m.Genres.Contains(genreFilter));
 
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+
+            // daca e cautare activa, sortam in memorie dupa relevanta
+            if (!string.IsNullOrEmpty(searchString))
+            {
+                var all = await moviesQuery
+                    .Select(m => new { m.Id, m.Title, m.PosterUrl, m.Genres })
+                    .ToListAsync();
+
+                var sorted = all
+                    .OrderBy(m => m.Title.StartsWith(searchString, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                    .ThenBy(m => m.Title)
+                    .Skip((page - 1) * pageSize)
+                    .Take(pageSize)
+                    .ToList();
+
+                var movieIds2 = sorted.Select(m => m.Id).ToList();
+                var activities2 = new List<UserMovieActivity>();
+                if (!string.IsNullOrEmpty(userId) && movieIds2.Any())
+                    activities2 = await _context.UserActivities
+                        .Where(ua => ua.UserId == userId && movieIds2.Contains(ua.MovieId))
+                        .ToListAsync();
+
+                return Json(sorted.Select(m => {
+                    var act = activities2.FirstOrDefault(a => a.MovieId == m.Id);
+                    return new
+                    {
+                        id = m.Id,
+                        title = m.Title,
+                        posterUrl = m.PosterUrl,
+                        genres = m.Genres,
+                        status = act != null ? act.Status : 0,
+                        rating = act != null ? act.Rating : 0
+                    };
+                }));
+            }
+
+            // fara cautare, sortare normala cu paginare in SQL
             moviesQuery = sortOrder switch
             {
                 "title_asc" => moviesQuery.OrderBy(m => m.Title),
@@ -59,16 +97,12 @@ namespace Licenta_Movie_Recommender.Controllers
                 .Select(m => new { m.Id, m.Title, m.PosterUrl, m.Genres })
                 .ToListAsync();
 
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
             var movieIds = moviesData.Select(m => m.Id).ToList();
-
             var activities = new List<UserMovieActivity>();
             if (!string.IsNullOrEmpty(userId) && movieIds.Any())
-            {
                 activities = await _context.UserActivities
                     .Where(ua => ua.UserId == userId && movieIds.Contains(ua.MovieId))
                     .ToListAsync();
-            }
 
             var result = moviesData.Select(m => {
                 var act = activities.FirstOrDefault(a => a.MovieId == m.Id);
@@ -86,23 +120,29 @@ namespace Licenta_Movie_Recommender.Controllers
             return Json(result);
         }
 
+
+        //search
         [HttpGet]
+        
         public async Task<IActionResult> SearchPreview(string q)
         {
             if (string.IsNullOrWhiteSpace(q) || q.Length < 2)
                 return Json(new { movies = new List<object>(), totalCount = 0 });
 
-            var totalCount = await _context.Movies.Where(m => m.Title.Contains(q)).CountAsync();
-            var movies = await _context.Movies
+            var all = await _context.Movies
                 .AsNoTracking()
                 .Where(m => m.Title.Contains(q))
-                .Take(5)
                 .Select(m => new { id = m.Id, title = m.Title, posterUrl = m.PosterUrl })
                 .ToListAsync();
 
-            return Json(new { movies, totalCount });
-        }
+            var movies = all
+                .OrderBy(m => m.title.StartsWith(q, StringComparison.OrdinalIgnoreCase) ? 0 : 1)
+                .ThenBy(m => m.title)
+                .Take(5)
+                .ToList();
 
+            return Json(new { movies, totalCount = all.Count });
+        }
         #endregion
 
         #region 2. RECOMANDARI 

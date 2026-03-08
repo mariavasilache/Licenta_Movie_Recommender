@@ -55,11 +55,14 @@
                                      view-data='new ViewDataDictionary(ViewData) { { "InWatchlist", inWatchlist }, { "IsWatched", isWatched }, { "Layout", "grid_nocontainer" }, { "ShowIgnore", true } }' />
                             @if (!string.IsNullOrEmpty(item.Explanation))
                             {
-                                <div class="px-1 mt-1">
-                                    <span class="explanation-badge">
-                                        <i class="bi bi-stars me-1"></i>@item.Explanation
-                                    </span>
-                                </div>
+                                var parts = item.Explanation.Split('|');
+                                var icon = parts[0];
+                                var text = parts[1];
+                                var iconClass = icon == "heart" ? "bi-heart-fill" : icon == "clock" ? "bi-clock-fill" : "bi-fire";
+                                <span class="explanation-badge d-block mt-1">
+                                    <i class="bi @iconClass me-1"></i><strong>@text</strong>
+                                </span>
+                            
                             }
                         </div>
                     }

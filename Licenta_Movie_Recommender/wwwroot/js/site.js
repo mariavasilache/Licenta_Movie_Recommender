@@ -108,11 +108,11 @@ function createMovieCardHtml(movie, customOptions = {}) {
     let badgeHtml = '';
     if (options.showBadges) {
         if (movie.rating > 0) {
-            badgeHtml = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm badge-glow" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-star-fill"></i> ${movie.rating}</span>`;
+            badgeHtml = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm badge-glow" style="top: 5px; left: 15px; z-index: 5;"><i class="bi bi-star-fill"></i> ${movie.rating}</span>`;
         } else if (movie.status === 1) {
-            badgeHtml = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm badge-glow" style="top: 5px; right: 15px; z-index: 5;" title="In Watchlist"><i class="bi bi-bookmark-fill"></i></span>`;
+            badgeHtml = `<span class="position-absolute badge bg-warning text-dark m-1 shadow-sm badge-glow" style="top: 5px; left: 15px; z-index: 5;" title="In Watchlist"><i class="bi bi-bookmark-fill"></i></span>`;
         } else if (movie.status === 2) {
-            badgeHtml = `<span class="position-absolute badge bg-success m-1 shadow-sm badge-glow" style="top: 5px; right: 15px; z-index: 5;" title="Vizionat"><i class="bi bi-eye-fill"></i></span>`;
+            badgeHtml = `<span class="position-absolute badge bg-success m-1 shadow-sm badge-glow" style="top: 5px; left: 15px; z-index: 5;" title="Vizionat"><i class="bi bi-eye-fill"></i></span>`;
         }
     }
 

@@ -72,6 +72,13 @@ header {
     position: relative;
     z-index: 1000;
 }
+.modal-backdrop {
+    z-index: 1040 !important;
+}
+
+.modal {
+    z-index: 1045 !important;
+}
 
 
 /*  3. FUNDAL PARTICLES  */

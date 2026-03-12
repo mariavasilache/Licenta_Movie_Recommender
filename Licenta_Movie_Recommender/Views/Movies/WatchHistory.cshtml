@@ -3,10 +3,7 @@
 }
 
 <div class="container mt-4 mb-5">
-    <div class="d-flex align-items-center mb-4 border-bottom border-secondary pb-3">
-        <h2 class="text-danger fw-bold mb-0"><i class="bi bi-clock-history me-2"></i> Activitatea Ta</h2>
-        <a asp-action="MyProfile" asp-controller="Account" class="btn btn-sm btn-outline-light opacity-75 ms-auto">&laquo; Înapoi la Profil</a>
-    </div>
+    <partial name="_PageHeader" model='"Activitatea Mea"' />
 
     @* --- TABS --- *@
     <ul class="nav nav-pills nav-fill mb-4 bg-dark border border-secondary rounded shadow-sm p-1" id="historyTabs" role="tablist">

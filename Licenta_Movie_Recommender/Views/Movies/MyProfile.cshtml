@@ -63,20 +63,8 @@
         {
             @foreach (var activity in Model.RecentWatched.Take(6))
             {
-               
-                    
-                    <partial name="_MovieCard" model="activity.Movie" view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false } }' />
-
-                    
-                    @if (activity.Rating > 0)
-                    {
-                        <span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-star-fill"></i> @activity.Rating</span>
-                    }
-                    else
-                    {
-                        <span class="position-absolute badge bg-success m-1 shadow-sm" title="Vizionat" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-eye-fill"></i></span>
-                    }
-               
+                <partial name="_MovieCard" model="activity.Movie"
+                         view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false }, { "Rating", activity.Rating } }' />
             }
         }
     </div>
@@ -91,9 +79,8 @@
         {
             @foreach (var activity in Model.RecentWatchlist.Take(6))
             {
-                    <partial name="_MovieCard" model="activity.Movie" view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false } }' />
-                    <span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" title="În Watchlist" style="top: 5px; right: 15px; z-index: 5;"><i class="bi bi-bookmark-fill"></i></span>
-                
+                <partial name="_MovieCard" model="activity.Movie"
+                         view-data='new ViewDataDictionary(ViewData) { { "ShowButtons", false }, { "BadgeWatchlist", true } }' />
             }
         }
     </div>

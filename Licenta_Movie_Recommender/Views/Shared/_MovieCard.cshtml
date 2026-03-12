@@ -4,6 +4,8 @@
     bool inWatchlist = ViewData["InWatchlist"] as bool? ?? false;
     bool isWatched = ViewData["IsWatched"] as bool? ?? false;
     string layoutStyle = ViewData["Layout"] as string ?? "grid";
+    int badgeRating = ViewData["Rating"] as int? ?? 0;
+    bool badgeWatchlist = ViewData["BadgeWatchlist"] as bool? ?? false;
 }
 
 @if (layoutStyle == "compact")
@@ -84,8 +86,22 @@ else
                 <img src="@Model.PosterUrl" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
                      onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
                      onerror="this.remove(); this.parentElement.classList.remove('skeleton-poster');">
+
+                @if (badgeRating > 0)
+                {
+                    <span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; left: 5px; z-index: 10;">
+                        <i class="bi bi-star-fill"></i> @badgeRating
+                    </span>
+                }
+                else if (badgeWatchlist)
+                {
+                    <span class="position-absolute badge bg-warning text-dark m-1 shadow-sm" style="top: 5px; left: 5px; z-index: 10;">
+                        <i class="bi bi-bookmark-fill"></i>
+                    </span>
+                }
             </a>
 
+            
            
             @* titlu *@
             <div class="card-body px-1 py-2 text-center" style="min-height: 65px;">

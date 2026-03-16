@@ -51,34 +51,30 @@ else
         <div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
 
             @* butoane actiune *@
-            <div class="movie-actions" style="z-index: 10;">
-                <div class="position-absolute top-0 end-0 p-2 d-flex flex-column gap-2">
-                    <button type="button" class="btn btn-sm @(inWatchlist ? "btn-active-watchlist" : "btn-outline-light") btn-watchlist-toggle" data-movie-id="@Model.Id">
-                        <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
-                    </button>
-                    <button type="button" class="btn btn-sm @(isWatched ? "btn-active-watched" : "btn-outline-light") btn-watched-toggle" data-movie-id="@Model.Id">
-                        <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
-                    </button>
-                    @if (isAdmin)
-                    {
-                        <button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm mt-1" data-movie-id="@Model.Id" data-movie-title="@Model.Title">
-                            <i class="bi bi-trash"></i>
-                        </button>
-                    }
-                </div>
-
-                @if (ViewData["ShowIgnore"] as bool? == true)
+            <div class="movie-actions position-absolute top-0 end-0 p-2 d-flex flex-column gap-2">
+                <button type="button" class="btn btn-sm @(inWatchlist ? "btn-active-watchlist" : "btn-outline-light") btn-watchlist-toggle" data-movie-id="@Model.Id">
+                    <i class="bi @(inWatchlist ? "bi-bookmark-fill" : "bi-bookmark")"></i>
+                </button>
+                <button type="button" class="btn btn-sm @(isWatched ? "btn-active-watched" : "btn-outline-light") btn-watched-toggle" data-movie-id="@Model.Id">
+                    <i class="bi @(isWatched ? "bi-check-circle-fill" : "bi-check-circle")"></i>
+                </button>
+                @if (isAdmin)
                 {
-                    <div class="position-absolute bottom-0 end-0 p-2">
-                        <button type="button"
-                                class="btn btn-sm btn-outline-light btn-ignore-rec"
-                                data-movie-id="@Model.Id"
-                                title="Nu mă interesează">
-                            <i class="bi bi-eye-slash"></i>
-                        </button>
-                    </div>
+                    <button type="button" class="btn btn-sm btn-danger btn-delete-movie shadow-sm mt-1" data-movie-id="@Model.Id" data-movie-title="@Model.Title">
+                        <i class="bi bi-trash"></i>
+                    </button>
                 }
             </div>
+
+            @if (ViewData["ShowIgnore"] as bool? == true)
+            {
+                <div class="movie-ignore-btn position-absolute p-2" style="bottom: 65px; right: 0; z-index: 10;">
+                    <button type="button" class="btn btn-sm btn-outline-light btn-ignore-rec"
+                            data-movie-id="@Model.Id" title="Nu mă interesează">
+                        <i class="bi bi-eye-slash"></i>
+                    </button>
+                </div>
+            }
 
             @* poster *@
             <a href="/Movies/Details/@Model.Id" class="text-decoration-none d-flex align-items-center justify-content-center position-relative rounded shadow skeleton-poster text-center p-3" style="aspect-ratio: 2/3; overflow: hidden; background-color: rgba(13, 13, 26, 0.5);">
@@ -99,6 +95,7 @@ else
                         <i class="bi bi-bookmark-fill"></i>
                     </span>
                 }
+                
             </a>
 
             

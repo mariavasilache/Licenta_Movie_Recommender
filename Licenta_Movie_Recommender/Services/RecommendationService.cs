@@ -54,7 +54,7 @@ namespace Licenta_Movie_Recommender.Services
             // ── DATE DESPRE USER ─────────────────────────────────────────
 
             // genurile preferate (din filmele notate cu 4-5)
-            var genreScores = BuildGenreMap(currentUserActivities);
+            var userGenreProfile = BuildGenreMap(currentUserActivities);
 
             // genurile vizionate in ultimele 14 zile 
             var recentGenres = BuildRecencyMap(currentUserActivities, dayWindow: 14);
@@ -99,14 +99,14 @@ namespace Licenta_Movie_Recommender.Services
 
                 // W2: scor gen
                 // proportional cu cat de mult ii plac genurile filmului
-                float genreScore = 0f;
-                if (movieGenres.Any() && genreScores.Any())
+                float movieGenreScore = 0f;
+                if (movieGenres.Any() && userGenreProfile.Any())
                 {
                     float totalGenre = movieGenres
-                        .Where(g => genreScores.ContainsKey(g))
-                        .Sum(g => genreScores[g]);
-                    float maxGenre = genreScores.Values.Any() ? genreScores.Values.Max() * movieGenres.Length : 1f;
-                    genreScore = maxGenre > 0 ? Math.Clamp(totalGenre / maxGenre, 0f, 1f) : 0f;
+                        .Where(g => userGenreProfile.ContainsKey(g))
+                        .Sum(g => userGenreProfile[g]);
+                    float maxGenre = userGenreProfile.Values.Any() ? userGenreProfile.Values.Max() * movieGenres.Length : 1f;
+                    movieGenreScore = maxGenre > 0 ? Math.Clamp(totalGenre / maxGenre, 0f, 1f) : 0f;
                 }
 
                 // W3: scor activitate recenta
@@ -132,10 +132,10 @@ namespace Licenta_Movie_Recommender.Services
                 // W5: scor diversitate (penalizare similaritate)
                 // scazut daca filmul seamana prea mult cu ce a vazut deja
                 float diversityPenalty = 0f;
-                if (movieGenres.Any() && genreScores.Any())
+                if (movieGenres.Any() && userGenreProfile.Any())
                 {
                     // daca toate genurile filmului sunt deja "saturate" in istoricul userului
-                    int saturatedGenres = movieGenres.Count(g => genreScores.ContainsKey(g) && genreScores[g] > 0.7f);
+                    int saturatedGenres = movieGenres.Count(g => userGenreProfile.ContainsKey(g) && userGenreProfile[g] > 0.7f);
                     diversityPenalty = movieGenres.Length > 0
                         ? (float)saturatedGenres / movieGenres.Length
                         : 0f;
@@ -144,12 +144,12 @@ namespace Licenta_Movie_Recommender.Services
                 // scor final ponderat
                 float finalScore =
                     (W_ML * mlScore) +
-                    (W_GENRE * genreScore) +
+                    (W_GENRE * movieGenreScore) +
                     (W_RECENCY * recentScore) +
                     (W_POPULARITY * popularityScore) -
                     (W_DIVERSITY * diversityPenalty);
 
-                string explanation = BuildExplanation(movieGenres, genreScores, recentGenres, popularityScore);
+                string explanation = BuildExplanation(movieGenres, userGenreProfile, recentGenres, popularityScore);
                 predictions.Add((movie, finalScore, explanation));
             }
 

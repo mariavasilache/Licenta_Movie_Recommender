@@ -64,7 +64,7 @@ h1, h2, h3, h4, h5, h6 {
 }
 
 /* asigura ca tot continutul e deasupra particulelor */
-.container, footer, main {
+.container, footer {
     position: relative !important;
     z-index: 1;
 }
@@ -201,6 +201,10 @@ header {
     backdrop-filter: blur(16px);
 }
 
+#profileDropdown::after {
+    border-top-color: rgba(255, 255, 255, 0.5);
+}
+
 /*  5. HERO SECTION  */
 .hero-section {
     height: 80vh;
@@ -211,7 +215,6 @@ header {
     position: relative;
 }
 
-    /* gradient care face trecerea lina spre continut */
     .hero-section::after {
         content: '';
         position: absolute;
@@ -298,14 +301,18 @@ header {
 
     .movie-card .movie-actions {
         opacity: 0;
-        transition: opacity 0.3s ease-in-out;
+        transition: opacity 0.2s ease-in-out 0.15s;
         pointer-events: none;
+        z-index: 10;
     }
 
     .movie-card:hover .movie-actions {
         opacity: 1;
         pointer-events: auto;
     }
+
+
+
 
 .movie-actions .btn {
     width: 32px;
@@ -315,19 +322,32 @@ header {
     align-items: center;
     justify-content: center;
     border-radius: 4px;
-    backdrop-filter: blur(4px);
-    background-color: rgba(0,0,0,0.5);
+    background-color: rgba(0,0,0,0.75);
     transition: all 0.2s ease-in-out;
+
 }
 
     .movie-actions .btn:hover {
         transform: scale(1.15);
+        background-color: rgba(180, 0, 255, 0.3) !important;
+        border-color: rgba(180, 0, 255, 0.6) !important;
+        color: #fff !important;
     }
-.movie-actions .btn-outline-light:hover {
-    background-color: rgba(180, 0, 255, 0.3) !important;
-    border-color: rgba(180, 0, 255, 0.6) !important;
-    color: #fff !important;
+
+
+
+.movie-card .movie-ignore-btn {
+    opacity: 0;
+    transition: opacity 0.2s ease-in-out 0.15s;
+    pointer-events: none;
+    z-index: 10;
 }
+
+.movie-card:hover .movie-ignore-btn {
+    opacity: 1;
+    pointer-events: auto;
+}
+
 
 /* animatie intrare carduri */
 .movie-container {
@@ -371,6 +391,8 @@ header {
 .movie-card .skeleton-poster {
     background-color: rgba(13, 13, 26, 0.6) !important;
 }
+
+
 
 
 /*  7. BUTOANE & BADGES  */
@@ -422,15 +444,24 @@ header {
 }
 
 .btn-ignore-rec {
-    border: 1px solid rgba(255,255,255,0.1) !important;
-    color: #a3a3a3 !important;
-    transition: all 0.2s ease;
+    width: 32px;
+    height: 32px;
+    padding: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 4px;
+    background-color: rgba(0, 0, 0, 0.55) !important;
+    border: 1px solid rgba(255,255,255,0.15) !important;
+    color: rgba(255,255,255,0.85) !important;
+    transition: all 0.2s ease-in-out;
 }
 
     .btn-ignore-rec:hover {
-        background-color: rgba(180, 0, 255, 0.1) !important;
-        color: #c77dff !important;
-        border-color: #c77dff !important;
+        transform: scale(1.15);
+        background-color: rgba(180, 0, 255, 0.35) !important;
+        border-color: rgba(180, 0, 255, 0.6) !important;
+        color: #fff !important;
     }
 
 .btn-outline-warning, .btn-outline-success,

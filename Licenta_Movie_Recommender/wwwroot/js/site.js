@@ -29,7 +29,7 @@ function showDynamicToast(message, type = 'success') {
     });
 }
 
-//modale confirmari
+//modal confirmare
 function showConfirmModal(message, onConfirm, title = 'Confirmare') {
     document.getElementById('confirmModalTitle').textContent = title;
     document.getElementById('confirmModalBody').textContent = message;
@@ -45,6 +45,22 @@ function showConfirmModal(message, onConfirm, title = 'Confirmare') {
         modal.hide();
         onConfirm();
     });
+}
+
+//modal creare lista
+function showCreateListModal(movieId = null) {
+    const form = document.getElementById('createListForm');
+    const movieInput = document.getElementById('createListMovieId');
+
+    if (movieId) {
+        form.action = '/Movies/CreateCustomListFromDetails';
+        movieInput.value = movieId;
+    } else {
+        form.action = '/Movies/CreateCustomList';
+        movieInput.value = '';
+    }
+
+    new bootstrap.Modal(document.getElementById('createListModal')).show();
 }
 
 //scroll efect glow
@@ -97,7 +113,7 @@ function createMovieCardHtml(movie, customOptions = {}) {
         showBadges: customOptions.showBadges || false,
         showDate: customOptions.showDate || false,
         isAdmin: customOptions.isAdmin || false,
-        layout: customOptions.layout || 'grid'
+        layout: customOptions.layout || 'grid',
     };
 
     const id = movie.id || movie.movieId;
@@ -161,22 +177,22 @@ function createMovieCardHtml(movie, customOptions = {}) {
     }
 
     return `
-    <div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4 movie-container">
-        <div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
-            <div class="movie-actions position-absolute top-0 end-0 p-2 d-flex flex-column gap-2" style="z-index: 10;">${buttonsHtml}</div>
-            <a href="/Movies/Details/${id}" class="text-decoration-none d-flex align-items-center justify-content-center position-relative bg-dark rounded shadow skeleton-poster text-center p-3" style="aspect-ratio: 2/3; overflow: hidden;">
-                <span class="text-secondary fw-bold" style="z-index: 1; font-size: 0.85rem;">${title}</span>
-                <img src="${posterUrl}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
-                     onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
-                    onerror="this.parentElement.classList.remove('skeleton-poster'); this.remove();">
-            </a>
+<div class="col-lg-2 col-md-3 col-sm-4 col-6 mb-4 movie-container">
+    <div class="card bg-transparent border-0 movie-card position-relative h-100 shadow-sm">
+        <div class="movie-actions position-absolute top-0 end-0 p-2 d-flex flex-column gap-2" >${buttonsHtml}</div>
+        <a href="/Movies/Details/${id}" class="text-decoration-none d-flex align-items-center justify-content-center position-relative bg-dark rounded shadow skeleton-poster text-center p-3" style="aspect-ratio: 2/3; overflow: hidden;">
+            <span class="text-secondary fw-bold" style="z-index: 1; font-size: 0.85rem;">${title}</span>
+            <img src="${posterUrl}" class="position-absolute top-0 start-0 w-100 h-100" style="object-fit: cover; opacity: 0; transition: opacity 0.4s ease-in-out; z-index: 2;"
+                 onload="this.style.opacity='1'; this.parentElement.classList.remove('skeleton-poster');"
+                 onerror="this.parentElement.classList.remove('skeleton-poster'); this.remove();">
             ${badgeHtml}
-            <div class="card-body px-1 py-2 text-center d-flex flex-column" style="min-height: 65px;">
-                <h6 class="card-title text-light text-truncate mb-1" style="font-size: 0.92rem;">${title}</h6>
-                ${dateHtml}
-            </div>
+        </a>
+        <div class="card-body px-1 py-2 text-center d-flex flex-column" style="min-height: 65px;">
+            <h6 class="card-title text-light text-truncate mb-1" style="font-size: 0.92rem;">${title}</h6>
+            ${dateHtml}
         </div>
-    </div>`;
+    </div>
+</div>`;
 }
 
 

@@ -9,6 +9,21 @@
 
 
 <div class="hero-section">
+    <div class="hero-poster-strip-wrapper">
+        <div class="hero-poster-strip">
+            @if (ViewBag.StripPosters != null)
+            {
+                @foreach (var poster in ViewBag.StripPosters as List<string>)
+                {
+                    <img src="@poster" alt="" onerror="this.style.display='none'">
+                }
+                @foreach (var poster in ViewBag.StripPosters as List<string>)
+                {
+                    <img src="@poster" alt="" onerror="this.style.display='none'">
+                }
+            }
+        </div>
+    </div>
     <div class="hero-content">
         <h1 class="hero-title">Scenapse</h1>
         <p class="hero-subtitle">Descoperă următoarele tale filme preferate</p>

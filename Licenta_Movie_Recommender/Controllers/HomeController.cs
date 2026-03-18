@@ -111,6 +111,18 @@ namespace Licenta_Movie_Recommender.Controllers
 
             ViewBag.DiscoverMovies = discoverMovies;
 
+            var stripPosters = await _context.Movies
+     .AsNoTracking()
+     .Where(m => !string.IsNullOrEmpty(m.PosterUrl) &&
+                 m.PosterUrl.StartsWith("https://image.tmdb.org"))
+     .OrderBy(m => Guid.NewGuid())
+     .Take(40)
+     .Select(m => m.PosterUrl)
+     .ToListAsync();
+            ViewBag.StripPosters = stripPosters;
+
+
+
             // Logica recomandari pentru user logat
             if (!string.IsNullOrEmpty(userId))
             {

@@ -8,7 +8,7 @@
 
 
     <div class="d-flex align-items-center mb-4 border-bottom border-secondary pb-3">
-        <h2 class="text-danger fw-bold mb-0"><i class="bi bi-person-circle me-2"></i> Dashboard Profil</h2>
+        <h2 class="fw-bold mb-0" style="color: var(--color-primary)"><i class="bi bi-person-circle me-2"></i> Dashboard Profil</h2>
     </div>
 
     @* --- SECTIUNEA 1: STATISTICI --- *@
@@ -88,7 +88,7 @@
     @* --- SECTIUNEA 3: LISTELE TALE --- *@
     <div class="d-flex justify-content-between align-items-center mt-5 mb-3 border-bottom border-secondary pb-3">
         <h4 class="fw-bold text-light mb-0">Listele Tale Personalizate</h4>
-        <button class="btn btn-danger btn-sm shadow-sm rounded-pill px-3 fw-bold" data-bs-toggle="modal" data-bs-target="#createListModal">
+        <button class="btn btn-sm shadow-sm rounded-pill px-3 fw-bold" style="background:var(--color-action); border-color:var(--color-action); color:white;" data-bs-toggle="modal" data-bs-target="#createListModal">
             <i class="bi bi-plus-lg me-1"></i> Listă Nouă
         </button>
     </div>
@@ -132,7 +132,7 @@
                                 }
                             </div>
 
-                            <h5 class="card-title fw-bold text-danger mb-1">@lista.Name</h5>
+                            <h5 class="card-title fw-bold mb-1" style="color: var(--color-primary)">@lista.Name</h5>
                             <p class="text-muted small mb-2">
                                 <i class="bi bi-film"></i> @lista.Movies.Count filme
                                 <span class="mx-1 opacity-50">&bull;</span>

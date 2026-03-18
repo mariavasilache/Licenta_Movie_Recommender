@@ -26,7 +26,7 @@
 
     <style>
         .nav-pills .nav-link.active {
-            background-color: #dc3545 !important; 
+            background-color: var(--color-action) !important;
             color: white !important;
         }
     </style>
@@ -36,7 +36,7 @@
         <div class="tab-pane fade show active" id="all" role="tabpanel">
             <div class="row" id="grid-0"></div>
             <div id="loader-0" class="text-center my-4" style="display:none;">
-                <div class="spinner-border text-danger shadow-sm" role="status"></div>
+                <div class="spinner-border shadow-sm" style="color: var(--color-primary)" role="status"></div>
                 <div class="small text-muted mt-2 fw-bold">Încărcăm filmele...</div>
             </div>
         </div>
@@ -45,7 +45,7 @@
         <div class="tab-pane fade" id="watched" role="tabpanel">
             <div class="row" id="grid-1"></div>
             <div id="loader-1" class="text-center my-4" style="display:none;">
-                <div class="spinner-border text-danger shadow-sm" role="status"></div>
+                <div class="spinner-border shadow-sm" style="color: var(--color-primary)" role="status"></div>
                 <div class="small text-muted mt-2 fw-bold">Încărcăm filmele...</div>
             </div>
         </div>
@@ -54,7 +54,7 @@
         <div class="tab-pane fade" id="watchlist" role="tabpanel">
             <div class="row" id="grid-2"></div>
             <div id="loader-2" class="text-center my-4" style="display:none;">
-                <div class="spinner-border text-danger shadow-sm" role="status"></div>
+                <div class="spinner-border shadow-sm" style="color: var(--color-primary)" role="status"></div>
                 <div class="small text-muted mt-2 fw-bold">Încărcăm filmele...</div>
             </div>
         </div>

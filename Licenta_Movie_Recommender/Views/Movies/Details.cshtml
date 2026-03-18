@@ -64,7 +64,7 @@
             <h1 class="display-4 fw-bold mb-2 text-warning">@Model.Title</h1>
 
             <p class="text-muted fs-5">
-                <i class="bi bi-calendar3 text-danger me-1"></i> Lansare: <span class="text-light">@(string.IsNullOrEmpty(ViewBag.ReleaseDate) ? "N/A" : ViewBag.ReleaseDate)</span> |
+                <i class="bi bi-calendar3 me-1" style="color: var(--color-secondary)"></i> Lansare: <span class="text-light">@(string.IsNullOrEmpty(ViewBag.ReleaseDate) ? "N/A" : ViewBag.ReleaseDate)</span> |
                 <i class="bi bi-star-fill text-warning me-1"></i> TMDB: <span class="text-light">@(ViewBag.TmdbRating > 0 ? ((double)ViewBag.TmdbRating).ToString("0.0") : "N/A")</span> <small>/ 10</small>
             </p>
 
@@ -78,7 +78,7 @@
                 }
             </div>
 
-            <h4 class="fw-bold text-warning border-bottom border-secondary pb-2 mb-3">Sinopsis</h4>
+            <h4 class="fw-bold  border-bottom border-secondary pb-2 mb-3" style="color: var(--color-primary)">Sinopsis</h4>
             <p class="lead text-light opacity-75" style="line-height: 1.8;">@ViewBag.Overview</p>
 
             @* --- ZONA ACTIUNI USER --- *@
@@ -180,7 +180,7 @@
                                 </button>
                                 <ul class="dropdown-menu dropdown-menu-dark shadow-lg border-secondary" style="min-width: 280px;">
                                     <li>
-                                        <button type="button" class="dropdown-item fw-bold text-info py-2" onclick="showCreateListModal(@Model.Id)">
+                                        <button type="button" class="dropdown-item fw-bold py-2" style="color: var(--color-secondary)" onclick="showCreateListModal(@Model.Id)">
                                             <i class="bi bi-plus-lg me-2"></i> Listă nouă
                                         </button>
                                     </li>
@@ -225,7 +225,7 @@
                     {
                         <div class="text-center py-3">
                             <p class="text-muted mb-3 fs-5">Vrei să salvezi filmul sau să îi dai o notă?</p>
-                            <a asp-controller="Account" asp-action="Login" class="btn btn-warning px-5 fw-bold text-dark">Autentifică-te acum</a>
+                            <a asp-controller="Account" asp-action="Login" class="btn px-5 fw-bold text-dark" style="background:var(--color-action); border-color:var(--color-action); color:white;">Autentifică-te acum</a>
                         </div>
                     }
                 </div>

@@ -46,7 +46,16 @@ namespace Licenta_Movie_Recommender.Controllers
         [HttpPost]
         public async Task<IActionResult> Login(string username, string password)
         {
-            var result = await _signInManager.PasswordSignInAsync(username, password, isPersistent: true, lockoutOnFailure: false);
+            // login cu email sau username
+            var loginName = username;
+            if (username.Contains('@'))
+            {
+                var userByEmail = await _userManager.FindByEmailAsync(username);
+                if (userByEmail != null)
+                    loginName = userByEmail.UserName;
+            }
+
+            var result = await _signInManager.PasswordSignInAsync(loginName, password, isPersistent: true, lockoutOnFailure: false);
 
             if (result.Succeeded) return RedirectToAction("Index", "Home");
 

@@ -1,4 +1,4 @@
-﻿// --- FUNCTIE UNIVERSALA TOAST URI AJAX ---
+// --- FUNCTIE UNIVERSALA TOAST URI AJAX ---
 function showDynamicToast(message, type = 'success') {
     const bgClass = type === 'success' ? 'bg-success' : 'bg-danger';
     const iconClass = type === 'success' ? 'bi-check-circle-fill' : 'bi-exclamation-triangle-fill';
@@ -199,13 +199,32 @@ function createMovieCardHtml(movie, customOptions = {}) {
 //2. INITIALIZARE SI EVENIMENTE GLOBALE
 
 document.addEventListener('DOMContentLoaded', () => {
-    // populeaza input search din URL 
     const urlSearch = new URLSearchParams(window.location.search).get('searchString');
-    if (urlSearch && document.getElementById('searchInput')) {
-        document.getElementById('searchInput').value = urlSearch;
+    const searchInputEl = document.getElementById('searchInput');
+    if (urlSearch && searchInputEl) {
+        searchInputEl.value = urlSearch;
+        if (window._triggerCatalogSearch) {
+            window._triggerCatalogSearch(urlSearch);
+        }
     }
 
-    // inchide dropdown search la click in afara
+    document.addEventListener('click', function(e) {
+        const btn = e.target.closest('.btn-search-all');
+        if (!btn) return;
+        e.preventDefault();
+        const query = decodeURIComponent(btn.dataset.searchAll);
+
+        const dropdown = document.getElementById('searchPreviewDropdown');
+        if (dropdown) dropdown.style.display = 'none';
+
+        if (window._triggerCatalogSearch) {
+            if (searchInputEl) searchInputEl.value = query;
+            window._triggerCatalogSearch(query);
+        } else {
+            window.location.href = '/Movies/Index?searchString=' + encodeURIComponent(query);
+        }
+    });
+
     document.addEventListener('click', function (e) {
         const dropdown = document.getElementById('searchPreviewDropdown');
         const form = document.getElementById('searchForm');
@@ -422,8 +441,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
                         if (data.totalCount > 5) {
                             searchResultsList.innerHTML += `
-            <a href="/Movies/Index?searchString=${encodeURIComponent(query)}" 
-               class="list-group-item list-group-item-action text-center py-2"
+            <a href="#" data-search-all="${encodeURIComponent(query)}"
+               class="list-group-item list-group-item-action text-center py-2 btn-search-all"
                style="color:#c77dff; font-size:0.8rem; background: rgba(180,0,255,0.05);">
                 <i class="bi bi-search me-1"></i> Vezi toate ${data.totalCount} rezultate pentru "<strong>${query}</strong>"
             </a>`;

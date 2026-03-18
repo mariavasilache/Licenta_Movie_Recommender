@@ -1,4 +1,4 @@
-﻿@model IEnumerable<Licenta_Movie_Recommender.Models.Movie>
+@model IEnumerable<Licenta_Movie_Recommender.Models.Movie>
 @{
     ViewData["Title"] = "Catalog Filme";
     string sort = ViewBag.CurrentSort;
@@ -13,31 +13,20 @@
         @* GENURI *@
         <div class="d-flex flex-wrap gap-2 align-items-center mb-3">
             <span class="text-muted small fw-bold text-uppercase me-2">Gen:</span>
-            <a asp-action="Index" asp-route-sortOrder="@sort"
-               class="btn btn-sm @(string.IsNullOrEmpty(genre) ? "btn-danger" : "btn-outline-secondary") rounded-pill px-3">Toate</a>
-
+            <button class="btn btn-sm btn-danger rounded-pill px-3 genre-btn active" data-genre="">Toate</button>
             @foreach (var g in ViewBag.Genres as List<string>)
             {
-                <a asp-action="Index" asp-route-genreFilter="@g" asp-route-sortOrder="@sort"
-                   class="btn btn-sm @(genre == g ? "btn-danger" : "btn-outline-secondary") rounded-pill px-3">@g</a>
+                <button class="btn btn-sm btn-outline-secondary rounded-pill px-3 genre-btn" data-genre="@g">@g</button>
             }
         </div>
 
         @* SORTARE *@
         <div class="d-flex flex-wrap gap-2 align-items-center pt-2 border-top border-secondary">
             <span class="text-muted small fw-bold text-uppercase me-2">Sortare:</span>
-
-            <a asp-action="Index" asp-route-genreFilter="@ViewBag.CurrentGenre" asp-route-sortOrder="title_asc"
-               class="btn btn-sm @(sort == "title_asc" ? "btn-warning text-dark" : "btn-outline-light") rounded-pill px-3 fw-bold">A - Z</a>
-
-            <a asp-action="Index" asp-route-genreFilter="@ViewBag.CurrentGenre" asp-route-sortOrder="title_desc"
-               class="btn btn-sm @(sort == "title_desc" ? "btn-warning text-dark" : "btn-outline-light") rounded-pill px-3 fw-bold">Z - A</a>
-
-            <a asp-action="Index" asp-route-genreFilter="@ViewBag.CurrentGenre" asp-route-sortOrder=""
-               class="btn btn-sm @(string.IsNullOrEmpty(sort) ? "btn-warning text-dark" : "btn-outline-light") rounded-pill px-3 fw-bold">Cele mai noi</a>
-
-            <a asp-action="Index" asp-route-genreFilter="@ViewBag.CurrentGenre" asp-route-sortOrder="oldest"
-               class="btn btn-sm @(sort == "oldest" ? "btn-warning text-dark" : "btn-outline-light") rounded-pill px-3 fw-bold">Cele mai vechi</a>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold sort-btn" data-sort="title_asc">A - Z</button>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold sort-btn" data-sort="title_desc">Z - A</button>
+            <button class="btn btn-sm btn-sort-active rounded-pill px-3 fw-bold sort-btn active" data-sort="">Cele mai noi</button>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold sort-btn" data-sort="oldest">Cele mai vechi</button>
         </div>
     </div>
 
@@ -58,9 +47,9 @@
         let hasMore = true;
 
         const urlParams = new URLSearchParams(window.location.search);
-        const sortOrder = urlParams.get('sortOrder') || "";
-        const genreFilter = urlParams.get('genreFilter') || "";
         const searchString = urlParams.get('searchString') || "";
+        let sortOrder = urlParams.get('sortOrder') || "";
+        let genreFilter = urlParams.get('genreFilter') || "";
 
                 async function loadMovies() {
             if (isLoading || !hasMore) return;
@@ -110,25 +99,63 @@
             }
         });
 
+        // setActivePill - clasele separate ca classList nu accepta spatii
+        function setActivePill(group, activeEl, activeClasses, inactiveClass) {
+            group.forEach(btn => {
+                activeClasses.forEach(c => btn.classList.remove(c));
+                btn.classList.add(inactiveClass);
+                btn.classList.remove('active');
+            });
+            activeClasses.forEach(c => activeEl.classList.add(c));
+            activeEl.classList.remove(inactiveClass);
+            activeEl.classList.add('active');
+        }
+
+        // expunem functia pt site.js (vezi toate rezultate din search)
+        window._triggerCatalogSearch = function(query) {
+            page = 1;
+            hasMore = true;
+            window._catalogSearch = query;
+            loadMovies();
+        };
+
         document.addEventListener('DOMContentLoaded', () => {
-             loadMovies();
+            const genreBtns = document.querySelectorAll('.genre-btn');
+            genreBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    genreFilter = btn.dataset.genre;
+                    setActivePill(genreBtns, btn, ['btn-danger'], 'btn-outline-secondary');
+                    page = 1; hasMore = true;
+                    document.getElementById('catalogGrid').innerHTML = '';
+                    loadMovies();
+                });
+            });
 
-             // search live in catalog
-             const catalogSearch = document.getElementById('searchInput');
-             if (catalogSearch) {
-                 catalogSearch.value = searchString;
+            const sortBtns = document.querySelectorAll('.sort-btn');
+            sortBtns.forEach(btn => {
+                btn.addEventListener('click', () => {
+                    sortOrder = btn.dataset.sort;
+                    setActivePill(sortBtns, btn, ['btn-sort-active'], 'btn-outline-light');
+                    page = 1; hasMore = true;
+                    document.getElementById('catalogGrid').innerHTML = '';
+                    loadMovies();
+                });
+            });
 
-                 let catalogDebounce;
-                 catalogSearch.addEventListener('input', function() {
-                     clearTimeout(catalogDebounce);
-                     catalogDebounce = setTimeout(() => {
-                         page = 1;
-                         hasMore = true;
-                         window._catalogSearch = this.value.trim();
-                         loadMovies();
-                     }, 400);
-                 });
-             }
-         });
+            loadMovies();
+
+            // search live in catalog
+            const catalogSearch = document.getElementById('searchInput');
+            if (catalogSearch) {
+                catalogSearch.value = searchString;
+                let catalogDebounce;
+                catalogSearch.addEventListener('input', function() {
+                    clearTimeout(catalogDebounce);
+                    catalogDebounce = setTimeout(() => {
+                        window._triggerCatalogSearch(this.value.trim());
+                    }, 400);
+                });
+            }
+        });
     </script>
 }

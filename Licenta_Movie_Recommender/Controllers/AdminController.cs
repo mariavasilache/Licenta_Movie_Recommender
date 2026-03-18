@@ -1,4 +1,4 @@
-﻿using Licenta_Movie_Recommender.Data;
+using Licenta_Movie_Recommender.Data;
 using Licenta_Movie_Recommender.Models;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
@@ -34,25 +34,32 @@ namespace Licenta_Movie_Recommender.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetManageMoviesData(int page = 1, string searchString = "", string filter = "all")
+        public async Task<IActionResult> GetManageMoviesData(int page = 1, string searchString = "", string filter = "all", string genre = "", string sort = "newest")
         {
             int pageSize = 18;
             var query = _context.Movies.IgnoreQueryFilters().AsQueryable();
 
             if (!string.IsNullOrEmpty(searchString))
-            {
                 query = query.Where(m => m.Title.Contains(searchString));
-            }
 
-            //filtrare pe tab-rui
             if (filter == "active") query = query.Where(m => !m.IsDeleted);
             else if (filter == "deleted") query = query.Where(m => m.IsDeleted);
 
+            if (!string.IsNullOrEmpty(genre))
+                query = query.Where(m => m.Genres != null && m.Genres.Contains(genre));
+
+            // sortare
+            query = sort switch
+            {
+                "az" => query.OrderBy(m => m.Title),
+                "za" => query.OrderByDescending(m => m.Title),
+                "oldest" => query.OrderBy(m => m.Id),
+                _ => query.OrderByDescending(m => m.Id) // newest default
+            };
+
             var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
 
-            //selectare date
             var movies = await query
-                .OrderByDescending(m => m.Id)
                 .Skip((page - 1) * pageSize)
                 .Take(pageSize)
                 .Select(m => new {
@@ -61,8 +68,6 @@ namespace Licenta_Movie_Recommender.Controllers
                     posterUrl = m.PosterUrl,
                     genres = m.Genres,
                     isDeleted = m.IsDeleted,
-
-
                     status = _context.UserActivities
                                 .Where(ua => ua.MovieId == m.Id && ua.UserId == userId)
                                 .Select(ua => ua.Status)
@@ -74,8 +79,26 @@ namespace Licenta_Movie_Recommender.Controllers
                 })
                 .ToListAsync();
 
-            
             return Json(movies);
+        }
+
+        [HttpGet]
+        public async Task<IActionResult> GetGenres()
+        {
+            var allGenres = await _context.Movies
+                .IgnoreQueryFilters()
+                .Where(m => m.Genres != null && m.Genres != "")
+                .Select(m => m.Genres)
+                .ToListAsync();
+
+            var genres = allGenres
+                .SelectMany(g => g.Split('|', StringSplitOptions.RemoveEmptyEntries))
+                .Select(g => g.Trim())
+                .Distinct()
+                .OrderBy(g => g)
+                .ToList();
+
+            return Json(genres);
         }
 
         //pagina editare
@@ -90,7 +113,7 @@ namespace Licenta_Movie_Recommender.Controllers
 
         //salvare modificari
         [HttpPost]
-        [ValidateAntiForgeryToken] // Protectie impotriva atacurilor de tip CSRF
+        [ValidateAntiForgeryToken] 
         public async Task<IActionResult> EditMovie(int id, Movie model)
         {
             if (id != model.Id) return BadRequest();

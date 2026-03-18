@@ -22,6 +22,11 @@ builder.Services.AddDefaultIdentity<IdentityUser>(options =>
 .AddRoles<IdentityRole>() 
 .AddEntityFrameworkStores<ApplicationDbContext>();
 
+builder.Services.ConfigureApplicationCookie(options => {
+    options.LoginPath = "/Account/Login";
+    options.AccessDeniedPath = "/Account/Login";
+});
+
 // CUSTOM SERVICES
 builder.Services.AddMemoryCache();
 builder.Services.AddHttpClient<TmdbService>();

@@ -61,12 +61,15 @@ html {
 }
 
 body {
-    margin-bottom: 60px;
+    margin-bottom: 0;
     background-color: var(--bg-base);
     color: #e5e5e5;
     font-family: 'Poppins', sans-serif;
     -webkit-font-smoothing: antialiased;
     position: relative;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
 }
 
 h1, h2, h3, h4, h5, h6 {
@@ -235,6 +238,20 @@ header {
 
 .navbar .dropdown-menu {
     z-index: 1100 !important;
+}
+
+.dropdown-menu .dropdown-item {
+    color: #e5e5e5 !important;
+}
+
+.dropdown-menu .dropdown-item:hover,
+.dropdown-menu .dropdown-item:focus {
+    background-color: rgba(199, 125, 255, 0.15) !important;
+    color: #ffffff !important;
+}
+
+.dropdown-menu .dropdown-header {
+    color: var(--color-primary) !important;
 }
 
 /*  5. HERO SECTION  */
@@ -636,4 +653,86 @@ h2.text-warning.fw-bold, h3.text-warning.fw-bold, h4.text-warning.fw-bold {
     to {
         transform: translateX(-50%);
     }
+}
+/* --- USER AVATAR DROPDOWN --- */
+
+.user-avatar-toggle::after {
+    display: none !important;
+}
+
+.avatar-chevron {
+    font-size: 0.65rem;
+    color: rgba(200, 180, 255, 0.5);
+    transition: transform 0.25s ease, color 0.25s ease;
+    margin-top: 1px; 
+
+}
+
+.user-avatar-toggle:hover .avatar-chevron,
+.user-avatar-toggle.show .avatar-chevron {
+    color: var(--color-primary);
+}
+
+.user-avatar-toggle.show .avatar-chevron {
+    transform: rotate(180deg);
+}
+
+/* --- ADMIN ITEM --- */
+.dropdown-menu .admin-item {
+    color: var(--color-primary) !important;
+    background: var(--color-primary-dim);
+    border-left: 2px solid var(--color-primary);
+}
+
+.dropdown-menu .admin-item:hover,
+.dropdown-menu .admin-item:focus {
+    background: var(--color-primary-mid) !important;
+    color: #ffffff !important;
+}
+
+
+.nav-pills .nav-link {
+    color: rgba(200, 200, 200, 0.7) !important;
+    border-radius: 6px;
+    transition: background-color 0.2s ease, color 0.2s ease;
+}
+
+.nav-pills .nav-link::after {
+    display: none !important; 
+}
+
+.nav-pills .nav-link:hover {
+    background-color: rgba(255, 255, 255, 0.07) !important;
+    color: #ffffff !important;
+}
+
+.nav-pills .nav-link.active {
+    background-color: #dc3545 !important;
+    color: #ffffff !important;
+}
+
+.nav-pills .nav-link.active:hover {
+    background-color: #bb2d3b !important;
+}
+
+/* --- SORT ACTIVE PILL --- */
+.btn-sort-active {
+    background-color: #ffc107 !important;
+    border-color: #ffc107 !important;
+    color: #000 !important;
+}
+
+.btn-sort-active:hover {
+    background-color: #e0a800 !important;
+}
+
+/* --- ADMIN FILTER BAR HIDE/SHOW LA SCROLL --- */
+.admin-filter-bar {
+    transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.admin-filter-bar.hidden {
+    transform: translateY(-110%);
+    opacity: 0;
+    pointer-events: none;
 }

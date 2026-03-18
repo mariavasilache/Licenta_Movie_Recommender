@@ -1,71 +1,61 @@
-﻿@{
+@{
     ViewData["Title"] = "Gestionare Filme";
 }
 
 <div class="container-fluid mt-4 mb-5">
-    @* --- HEADER CU BUTON DE INAPOI --- *@
-    <div class="d-flex justify-content-between align-items-center mb-4">
+
+    @* --- HEADER --- *@
+    <div class="d-flex justify-content-between align-items-center mb-3">
         <div class="d-flex align-items-center gap-3">
-            <a href="/Admin" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;" title="Înapoi la Dashboard">
+            <a href="/Admin" class="btn btn-outline-secondary rounded-circle d-flex align-items-center justify-content-center" style="width: 42px; height: 42px;">
                 <i class="bi bi-arrow-left fs-5"></i>
             </a>
             <h1 class="h3 text-white fw-bold mb-0">Gestionare Filme</h1>
         </div>
-
         <a href="/Admin/Import" class="btn btn-success shadow-sm">
             <i class="bi bi-cloud-download me-1"></i> Importă filme noi
         </a>
     </div>
 
-    @* --- BARA DE CAUTARE --- *@
-    <div class="card bg-dark border-secondary shadow mb-4">
-        <div class="card-body">
-            <form id="adminSearchForm" class="row g-3">
-                <div class="col-md-10">
-                    <input type="text" id="adminSearchInput" class="form-control bg-dark text-white border-secondary" placeholder="Caută după titlu...">
-                </div>
-                <div class="col-md-2">
-                    <button type="submit" class="btn btn-primary w-100">
-                        <i class="bi bi-search"></i> Caută
-                    </button>
-                </div>
-            </form>
+    @* --- FILTRE (sticky, hide la scroll) --- *@
+    <div class="admin-filter-bar filter-section bg-dark border border-secondary rounded-3 shadow-sm mb-3 p-3 sticky-top" style="top: 70px; z-index: 99;">
+
+        @* Taburi status *@
+        <div class="d-flex gap-2 mb-3 pb-3 border-bottom border-secondary">
+            <button class="btn btn-danger rounded-pill fw-bold admin-tab-btn active flex-fill" data-filter="all">
+                <i class="bi bi-collection-play-fill me-1"></i>Toate
+            </button>
+            <button class="btn btn-outline-secondary rounded-pill fw-bold admin-tab-btn flex-fill" data-filter="active">
+                <i class="bi bi-check-circle-fill text-success me-1"></i>Active
+            </button>
+            <button class="btn btn-outline-secondary rounded-pill fw-bold admin-tab-btn flex-fill" data-filter="deleted">
+                <i class="bi bi-trash-fill text-danger me-1"></i>Șterse
+            </button>
+        </div>
+
+        @* Genuri *@
+        <div class="d-flex flex-wrap gap-2 align-items-center mb-2">
+            <span class="text-muted small fw-bold text-uppercase me-1" style="font-size:0.75rem;">Gen:</span>
+            <button class="btn btn-sm btn-danger rounded-pill px-3 genre-btn active" data-genre="">Toate</button>
+            <div id="genrePills" class="d-flex flex-wrap gap-2"></div>
+        </div>
+
+        @* Sortare + Reset *@
+        <div class="d-flex flex-wrap gap-2 align-items-center pt-2 border-top border-secondary">
+            <span class="text-muted small fw-bold text-uppercase me-1" style="font-size:0.75rem;">Sortare:</span>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold sort-btn" data-sort="az">A - Z</button>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold sort-btn" data-sort="za">Z - A</button>
+            <button class="btn btn-sm btn-sort-active rounded-pill px-3 fw-bold sort-btn active" data-sort="newest">Cele mai noi</button>
+            <button class="btn btn-sm btn-outline-light rounded-pill px-3 fw-bold sort-btn" data-sort="oldest">Cele mai vechi</button>
+            <button id="btnResetFilters" class="btn btn-sm btn-outline-secondary ms-auto" title="Resetează filtrele">
+                <i class="bi bi-x-circle me-1"></i>Reset
+            </button>
         </div>
     </div>
-
-   
-
-    @* --- TABURI FILTRARE --- *@
-    <ul class="nav nav-pills nav-fill mb-4 bg-dark border border-secondary rounded shadow-sm p-1" id="adminTabs" role="tablist">
-        <li class="nav-item" role="presentation">
-            <button class="nav-link active fw-bold text-light admin-tab-btn" data-filter="all" type="button">
-                <i class="bi bi-collection-play-fill"></i> Toate
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold text-light admin-tab-btn" data-filter="active" type="button">
-                <i class="bi bi-check-circle-fill text-success"></i> Active
-            </button>
-        </li>
-        <li class="nav-item" role="presentation">
-            <button class="nav-link fw-bold text-light admin-tab-btn" data-filter="deleted" type="button">
-                <i class="bi bi-trash-fill text-danger"></i> Șterse
-            </button>
-        </li>
-    </ul>
-
-    <style>
-       
-        #adminTabs .nav-link.active {
-            background-color: #dc3545 !important;
-            color: white !important;
-        }
-    </style>
 
     @* --- GRID FILME --- *@
     <div id="adminMovieGrid" class="row g-2"></div>
 
-    @* --- LOADER --- *@
     <div id="adminLoader" class="text-center my-5" style="display:none;">
         <div class="spinner-border text-danger shadow-sm" role="status"></div>
     </div>
@@ -76,90 +66,142 @@
         let page = 1;
         let isLoading = false;
         let hasMore = true;
-        let searchString = '';
-        let currentFilter = 'all';
+        let searchString = new URLSearchParams(window.location.search).get('searchString') || ''; let currentFilter = 'all';
+        let currentGenre = '';
+        let currentSort = 'newest';
+
+        function resetPagination() {
+            page = 1;
+            hasMore = true;
+            document.getElementById('adminMovieGrid').innerHTML = '';
+        }
+
+        function setActivePill(group, activeEl, activeClasses, inactiveClass) {
+            group.forEach(btn => {
+                activeClasses.forEach(c => btn.classList.remove(c));
+                btn.classList.add(inactiveClass);
+                btn.classList.remove('active');
+            });
+            activeClasses.forEach(c => activeEl.classList.add(c));
+            activeEl.classList.remove(inactiveClass);
+            activeEl.classList.add('active');
+        }
 
         async function loadAdminMovies() {
             if (isLoading || !hasMore) return;
             isLoading = true;
-
-            const grid = document.getElementById('adminMovieGrid');
-            const loader = document.getElementById('adminLoader');
-
-            loader.style.display = 'block';
+            document.getElementById('adminLoader').style.display = 'block';
 
             try {
-                const response = await fetch(`/Admin/GetManageMoviesData?page=${page}&searchString=${encodeURIComponent(searchString)}&filter=${currentFilter}`);
-                const movies = await response.json();
-
-                if (page === 1) grid.innerHTML = '';
+                const params = new URLSearchParams({ page, searchString, filter: currentFilter, genre: currentGenre, sort: currentSort });
+                const movies = await fetch(`/Admin/GetManageMoviesData?${params}`).then(r => r.json());
+                const grid = document.getElementById('adminMovieGrid');
 
                 if (movies.length === 0) {
                     hasMore = false;
                     if (page === 1) grid.innerHTML = `
-                            <div class="col-12 text-center text-muted py-5 border border-secondary rounded-3 bg-transparent">
-                                <i class="bi bi-camera-reels display-6 d-block mb-3 opacity-50"></i>
-                                Nu am găsit niciun film.
-                            </div>`;
+                        <div class="col-12 text-center text-muted py-5 border border-secondary rounded-3">
+                            <i class="bi bi-camera-reels display-6 d-block mb-3 opacity-50"></i>
+                            Nu am găsit niciun film.
+                        </div>`;
                 } else {
                     let html = '';
-                    movies.forEach(movie => {
-                        html += createMovieCardHtml(movie, { isAdmin: true, layout: 'compact' });
-                    });
-
-                    
+                    movies.forEach(m => { html += createMovieCardHtml(m, { isAdmin: true, layout: 'compact' }); });
                     grid.insertAdjacentHTML('beforeend', html);
                     page++;
                 }
-            } catch (error) {
-                console.error("Eroare la încărcare:", error);
+
+                
+
+            } catch (e) {
+                console.error('Eroare:', e);
             } finally {
                 isLoading = false;
-                loader.style.display = 'none';
+                document.getElementById('adminLoader').style.display = 'none';
             }
         }
 
-        // --- click tab uri ---
-        document.querySelectorAll('.admin-tab-btn').forEach(btn => {
-            btn.addEventListener('click', (e) => {
+        async function loadGenres() {
+            try {
+                const genres = await fetch('/Admin/GetGenres').then(r => r.json());
+                const container = document.getElementById('genrePills');
+                container.innerHTML = genres.map(g =>
+                    `<button class="btn btn-sm btn-outline-secondary rounded-pill px-3 genre-btn" data-genre="${g}">${g}</button>`
+                ).join('');
+                attachGenreListeners();
+            } catch (e) { console.error(e); }
+        }
 
-                document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+        function attachGenreListeners() {
+            document.querySelectorAll('.genre-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentGenre = btn.dataset.genre;
+                    setActivePill(document.querySelectorAll('.genre-btn'), btn, ['btn-danger'], 'btn-outline-secondary');
+                    resetPagination();
+                    loadAdminMovies();
+                });
+            });
+        }
 
-                const clickedBtn = e.currentTarget;
-                clickedBtn.classList.add('active');
-
-                currentFilter = clickedBtn.getAttribute('data-filter');
-
-                page = 1;
-                hasMore = true;
+        // sort pills
+        document.querySelectorAll('.sort-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentSort = btn.dataset.sort;
+                setActivePill(document.querySelectorAll('.sort-btn'), btn, ['btn-sort-active'], 'btn-outline-light');
+                resetPagination();
                 loadAdminMovies();
             });
         });
 
-        // Cautare
-        let debounceTimerAdmin;
-        document.getElementById('adminSearchInput').addEventListener('input', (e) => {
-            clearTimeout(debounceTimerAdmin); 
-
-            debounceTimerAdmin = setTimeout(() => {
-                searchString = e.target.value.trim();
-                page = 1;
-                hasMore = true;
-                loadAdminMovies(); 
-            }, 400);
-        });
-
-        document.getElementById('adminSearchForm').addEventListener('submit', (e) => e.preventDefault());
-
-
-        // scroll Infinit
-        window.addEventListener('scroll', () => {
-            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500) {
+        // tab-uri status
+        document.querySelectorAll('.admin-tab-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentFilter = btn.dataset.filter;
+                document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                resetPagination();
                 loadAdminMovies();
-            }
+            });
         });
 
-        
-        document.addEventListener('DOMContentLoaded', loadAdminMovies);
+     
+
+        // reset
+        document.getElementById('btnResetFilters').addEventListener('click', () => {
+            searchString = ''; currentGenre = ''; currentSort = 'newest'; currentFilter = 'all';
+            document.getElementById('adminSearchInput').value = '';
+            setActivePill(document.querySelectorAll('.genre-btn'), document.querySelector('.genre-btn[data-genre=""]'), ['btn-danger'], 'btn-outline-secondary');
+            setActivePill(document.querySelectorAll('.sort-btn'), document.querySelector('.sort-btn[data-sort="newest"]'), ['btn-sort-active'], 'btn-outline-light');
+            document.querySelectorAll('.admin-tab-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector('.admin-tab-btn[data-filter="all"]').classList.add('active');
+            resetPagination();
+            loadAdminMovies();
+        });
+
+        // scroll infinit
+        window.addEventListener('scroll', () => {
+            if ((window.innerHeight + window.scrollY) >= document.body.offsetHeight - 500)
+                loadAdminMovies();
+        });
+
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGenres();
+            loadAdminMovies();
+            attachGenreListeners(); 
+        });
+
+        const adminSearch = document.getElementById('searchInput');
+        if (adminSearch) {
+            adminSearch.value = searchString;
+            let debounceTimer;
+            adminSearch.addEventListener('input', function () {
+                clearTimeout(debounceTimer);
+                debounceTimer = setTimeout(() => {
+                    searchString = this.value.trim();
+                    resetPagination();
+                    loadAdminMovies();
+                }, 400);
+            });
+        }
     </script>
 }
